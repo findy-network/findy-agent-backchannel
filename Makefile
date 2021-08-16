@@ -33,11 +33,11 @@ check: check_fmt vet shadow
 
 dbuild:
 	docker build \
-		-t findy-template-go \
+		-t findy-test-harness \
 		.
 
 drun:
-	docker run -it --rm findy-template-go
+	docker run -it --rm findy-test-harness
 
 scan:
 	@./scripts/scan.sh $(ARGS)

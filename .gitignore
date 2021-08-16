@@ -21,3 +21,6 @@
 
 # Environment variables
 .envrc
+
+.docker
+.data

@@ -1,0 +1,34 @@
+version: '3.9'
+services:
+  core:
+    image: ghcr.io/findy-network/findy-agent:latest
+    volumes:
+      - ./conf/genesis.txt:/genesis.txt
+      - ./conf/steward.exported:/steward.exported
+      - ./cert:/grpc
+    environment:
+      FCLI_POOL_GENESIS_TXN_FILE: '/genesis.txt'
+      FCLI_POOL_NAME: 'iop'
+      FCLI_AGENCY_POOL_NAME: 'iop'
+      FCLI_AGENCY_GRPC_TLS: 'true'
+      FCLI_AGENCY_GRPC_CERT_PATH: '/grpc'
+    ports:
+      - '8080:8080'
+      - '50052:50051'
+  auth:
+    image: ghcr.io/findy-network/findy-agent-auth:latest
+    volumes:
+      - ./cert:/grpc
+      - .data:/data
+    depends_on:
+      - core
+    environment:
+      FAA_PORT: '8888'
+      FAA_ORIGIN: 'localhost:8888'
+      FAA_AGENCY_ADDR: 'core'
+    ports:
+      - '8888:8888'
+#networks:
+#  default:
+#    external: true
+#    name: von_von

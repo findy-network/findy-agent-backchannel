@@ -13,23 +13,42 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	openapi "github.com/findy-network/findy-test-harness/go"
 	"github.com/findy-network/findy-test-harness/go/agent"
 )
 
 func main() {
-	log.Printf("Server started")
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "9010"
+	for _, a := range os.Args {
+		log.Println(a)
 	}
+
+	name := os.Getenv("AGENT_NAME")
+	port := "9999"
+	switch name {
+	case "Acme":
+		port = "9010"
+	case "Bob":
+		port = "9020"
+	case "Faber":
+		port = "9030"
+	case "Alice":
+		port = "9040"
+	}
+
+	if strings.HasPrefix(os.Args[2], "9") {
+		port = os.Args[2]
+	}
+
+	log.Printf("Starting server at port %s", port)
 
 	a := agent.Init()
 	a.Login()
 
-	ConnectionApiService := openapi.NewConnectionApiService()
+	log.Printf("Agent login succeeded")
+
+	ConnectionApiService := openapi.NewConnectionApiService(a)
 	ConnectionApiController := openapi.NewConnectionApiController(ConnectionApiService)
 
 	CredentialApiService := openapi.NewCredentialApiService()

@@ -1,5 +1,9 @@
-FROM golang:1.10 AS build
+FROM golang:1.16 AS build
 WORKDIR /go/src
+
+COPY go.* ./
+RUN go mod download
+
 COPY go ./go
 COPY main.go .
 
@@ -9,6 +13,11 @@ RUN go get -d -v ./...
 RUN go build -a -installsuffix cgo -o openapi .
 
 FROM scratch AS runtime
+
 COPY --from=build /go/src/openapi ./
-EXPOSE 8080/tcp
+
+EXPOSE "9020-9059"
+
+ADD ./env/cert ./env/cert
+
 ENTRYPOINT ["./openapi"]

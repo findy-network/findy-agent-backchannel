@@ -15,9 +15,10 @@ import (
 )
 
 type Agent struct {
-	User string
-	JWT  string
-	Conn client.Conn
+	User       string
+	JWT        string
+	Conn       client.Conn
+	AgencyHost string
 }
 
 var authnCmd = authn.Cmd{
@@ -33,7 +34,15 @@ var authnCmd = authn.Cmd{
 
 func Init() *Agent {
 
-	authnCmd.UserName = fmt.Sprintf("findy-test-harness-%d", time.Now().Unix())
+	url := os.Getenv("DOCKERHOST")
+	if url == "" {
+		url = "localhost"
+	}
+	authnCmd.Url = fmt.Sprintf("http://%s:8888", url)
+
+	//authnCmd.Origin = fmt.Sprintf("//%s:8888", url)
+
+	authnCmd.UserName = fmt.Sprintf("findy-test-harness-%d", time.Now().UnixNano())
 
 	myCmd := authnCmd
 	myCmd.SubCmd = "register"
@@ -41,7 +50,7 @@ func Init() *Agent {
 	err2.Check(myCmd.Validate())
 	_, err := myCmd.Exec(os.Stdout)
 	err2.Check(err)
-	return &Agent{User: authnCmd.UserName}
+	return &Agent{User: authnCmd.UserName, AgencyHost: url}
 }
 
 func (a *Agent) Login() {
@@ -57,8 +66,8 @@ func (a *Agent) Login() {
 
 	conf := client.BuildClientConnBase(
 		"./env/cert",
-		"localhost",
-		50051,
+		a.AgencyHost,
+		50052,
 		[]grpc.DialOption{},
 	)
 	conn := client.TryAuthOpen(a.JWT, conf)

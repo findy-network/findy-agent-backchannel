@@ -6,14 +6,14 @@ req_extensions = req_ext
 distinguished_name = dn
  
 [ dn ]
-C = UK
-ST = London
-L = London
-O = Inanzzz Ltd.
-OU = Information Technologies
+C = FI
+ST = Oulu
+L = Oulu
+O = OP
+OU = Lab
 emailAddress = email@email.com
-CN = 192.168.65.3
- 
+CN = <IP_ADDRESS>
+
 [ req_ext ]
 subjectAltName = @alt_names
  
@@ -21,5 +21,4 @@ subjectAltName = @alt_names
 DNS.1 = core
 DNS.2 = localhost
 DNS.3 = www.inanzzz.com
-IP.1 = 192.168.65.3
-
+IP.1 = <IP_ADDRESS>

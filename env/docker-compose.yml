@@ -8,12 +8,14 @@ services:
       - ./cert:/grpc
     environment:
       FCLI_POOL_GENESIS_TXN_FILE: '/genesis.txt'
-      FCLI_POOL_NAME: 'iop'
-      FCLI_AGENCY_POOL_NAME: 'iop'
+      #FCLI_POOL_NAME: 'iop'
+      #FCLI_AGENCY_POOL_NAME: 'iop'
+      FCLI_POOL_NAME: 'FINDY_FILE_LEDGER'
+      FCLI_AGENCY_POOL_NAME: 'FINDY_FILE_LEDGER'
       FCLI_AGENCY_GRPC_TLS: 'true'
       FCLI_AGENCY_GRPC_CERT_PATH: '/grpc'
     ports:
-      - '8080:8080'
+      - '8088:8080'
       - '50052:50051'
   auth:
     image: ghcr.io/findy-network/findy-agent-auth:latest

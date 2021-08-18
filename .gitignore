@@ -24,3 +24,8 @@
 
 .docker
 .data
+
+# generated files
+./env/cert/client/cert.conf
+./env/cert/server/cert.conf
+./env/docker-compose.yml

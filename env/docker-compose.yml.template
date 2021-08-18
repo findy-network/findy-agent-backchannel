@@ -14,7 +14,7 @@ services:
       FCLI_AGENCY_POOL_NAME: 'FINDY_FILE_LEDGER'
       FCLI_AGENCY_GRPC_TLS: 'true'
       FCLI_AGENCY_GRPC_CERT_PATH: '/grpc'
-      FCLI_AGENCY_HOST_ADDRESS: 192.168.65.3
+      FCLI_AGENCY_HOST_ADDRESS: <IP_ADDRESS>
       FCLI_AGENCY_HOST_PORT: 8088
       FCLI_AGENCY_SERVER_PORT: 8088
     ports:
@@ -33,7 +33,3 @@ services:
       FAA_AGENCY_ADDR: 'core'
     ports:
       - '8888:8888'
-#networks:
-#  default:
-#    external: true
-#    name: von_von

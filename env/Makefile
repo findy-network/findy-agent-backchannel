@@ -1,27 +1,27 @@
+VON_NETWORK_VERSION:=37fa43673678b64c0f6080c5e2b50c7ea5354cb4
+AATH_VERSION:=11260b718b7bd67a5aa5f2dc39ba92408e626302
+
+aath-up: rm up fth-up aath
+
 von-up:
 	mkdir -p .docker
-	-git clone https://github.com/bcgov/von-network .docker/von-network
+	-git clone https://github.com/bcgov/von-network .docker/von-network && \
+		cd .docker/von-network && git checkout $(VON_NETWORK_VERSION)
 	cd .docker/von-network && ./manage build && ./manage start
 
-aath-up: rm up fth-up
-	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
-#	cd .docker/aries-agent-test-harness && \
-#		./manage build -a acapy && \
-#		./manage run -d acapy -t @T001-RFC0160
+aath: 
+	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness && \
+		cd .docker/aries-agent-test-harness && git checkout $(AATH_VERSION)
 	cd .docker/aries-agent-test-harness && \
-		mkdir -p aries-backchannels/findy && \
-		touch aries-backchannels/findy/Dockerfile.findy && \
-		./manage run -d findy -b acapy -t @T001-RFC0160
-
-aath-only: fth-up
-	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
+		./manage build -a acapy
 	cd .docker/aries-agent-test-harness && \
 		mkdir -p aries-backchannels/findy && \
 		touch aries-backchannels/findy/Dockerfile.findy && \
 		./manage run -d acapy -b findy -t @T001-RFC0160
 
+aath-only: fth-up aath
+
 fth-up:
-# build and run docker images with correct name
 	cd .. && docker build -t findy-agent-backchannel .
 
 gen-cert:
@@ -37,6 +37,10 @@ gen-cert:
 
 up: von-up gen-cert
 	sleep 15
+	$(eval DOCKERHOST=$(shell docker run --rm --net=host eclipse/che-ip))
+	@cat ./docker-compose.yml.template > ./docker-compose.yml
+	awk '{sub("<IP_ADDRESS>","$(DOCKERHOST)")}1' ./docker-compose.yml > ./docker-compose.yml.tmp && \
+		mv ./docker-compose.yml.tmp ./docker-compose.yml
 	curl http://localhost:9000/genesis > conf/genesis.txt
 	docker-compose up -d
 

@@ -23,3 +23,8 @@ jobs:
         run: go test ./...
       - name: scan
         run: make scan
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: test
+        run: cd ./env && make aath-up

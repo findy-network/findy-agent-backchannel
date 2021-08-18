@@ -74,7 +74,7 @@ func (a *Agent) Login() {
 	conf := client.BuildClientConnBase(
 		"./env/cert",
 		a.AgencyHost,
-		50052,
+		50051,
 		[]grpc.DialOption{},
 	)
 
@@ -92,6 +92,7 @@ func (a *Agent) Login() {
 				panic("Listening failed")
 			}
 			notification := chRes.GetNotification()
+			fmt.Printf("Received agent notification %v\n", notification)
 			if notification.GetProtocolType() == agency.Protocol_DIDEXCHANGE &&
 				notification.GetTypeID() == agency.Notification_STATUS_UPDATE {
 				protocolID := &agency.ProtocolID{
@@ -101,6 +102,7 @@ func (a *Agent) Login() {
 				status, err := a.ProtocolClient.Status(context.TODO(), protocolID)
 				err2.Check(err)
 				if status.State.State == agency.ProtocolState_OK {
+					fmt.Printf("New connection %v\n", status.GetDIDExchange())
 					a.Connections.Store(status.GetDIDExchange().ID, status.GetDIDExchange())
 				}
 			}
@@ -143,6 +145,7 @@ func (a *Agent) Connect(invitationId string) (string, error) {
 	invitationBytes, _ := json.Marshal(invitation)
 
 	pw := async.NewPairwise(a.Conn, "")
+	pw.Label = authnCmd.UserName
 	_, err := pw.Connection(context.TODO(), string(invitationBytes))
 	err2.Check(err)
 

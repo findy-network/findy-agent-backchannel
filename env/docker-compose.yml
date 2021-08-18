@@ -14,9 +14,12 @@ services:
       FCLI_AGENCY_POOL_NAME: 'FINDY_FILE_LEDGER'
       FCLI_AGENCY_GRPC_TLS: 'true'
       FCLI_AGENCY_GRPC_CERT_PATH: '/grpc'
+      FCLI_AGENCY_HOST_ADDRESS: 192.168.65.3
+      FCLI_AGENCY_HOST_PORT: 8088
+      FCLI_AGENCY_SERVER_PORT: 8088
     ports:
-      - '8088:8080'
-      - '50052:50051'
+      - '8088:8088'
+      - '50051:50051'
   auth:
     image: ghcr.io/findy-network/findy-agent-auth:latest
     volumes:

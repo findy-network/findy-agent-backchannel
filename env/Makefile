@@ -11,14 +11,14 @@ aath-up: rm up fth-up
 	cd .docker/aries-agent-test-harness && \
 		mkdir -p aries-backchannels/findy && \
 		touch aries-backchannels/findy/Dockerfile.findy && \
-		./manage run -d findy -t @T001-RFC0160
+		./manage run -d findy -b acapy -t @T001-RFC0160
 
 aath-only: fth-up
 	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
 	cd .docker/aries-agent-test-harness && \
 		mkdir -p aries-backchannels/findy && \
 		touch aries-backchannels/findy/Dockerfile.findy && \
-		./manage run -d findy -t @T001-RFC0160
+		./manage run -d acapy -b findy -t @T001-RFC0160
 
 fth-up:
 # build and run docker images with correct name

@@ -33,13 +33,13 @@ func (c *ConnectionApiController) Routes() Routes {
 		{
 			"ConnectionAcceptInvitation",
 			strings.ToUpper("Post"),
-			"/agent/command/connection/accept-invitation",
+			"/agent/command/connection/{accept-invitation:accept-invitation\\/?}",
 			c.ConnectionAcceptInvitation,
 		},
 		{
 			"ConnectionAcceptRequest",
 			strings.ToUpper("Post"),
-			"/agent/command/connection/accept-request",
+			"/agent/command/connection/{accept-request:accept-request\\/?}",
 			c.ConnectionAcceptRequest,
 		},
 		{
@@ -63,13 +63,13 @@ func (c *ConnectionApiController) Routes() Routes {
 		{
 			"ConnectionReceiveInvitation",
 			strings.ToUpper("Post"),
-			"/agent/command/connection/receive-invitation",
+			"/agent/command/connection/{receive-invitation:receive-invitation\\/?}",
 			c.ConnectionReceiveInvitation,
 		},
 		{
 			"ConnectionSendPing",
 			strings.ToUpper("Post"),
-			"/agent/command/connection/send-ping",
+			"/agent/command/connection/{send-ping:send-ping\\/?}",
 			c.ConnectionSendPing,
 		},
 	}

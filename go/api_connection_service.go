@@ -12,6 +12,7 @@ package openapi
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/findy-network/findy-test-harness/go/agent"
@@ -37,9 +38,10 @@ func (s *ConnectionApiService) ConnectionAcceptInvitation(ctx context.Context, i
 	// Add api_connection_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, InlineResponse2001{}) or use other options such as http.Ok ...
-	//return Response(200, InlineResponse2001{}), nil
+	id, _ := s.a.Connect(inlineObject1.Id)
+	return Response(200, InlineResponse2001{ConnectionId: id, State: REQUEST}), nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("ConnectionAcceptInvitation method not implemented")
+	//return Response(http.StatusNotImplemented, nil), errors.New("ConnectionAcceptInvitation method not implemented")
 }
 
 // ConnectionAcceptRequest - Accept a connection request
@@ -48,9 +50,9 @@ func (s *ConnectionApiService) ConnectionAcceptRequest(ctx context.Context, inli
 	// Add api_connection_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, InlineResponse2002{}) or use other options such as http.Ok ...
-	//return Response(200, InlineResponse2002{}), nil
+	return Response(200, InlineResponse2002{inlineObject2.Id, RESPONSE}), nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("ConnectionAcceptRequest method not implemented")
+	//return Response(http.StatusNotImplemented, nil), errors.New("ConnectionAcceptRequest method not implemented")
 }
 
 // ConnectionCreateInvitation - Create a new connection invitation
@@ -85,12 +87,17 @@ func (s *ConnectionApiService) ConnectionGetById(ctx context.Context, connection
 	// Add api_connection_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, ConnectionResponse{}) or use other options such as http.Ok ...
-	//return Response(200, ConnectionResponse{}), nil
+	if _, ok := s.a.QueryConnection(connectionId); ok {
+		return Response(200, ConnectionResponse{ConnectionId: connectionId, State: ACTIVE}), nil
+	}
+	if res, _ := s.a.GetInvitation(connectionId); res != nil {
+		return Response(200, ConnectionResponse{ConnectionId: connectionId, State: INVITATION}), nil
+	}
 
 	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	//return Response(404, nil),nil
+	return Response(404, nil), nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("ConnectionGetById method not implemented")
+	//return Response(http.StatusNotImplemented, nil), errors.New("ConnectionGetById method not implemented")
 }
 
 // ConnectionReceiveInvitation - Receive an invitation
@@ -99,9 +106,13 @@ func (s *ConnectionApiService) ConnectionReceiveInvitation(ctx context.Context, 
 	// Add api_connection_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, InlineResponse200{}) or use other options such as http.Ok ...
-	//return Response(200, InlineResponse200{}), nil
+	fmt.Println("RECEIVE")
+	fmt.Println(inlineObject.Data)
+	// TODO: connection-id, state
+	id, _ := s.a.ReceiveInvitation(inlineObject.Data)
+	return Response(200, InlineResponse200{ConnectionId: id, State: INVITATION}), nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("ConnectionReceiveInvitation method not implemented")
+	//return Response(http.StatusNotImplemented, nil), errors.New("ConnectionReceiveInvitation method not implemented")
 }
 
 // ConnectionSendPing - Send trust ping
@@ -110,7 +121,8 @@ func (s *ConnectionApiService) ConnectionSendPing(ctx context.Context, inlineObj
 	// Add api_connection_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, InlineResponse2002{}) or use other options such as http.Ok ...
-	//return Response(200, InlineResponse2002{}), nil
+	id, _ := s.a.TrustPing(inlineObject3.Id)
+	return Response(200, InlineResponse2002{ConnectionId: id, State: ACTIVE}), nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("ConnectionSendPing method not implemented")
+	//return Response(http.StatusNotImplemented, nil), errors.New("ConnectionSendPing method not implemented")
 }

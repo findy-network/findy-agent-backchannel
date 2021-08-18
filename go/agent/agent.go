@@ -2,12 +2,15 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/findy-network/findy-agent-auth/acator/authn"
 	"github.com/findy-network/findy-common-go/agency/client"
+	"github.com/findy-network/findy-common-go/agency/client/async"
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/google/uuid"
 	"github.com/lainio/err2"
@@ -15,10 +18,14 @@ import (
 )
 
 type Agent struct {
-	User       string
-	JWT        string
-	Conn       client.Conn
-	AgencyHost string
+	User           string
+	JWT            string
+	Conn           client.Conn
+	AgentClient    agency.AgentServiceClient
+	ProtocolClient agency.ProtocolServiceClient
+	AgencyHost     string
+	Invitations    sync.Map
+	Connections    sync.Map
 }
 
 var authnCmd = authn.Cmd{
@@ -50,7 +57,7 @@ func Init() *Agent {
 	err2.Check(myCmd.Validate())
 	_, err := myCmd.Exec(os.Stdout)
 	err2.Check(err)
-	return &Agent{User: authnCmd.UserName, AgencyHost: url}
+	return &Agent{User: authnCmd.UserName, AgencyHost: url, Invitations: sync.Map{}}
 }
 
 func (a *Agent) Login() {
@@ -70,22 +77,100 @@ func (a *Agent) Login() {
 		50052,
 		[]grpc.DialOption{},
 	)
-	conn := client.TryAuthOpen(a.JWT, conf)
-	a.Conn = conn
 
+	a.Conn = client.TryAuthOpen(a.JWT, conf)
+	a.AgentClient = agency.NewAgentServiceClient(a.Conn)
+	a.ProtocolClient = agency.NewProtocolServiceClient(a.Conn)
+
+	ch, err := a.Conn.ListenStatus(context.TODO(), &agency.ClientID{ID: uuid.New().String()})
+	err2.Check(err)
+
+	go func() {
+		for {
+			chRes, ok := <-ch
+			if !ok {
+				panic("Listening failed")
+			}
+			notification := chRes.GetNotification()
+			if notification.GetProtocolType() == agency.Protocol_DIDEXCHANGE &&
+				notification.GetTypeID() == agency.Notification_STATUS_UPDATE {
+				protocolID := &agency.ProtocolID{
+					ID:     notification.ProtocolID,
+					TypeID: notification.ProtocolType,
+				}
+				status, err := a.ProtocolClient.Status(context.TODO(), protocolID)
+				err2.Check(err)
+				if status.State.State == agency.ProtocolState_OK {
+					a.Connections.Store(status.GetDIDExchange().ID, status.GetDIDExchange())
+				}
+			}
+		}
+	}()
 }
 
 func (a *Agent) CreateInvitation() (map[string]interface{}, error) {
-	sc := agency.NewAgentServiceClient(a.Conn)
 	id := uuid.New().String()
 
-	invitation, err := sc.CreateInvitation(
+	invitation, err := a.AgentClient.CreateInvitation(
 		context.TODO(),
 		&agency.InvitationBase{Label: a.User, ID: id},
 	)
-	if err == nil {
-		fmt.Printf("Created invitation\n %s\n", invitation.JSON)
-		return map[string]interface{}{"connection_id": id, "invitation": invitation.JSON}, nil
+	err2.Check(err)
+
+	fmt.Printf("Created invitation\n %s\n", invitation.JSON)
+	var invitationMap map[string]interface{}
+	json.Unmarshal([]byte(invitation.JSON), &invitationMap)
+	return map[string]interface{}{"connection_id": id, "invitation": invitationMap}, nil
+
+}
+
+func (a *Agent) ReceiveInvitation(invitation map[string]interface{}) (string, error) {
+	id := invitation["@id"].(string)
+	a.Invitations.Store(id, invitation)
+	return id, nil
+}
+
+func (a *Agent) GetInvitation(id string) (map[string]interface{}, error) {
+	res, ok := a.Invitations.Load(id)
+	if !ok {
+		panic("Invitation not found")
 	}
-	return nil, err
+	return res.(map[string]interface{}), nil
+}
+
+func (a *Agent) Connect(invitationId string) (string, error) {
+	invitation, _ := a.GetInvitation(invitationId)
+	invitationBytes, _ := json.Marshal(invitation)
+
+	pw := async.NewPairwise(a.Conn, "")
+	_, err := pw.Connection(context.TODO(), string(invitationBytes))
+	err2.Check(err)
+
+	return invitationId, nil
+}
+
+func (a *Agent) GetConnection(id string) (string, error) {
+	_, ok := a.Connections.Load(id)
+	if !ok {
+		panic("Connection not found")
+	}
+	return id, nil
+}
+
+func (a *Agent) QueryConnection(id string) (string, bool) {
+	_, ok := a.Connections.Load(id)
+	if ok {
+		return id, ok
+	}
+	return "", ok
+}
+
+func (a *Agent) TrustPing(connectionId string) (string, error) {
+	_, _ = a.GetConnection(connectionId)
+
+	pw := async.NewPairwise(a.Conn, connectionId)
+	_, err := pw.Ping(context.TODO())
+	err2.Check(err)
+
+	return connectionId, nil
 }

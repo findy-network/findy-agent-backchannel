@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/findy-network/findy-test-harness/go/agent"
+	"github.com/findy-network/findy-test-harness/agent"
 )
 
 // ConnectionApiService is a service that implents the logic for the ConnectionApiServicer

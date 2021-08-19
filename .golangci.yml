@@ -102,23 +102,12 @@ issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     # Exclude some linters from running on tests files.
-    - path: go\.go
+    - path: main.go
       linters:
-        - deadcode
-        - dupl
-        - errcheck
-        - gocritic
-        - gofmt
-        - goimports
-        - gomnd
-        - lll
         - revive
         - stylecheck
-        - unconvert
-        - unused
-        - whitespace
 run:
   skip-dirs:
-    - ./go
+    - go
 service:
   golangci-lint-version: 1.37.x # use the fixed version to not introduce new linters unexpectedly

@@ -17,6 +17,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const AgencyPort = 50051
+
 type Agent struct {
 	User           string
 	JWT            string
@@ -40,15 +42,11 @@ var authnCmd = authn.Cmd{
 }
 
 func Init() *Agent {
-
 	url := os.Getenv("DOCKERHOST")
 	if url == "" {
 		url = "localhost"
 	}
 	authnCmd.Url = fmt.Sprintf("http://%s:8888", url)
-
-	//authnCmd.Origin = fmt.Sprintf("//%s:8888", url)
-
 	authnCmd.UserName = fmt.Sprintf("findy-test-harness-%d", time.Now().UnixNano())
 
 	myCmd := authnCmd
@@ -61,7 +59,6 @@ func Init() *Agent {
 }
 
 func (a *Agent) Login() {
-
 	myCmd := authnCmd
 	myCmd.SubCmd = "login"
 
@@ -74,7 +71,7 @@ func (a *Agent) Login() {
 	conf := client.BuildClientConnBase(
 		"./env/cert",
 		a.AgencyHost,
-		50051,
+		AgencyPort,
 		[]grpc.DialOption{},
 	)
 
@@ -121,9 +118,10 @@ func (a *Agent) CreateInvitation() (map[string]interface{}, error) {
 
 	fmt.Printf("Created invitation\n %s\n", invitation.JSON)
 	var invitationMap map[string]interface{}
-	json.Unmarshal([]byte(invitation.JSON), &invitationMap)
-	return map[string]interface{}{"connection_id": id, "invitation": invitationMap}, nil
+	err = json.Unmarshal([]byte(invitation.JSON), &invitationMap)
+	err2.Check(err)
 
+	return map[string]interface{}{"connection_id": id, "invitation": invitationMap}, nil
 }
 
 func (a *Agent) ReceiveInvitation(invitation map[string]interface{}) (string, error) {
@@ -140,8 +138,8 @@ func (a *Agent) GetInvitation(id string) (map[string]interface{}, error) {
 	return res.(map[string]interface{}), nil
 }
 
-func (a *Agent) Connect(invitationId string) (string, error) {
-	invitation, _ := a.GetInvitation(invitationId)
+func (a *Agent) Connect(invitationID string) (string, error) {
+	invitation, _ := a.GetInvitation(invitationID)
 	invitationBytes, _ := json.Marshal(invitation)
 
 	pw := async.NewPairwise(a.Conn, "")
@@ -149,7 +147,7 @@ func (a *Agent) Connect(invitationId string) (string, error) {
 	_, err := pw.Connection(context.TODO(), string(invitationBytes))
 	err2.Check(err)
 
-	return invitationId, nil
+	return invitationID, nil
 }
 
 func (a *Agent) GetConnection(id string) (string, error) {
@@ -168,12 +166,12 @@ func (a *Agent) QueryConnection(id string) (string, bool) {
 	return "", ok
 }
 
-func (a *Agent) TrustPing(connectionId string) (string, error) {
-	_, _ = a.GetConnection(connectionId)
+func (a *Agent) TrustPing(connectionID string) (string, error) {
+	_, _ = a.GetConnection(connectionID)
 
-	pw := async.NewPairwise(a.Conn, connectionId)
+	pw := async.NewPairwise(a.Conn, connectionID)
 	_, err := pw.Ping(context.TODO())
 	err2.Check(err)
 
-	return connectionId, nil
+	return connectionID, nil
 }

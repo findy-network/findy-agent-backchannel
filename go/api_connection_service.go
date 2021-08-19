@@ -12,7 +12,6 @@ package openapi
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/findy-network/findy-test-harness/agent"
@@ -34,40 +33,26 @@ func NewConnectionApiService(a *agent.Agent) ConnectionApiServicer {
 
 // ConnectionAcceptInvitation - Accept an invitation
 func (s *ConnectionApiService) ConnectionAcceptInvitation(ctx context.Context, inlineObject1 InlineObject1) (ImplResponse, error) {
-	// TODO - update ConnectionAcceptInvitation with the required logic for this service method.
-	// Add api_connection_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, InlineResponse2001{}) or use other options such as http.Ok ...
-	id, _ := s.a.Connect(inlineObject1.Id)
-	return Response(200, InlineResponse2001{ConnectionId: id, State: REQUEST}), nil
-
-	//return Response(http.StatusNotImplemented, nil), errors.New("ConnectionAcceptInvitation method not implemented")
+	id, err := s.a.Connect(inlineObject1.Id)
+	if err == nil {
+		return Response(200, InlineResponse2001{ConnectionId: id, State: REQUEST}), nil
+	}
+	return Response(http.StatusInternalServerError, nil), err
 }
 
 // ConnectionAcceptRequest - Accept a connection request
 func (s *ConnectionApiService) ConnectionAcceptRequest(ctx context.Context, inlineObject2 InlineObject2) (ImplResponse, error) {
-	// TODO - update ConnectionAcceptRequest with the required logic for this service method.
-	// Add api_connection_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, InlineResponse2002{}) or use other options such as http.Ok ...
+	// Findy Agency does not have accept connection step at the moment
 	return Response(200, InlineResponse2002{inlineObject2.Id, RESPONSE}), nil
-
-	//return Response(http.StatusNotImplemented, nil), errors.New("ConnectionAcceptRequest method not implemented")
 }
 
 // ConnectionCreateInvitation - Create a new connection invitation
 func (s *ConnectionApiService) ConnectionCreateInvitation(ctx context.Context) (ImplResponse, error) {
-	// TODO - update ConnectionCreateInvitation with the required logic for this service method.
-	// Add api_connection_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, map[string]interface{}{}) or use other options such as http.Ok ...
 	r, err := s.a.CreateInvitation()
 	if err == nil {
 		return Response(200, r), nil
 	}
 	return Response(http.StatusInternalServerError, nil), err
-
-	//return Response(http.StatusNotImplemented, nil), errors.New("ConnectionCreateInvitation method not implemented")
 }
 
 // ConnectionGetAll - Get all connections
@@ -83,46 +68,29 @@ func (s *ConnectionApiService) ConnectionGetAll(ctx context.Context) (ImplRespon
 
 // ConnectionGetById - Get connection by id
 func (s *ConnectionApiService) ConnectionGetById(ctx context.Context, connectionId string) (ImplResponse, error) {
-	// TODO - update ConnectionGetById with the required logic for this service method.
-	// Add api_connection_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, ConnectionResponse{}) or use other options such as http.Ok ...
 	if _, ok := s.a.QueryConnection(connectionId); ok {
 		return Response(200, ConnectionResponse{ConnectionId: connectionId, State: ACTIVE}), nil
 	}
 	if res, _ := s.a.GetInvitation(connectionId); res != nil {
 		return Response(200, ConnectionResponse{ConnectionId: connectionId, State: INVITATION}), nil
 	}
-
-	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
 	return Response(404, nil), nil
-
-	//return Response(http.StatusNotImplemented, nil), errors.New("ConnectionGetById method not implemented")
 }
 
 // ConnectionReceiveInvitation - Receive an invitation
 func (s *ConnectionApiService) ConnectionReceiveInvitation(ctx context.Context, inlineObject InlineObject) (ImplResponse, error) {
-	// TODO - update ConnectionReceiveInvitation with the required logic for this service method.
-	// Add api_connection_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, InlineResponse200{}) or use other options such as http.Ok ...
-	fmt.Println("RECEIVE")
-	fmt.Println(inlineObject.Data)
-	// TODO: connection-id, state
-	id, _ := s.a.ReceiveInvitation(inlineObject.Data)
-	return Response(200, InlineResponse200{ConnectionId: id, State: INVITATION}), nil
-
-	//return Response(http.StatusNotImplemented, nil), errors.New("ConnectionReceiveInvitation method not implemented")
+	id, err := s.a.ReceiveInvitation(inlineObject.Data)
+	if err == nil {
+		return Response(200, InlineResponse200{ConnectionId: id, State: INVITATION}), nil
+	}
+	return Response(http.StatusInternalServerError, nil), err
 }
 
 // ConnectionSendPing - Send trust ping
 func (s *ConnectionApiService) ConnectionSendPing(ctx context.Context, inlineObject3 InlineObject3) (ImplResponse, error) {
-	// TODO - update ConnectionSendPing with the required logic for this service method.
-	// Add api_connection_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, InlineResponse2002{}) or use other options such as http.Ok ...
-	id, _ := s.a.TrustPing(inlineObject3.Id)
-	return Response(200, InlineResponse2002{ConnectionId: id, State: ACTIVE}), nil
-
-	//return Response(http.StatusNotImplemented, nil), errors.New("ConnectionSendPing method not implemented")
+	id, err := s.a.TrustPing(inlineObject3.Id)
+	if err == nil {
+		return Response(200, InlineResponse2002{ConnectionId: id, State: ACTIVE}), nil
+	}
+	return Response(http.StatusInternalServerError, nil), err
 }

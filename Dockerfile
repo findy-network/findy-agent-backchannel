@@ -1,18 +1,21 @@
-FROM golang:1.16-alpine3.13
-
-WORKDIR /work
+FROM golang:1.16 AS build
+WORKDIR /go/src
 
 COPY go.* ./
 RUN go mod download
 
-COPY . ./
+COPY . .
 
-RUN go build -o /go/bin/findy-template-go
+ENV CGO_ENABLED=0
 
-FROM alpine:3.13
+RUN go build -a -installsuffix cgo -o openapi .
 
-COPY --from=0 /go/bin/findy-template-go /findy-template-go
+FROM scratch AS runtime
 
-RUN echo '/findy-template-go' > /start.sh && chmod a+x /start.sh
+COPY --from=build /go/src/openapi ./
 
-ENTRYPOINT ["/bin/sh", "-c", "/start.sh"]
+EXPOSE "9020-9059"
+
+ADD ./env/cert ./env/cert
+
+ENTRYPOINT ["./openapi"]

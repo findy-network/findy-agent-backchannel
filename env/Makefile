@@ -1,7 +1,7 @@
 VON_NETWORK_VERSION:=37fa43673678b64c0f6080c5e2b50c7ea5354cb4
 AATH_VERSION:=11260b718b7bd67a5aa5f2dc39ba92408e626302
 
-aath-up: generate clone rm up fth-up aath
+aath-up: generate clone rm up image aath
 
 generate:
 	$(eval DOCKERHOST=$(shell docker run --rm --net=host eclipse/che-ip))
@@ -27,9 +27,9 @@ aath:
 		touch aries-backchannels/findy/Dockerfile.findy && \
 		./manage run -d acapy -b findy -t @T001-RFC0160
 
-aath-only: fth-up aath
+aath-only: image aath
 
-fth-up:
+image:
 	cd .. && docker build -t findy-agent-backchannel .
 
 gen-cert:

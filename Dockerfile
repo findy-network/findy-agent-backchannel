@@ -4,11 +4,9 @@ WORKDIR /go/src
 COPY go.* ./
 RUN go mod download
 
-COPY go ./go
-COPY main.go .
+COPY . .
 
 ENV CGO_ENABLED=0
-RUN go get -d -v ./...
 
 RUN go build -a -installsuffix cgo -o openapi .
 

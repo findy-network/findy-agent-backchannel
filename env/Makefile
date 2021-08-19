@@ -44,7 +44,7 @@ gen-cert:
 	cd ./cert && ./gen.sh server
 
 up: von-up gen-cert
-	sleep 15
+	./wait-for-ledger.sh
 	curl http://localhost:9000/genesis > conf/genesis.txt
 	docker-compose up -d
 

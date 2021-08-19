@@ -26,6 +26,7 @@
 .data
 
 # generated files
+env/conf/genesis.txt
 env/cert/client/cert.conf
 env/cert/client/client.crt
 env/cert/client/client.key

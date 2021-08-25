@@ -26,8 +26,17 @@ type Agent struct {
 	AgentClient    agency.AgentServiceClient
 	ProtocolClient agency.ProtocolServiceClient
 	AgencyHost     string
-	Invitations    sync.Map
-	Connections    sync.Map
+	// TODO: create dedicated structure instead of sync.Map
+	Invitations      sync.Map
+	Connections      sync.Map
+	CredentialOffers sync.Map
+	Credentials      sync.Map
+}
+
+type Credential struct {
+	ID        string `json:"referent"`
+	CredDefID string `json:"cred_def_id"`
+	SchemaID  string `json:"schema_id"`
 }
 
 var authnCmd = authn.Cmd{
@@ -55,7 +64,44 @@ func Init() *Agent {
 	err2.Check(myCmd.Validate())
 	_, err := myCmd.Exec(os.Stdout)
 	err2.Check(err)
-	return &Agent{User: authnCmd.UserName, AgencyHost: url, Invitations: sync.Map{}}
+	return &Agent{
+		User:             authnCmd.UserName,
+		AgencyHost:       url,
+		Invitations:      sync.Map{},
+		Connections:      sync.Map{},
+		CredentialOffers: sync.Map{},
+		Credentials:      sync.Map{},
+	}
+}
+
+func (a *Agent) saveConnection(notification *agency.Notification) {
+	protocolID := &agency.ProtocolID{
+		ID:     notification.ProtocolID,
+		TypeID: notification.ProtocolType,
+	}
+	status, err := a.ProtocolClient.Status(context.TODO(), protocolID)
+	err2.Check(err)
+	if status.State.State == agency.ProtocolState_OK {
+		fmt.Printf("New connection %v\n", status.GetDIDExchange())
+		a.Connections.Store(status.GetDIDExchange().ID, status.GetDIDExchange())
+	}
+}
+
+func (a *Agent) saveCredential(notification *agency.Notification) {
+	protocolID := &agency.ProtocolID{
+		ID:     notification.ProtocolID,
+		TypeID: notification.ProtocolType,
+	}
+	status, err := a.ProtocolClient.Status(context.TODO(), protocolID)
+	err2.Check(err)
+	if status.State.State == agency.ProtocolState_OK {
+		fmt.Printf("New connection %v\n", status.GetDIDExchange())
+		a.Credentials.Store(notification.GetProtocolID(), status.GetIssueCredential())
+	}
+}
+
+func (a *Agent) handleCredOffer(notification *agency.Notification) {
+	a.CredentialOffers.Store(notification.GetProtocolID(), notification)
 }
 
 func (a *Agent) Login() {
@@ -90,18 +136,16 @@ func (a *Agent) Login() {
 			}
 			notification := chRes.GetNotification()
 			fmt.Printf("Received agent notification %v\n", notification)
-			if notification.GetProtocolType() == agency.Protocol_DIDEXCHANGE &&
-				notification.GetTypeID() == agency.Notification_STATUS_UPDATE {
-				protocolID := &agency.ProtocolID{
-					ID:     notification.ProtocolID,
-					TypeID: notification.ProtocolType,
+
+			if notification.GetTypeID() == agency.Notification_STATUS_UPDATE {
+				if notification.GetProtocolType() == agency.Protocol_DIDEXCHANGE {
+					a.saveConnection(notification)
+				} else if notification.GetProtocolType() == agency.Protocol_ISSUE_CREDENTIAL {
+					a.saveCredential(notification)
 				}
-				status, err := a.ProtocolClient.Status(context.TODO(), protocolID)
-				err2.Check(err)
-				if status.State.State == agency.ProtocolState_OK {
-					fmt.Printf("New connection %v\n", status.GetDIDExchange())
-					a.Connections.Store(status.GetDIDExchange().ID, status.GetDIDExchange())
-				}
+			} else if notification.GetProtocolType() == agency.Protocol_ISSUE_CREDENTIAL &&
+				notification.GetTypeID() == agency.Notification_PROTOCOL_PAUSED {
+				a.handleCredOffer(notification)
 			}
 		}
 	}()
@@ -174,4 +218,58 @@ func (a *Agent) TrustPing(connectionID string) (string, error) {
 	err2.Check(err)
 
 	return connectionID, nil
+}
+
+func (a *Agent) GetCredentialOffer(id string) (string, error) {
+	res, ok := a.CredentialOffers.Load(id)
+	if !ok {
+		panic("Offer not found")
+	}
+	return res.(*agency.Notification).ProtocolID, nil
+}
+
+func (a *Agent) RequestCredential(id string) (string, error) {
+	res, ok := a.CredentialOffers.Load(id)
+	if !ok {
+		panic("Offer not found")
+	}
+	threadID := res.(*agency.Notification).ProtocolID
+
+	state := &agency.ProtocolState{
+		ProtocolID: &agency.ProtocolID{
+			TypeID: agency.Protocol_ISSUE_CREDENTIAL,
+			Role:   agency.Protocol_RESUMER,
+			ID:     id,
+		},
+		State: agency.ProtocolState_ACK,
+	}
+
+	_, err := a.ProtocolClient.Resume(
+		context.TODO(),
+		state,
+	)
+	err2.Check(err)
+
+	return threadID, nil
+}
+
+func (a *Agent) QueryCredential(id string) (string, bool) {
+	_, ok := a.Credentials.Load(id)
+	if ok {
+		return id, ok
+	}
+	return "", ok
+}
+
+func (a *Agent) GetCredential(id string) (*Credential, error) {
+	credObj, ok := a.Credentials.Load(id)
+	if !ok {
+		panic("Credential not found")
+	}
+	cred := credObj.(*agency.ProtocolStatus_IssueCredentialStatus)
+	return &Credential{
+		ID:        id,
+		CredDefID: cred.CredDefID,
+		SchemaID:  cred.SchemaID,
+	}, nil
 }

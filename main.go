@@ -52,7 +52,7 @@ func main() {
 	ConnectionApiService := openapi.NewConnectionApiService(a)
 	ConnectionApiController := openapi.NewConnectionApiController(ConnectionApiService)
 
-	CredentialApiService := openapi.NewCredentialApiService()
+	CredentialApiService := openapi.NewCredentialApiService(a)
 	CredentialApiController := openapi.NewCredentialApiController(CredentialApiService)
 
 	CredentialDefinitionApiService := openapi.NewCredentialDefinitionApiService()
@@ -61,7 +61,7 @@ func main() {
 	DIDApiService := openapi.NewDIDApiService()
 	DIDApiController := openapi.NewDIDApiController(DIDApiService)
 
-	IssueCredentialApiService := openapi.NewIssueCredentialApiService()
+	IssueCredentialApiService := openapi.NewIssueCredentialApiService(a)
 	IssueCredentialApiController := openapi.NewIssueCredentialApiController(IssueCredentialApiService)
 
 	IssueCredentialV2ApiService := openapi.NewIssueCredentialV2ApiService()

@@ -25,7 +25,7 @@ aath:
 	cd .docker/aries-agent-test-harness && \
 		mkdir -p aries-backchannels/findy && \
 		touch aries-backchannels/findy/Dockerfile.findy && \
-		./manage run -d acapy -b findy -t @T001-RFC0160
+		./manage run -d acapy -b findy -t @T001-RFC0160,@T003-RFC0036
 
 aath-only: image aath
 

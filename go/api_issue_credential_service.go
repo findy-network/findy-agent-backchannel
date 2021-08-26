@@ -33,10 +33,10 @@ func NewIssueCredentialApiService(a *agent.Agent) IssueCredentialApiServicer {
 
 // IssueCredentialGetByThreadId - Get credential exchange record by thread id
 func (s *IssueCredentialApiService) IssueCredentialGetByThreadId(ctx context.Context, credentialExchangeThreadId string) (ImplResponse, error) {
-	if threadID, ok := s.a.QueryCredential(credentialExchangeThreadId); ok {
+	if cred, err := s.a.GetCredential(credentialExchangeThreadId); err == nil {
 		return Response(200, IssueCredentialOperationResponse{
 			State:    CREDENTIAL_RECEIVED,
-			ThreadId: threadID,
+			ThreadId: cred.ID,
 		}), nil
 
 	}
@@ -46,7 +46,7 @@ func (s *IssueCredentialApiService) IssueCredentialGetByThreadId(ctx context.Con
 			ThreadId: threadID,
 		}), nil
 	}
-	return Response(404, nil), nil
+	return Response(http.StatusNotFound, nil), nil
 }
 
 // IssueCredentialIssue - Issue Credential
@@ -88,9 +88,9 @@ func (s *IssueCredentialApiService) IssueCredentialSendRequest(ctx context.Conte
 
 // IssueCredentialStore - Store Credential
 func (s *IssueCredentialApiService) IssueCredentialStore(ctx context.Context, req IssueCredentialStoreRequest) (ImplResponse, error) {
-	id, ok := s.a.QueryCredential(req.Id)
-	if !ok {
-		return Response(http.StatusNotFound, nil), nil
+	cred, err := s.a.GetCredential(req.Id)
+	if err != nil {
+		return Response(http.StatusNotFound, nil), err
 	}
-	return Response(200, IssueCredentialOperationResponse{ThreadId: id, CredentialId: id, State: DONE}), nil
+	return Response(200, IssueCredentialOperationResponse{ThreadId: cred.ID, CredentialId: cred.ID, State: DONE}), nil
 }

@@ -11,6 +11,7 @@ package openapi
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -33,7 +34,7 @@ func NewConnectionApiService(a *agent.Agent) ConnectionApiServicer {
 
 // ConnectionAcceptInvitation - Accept an invitation
 func (s *ConnectionApiService) ConnectionAcceptInvitation(ctx context.Context, inlineObject1 InlineObject1) (ImplResponse, error) {
-	id, err := s.a.Connect(inlineObject1.Id)
+	id, err := s.a.RequestConnection(inlineObject1.Id)
 	if err == nil {
 		return Response(200, InlineResponse2001{ConnectionId: id, State: REQUEST}), nil
 	}
@@ -48,9 +49,12 @@ func (s *ConnectionApiService) ConnectionAcceptRequest(ctx context.Context, inli
 
 // ConnectionCreateInvitation - Create a new connection invitation
 func (s *ConnectionApiService) ConnectionCreateInvitation(ctx context.Context) (ImplResponse, error) {
-	r, err := s.a.CreateInvitation()
+	invitationJSON, err := s.a.CreateInvitation()
 	if err == nil {
-		return Response(200, r), nil
+		var invitationMap map[string]interface{}
+		if err = json.Unmarshal([]byte(invitationJSON), &invitationMap); err == nil {
+			return Response(200, map[string]interface{}{"connection_id": invitationMap["@id"], "invitation": invitationMap}), nil
+		}
 	}
 	return Response(http.StatusInternalServerError, nil), err
 }
@@ -68,18 +72,23 @@ func (s *ConnectionApiService) ConnectionGetAll(ctx context.Context) (ImplRespon
 
 // ConnectionGetById - Get connection by id
 func (s *ConnectionApiService) ConnectionGetById(ctx context.Context, connectionId string) (ImplResponse, error) {
-	if _, ok := s.a.QueryConnection(connectionId); ok {
+	if _, err := s.a.GetConnection(connectionId); err == nil {
 		return Response(200, ConnectionResponse{ConnectionId: connectionId, State: ACTIVE}), nil
 	}
-	if res, _ := s.a.GetInvitation(connectionId); res != nil {
+	if _, err := s.a.GetConnectionInvitation(connectionId); err == nil {
 		return Response(200, ConnectionResponse{ConnectionId: connectionId, State: INVITATION}), nil
 	}
-	return Response(404, nil), nil
+	return Response(http.StatusNotFound, nil), nil
 }
 
 // ConnectionReceiveInvitation - Receive an invitation
 func (s *ConnectionApiService) ConnectionReceiveInvitation(ctx context.Context, inlineObject InlineObject) (ImplResponse, error) {
-	id, err := s.a.ReceiveInvitation(inlineObject.Data)
+	invitationBytes, err := json.Marshal(inlineObject.Data)
+	if err != nil {
+		return Response(http.StatusBadRequest, nil), err
+	}
+	id := inlineObject.Data["@id"].(string)
+	id, err = s.a.AddConnectionInvitation(id, string(invitationBytes))
 	if err == nil {
 		return Response(200, InlineResponse200{ConnectionId: id, State: INVITATION}), nil
 	}

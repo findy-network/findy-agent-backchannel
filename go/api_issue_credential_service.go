@@ -67,13 +67,23 @@ func (s *IssueCredentialApiService) IssueCredentialSendOffer(ctx context.Context
 
 // IssueCredentialSendProposal - Send credential proposal
 func (s *IssueCredentialApiService) IssueCredentialSendProposal(ctx context.Context, inlineObject6 InlineObject6) (ImplResponse, error) {
-	// TODO - update IssueCredentialSendProposal with the required logic for this service method.
-	// Add api_issue_credential_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	connectionID := inlineObject6.Data.ConnectionId
+	credDefID := inlineObject6.Data.CredDefId
+	previewAttributes := inlineObject6.Data.CredentialProposal.Attributes
+	attributes := make([]*agent.CredentialAttribute, 0)
+	for _, attr := range previewAttributes {
+		attributes = append(attributes, &agent.CredentialAttribute{
+			Name:  attr.Name,
+			Value: attr.Value,
+		})
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, IssueCredentialOperationResponse{}) or use other options such as http.Ok ...
-	//return Response(200, IssueCredentialOperationResponse{}), nil
+	threadId, err := s.a.ProposeCredential(connectionID, credDefID, attributes)
+	if err == nil {
+		return Response(200, IssueCredentialOperationResponse{State: PROPOSAL_SENT, ThreadId: threadId}), nil
+	}
 
-	return Response(http.StatusNotImplemented, nil), errors.New("IssueCredentialSendProposal method not implemented")
+	return Response(http.StatusInternalServerError, nil), err
 }
 
 // IssueCredentialSendRequest - Send credential request

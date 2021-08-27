@@ -67,7 +67,7 @@ func main() {
 	IssueCredentialV2ApiService := openapi.NewIssueCredentialV2ApiService()
 	IssueCredentialV2ApiController := openapi.NewIssueCredentialV2ApiController(IssueCredentialV2ApiService)
 
-	PresentProofApiService := openapi.NewPresentProofApiService()
+	PresentProofApiService := openapi.NewPresentProofApiService(a)
 	PresentProofApiController := openapi.NewPresentProofApiController(PresentProofApiService)
 
 	SchemaApiService := openapi.NewSchemaApiService()

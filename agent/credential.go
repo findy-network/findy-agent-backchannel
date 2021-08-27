@@ -12,6 +12,7 @@ import (
 )
 
 type CredentialStatus = agency.ProtocolStatus_IssueCredentialStatus
+type CredentialAttribute = agency.Protocol_IssuingAttributes_Attribute
 
 type Credential struct {
 	ID        string `json:"referent"`
@@ -65,6 +66,32 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 		err2.Check(err)
 	}
 	return nil
+}
+
+func (s *CredentialStore) ProposeCredential(connectionID, credDefID string, attributes []*CredentialAttribute) (threadID string, err error) {
+	defer err2.Return(&err)
+
+	log.Printf("Propose credential, conn id: %s, credDefID: %s, attrs: %v", connectionID, credDefID, attributes)
+
+	protocol := &agency.Protocol{
+		ConnectionID: connectionID,
+		TypeID:       agency.Protocol_ISSUE_CREDENTIAL,
+		Role:         agency.Protocol_ADDRESSEE,
+		StartMsg: &agency.Protocol_IssueCredential{
+			IssueCredential: &agency.Protocol_IssueCredentialMsg{
+				CredDefID: credDefID,
+				AttrFmt: &agency.Protocol_IssueCredentialMsg_Attributes{
+					Attributes: &agency.Protocol_IssuingAttributes{
+						Attributes: attributes,
+					},
+				},
+			},
+		},
+	}
+	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
+	err2.Check(err)
+
+	return res.ID, nil
 }
 
 func (s *CredentialStore) RequestCredential(id string) (threadID string, err error) {

@@ -29,6 +29,7 @@ type Agent struct {
 	AgencyHost string
 	*ConnectionStore
 	*CredentialStore
+	*ProofStore
 }
 
 var authnCmd = authn.Cmd{
@@ -88,6 +89,7 @@ func (a *Agent) Login() {
 	}
 	a.ConnectionStore = InitConnections(a.Client, a.User)
 	a.CredentialStore = InitCredentials(a.Client)
+	a.ProofStore = InitProofs(a.Client)
 
 	ch, err := a.Client.Conn.ListenStatus(context.TODO(), &agency.ClientID{ID: uuid.New().String()})
 	err2.Check(err)
@@ -103,6 +105,7 @@ func (a *Agent) Login() {
 
 			a.HandleConnectionNotification(notification)
 			a.HandleCredentialNotification(notification)
+			a.HandleProofNotification(notification)
 		}
 	}()
 }

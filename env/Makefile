@@ -1,7 +1,7 @@
 VON_NETWORK_VERSION:=37fa43673678b64c0f6080c5e2b50c7ea5354cb4
 AATH_VERSION:=11260b718b7bd67a5aa5f2dc39ba92408e626302
 
-aath-up: generate clone rm up image aath
+aath-up: generate clone rm up aath
 
 generate:
 	$(eval DOCKERHOST=$(shell docker run --rm --net=host eclipse/che-ip))
@@ -19,15 +19,20 @@ clone:
 von-up:
 	cd .docker/von-network && ./manage build && ./manage start
 
-aath: 
+aath: image aath-build aath-test
+
+aath-build: 
 	cd .docker/aries-agent-test-harness && \
 		./manage build -a acapy
+
+aath-test: 
 	cd .docker/aries-agent-test-harness && \
 		mkdir -p aries-backchannels/findy && \
 		touch aries-backchannels/findy/Dockerfile.findy && \
 		./manage run -d acapy -b findy -t @T001-RFC0160,@T003-RFC0036
 
-aath-only: image aath
+#		./manage run -d acapy -b findy -t @T001-RFC0037
+#		./manage run -d acapy -b findy -t @RFC0036 -t ~@AIP20 -t ~@wip
 
 image:
 	cd .. && docker build -t findy-agent-backchannel .

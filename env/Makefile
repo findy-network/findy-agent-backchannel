@@ -31,7 +31,6 @@ aath-test:
 		touch aries-backchannels/findy/Dockerfile.findy && \
 		./manage run -d acapy -b findy -t @T001-RFC0160,@T003-RFC0036
 #		./manage run -d acapy -b findy -t @AIP10 -t ~@wip
-#		./manage run -d acapy -b findy -t @RFC0037
 
 image:
 	cd .. && docker build -t findy-agent-backchannel .

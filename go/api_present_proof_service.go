@@ -67,13 +67,22 @@ func (s *PresentProofApiService) PresentProofSendPresentation(ctx context.Contex
 
 // PresentProofSendProposal - Send presentation proposal
 func (s *PresentProofApiService) PresentProofSendProposal(ctx context.Context, inlineObject7 InlineObject7) (ImplResponse, error) {
-	// TODO - update PresentProofSendProposal with the required logic for this service method.
-	// Add api_present_proof_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	connectionID := inlineObject7.Data.ConnectionId
+	proposalAttributes := inlineObject7.Data.PresentationProposal.Attributes
+	attributes := make([]*agent.ProofAttribute, 0)
+	for _, attr := range proposalAttributes {
+		attributes = append(attributes, &agent.ProofAttribute{
+			Name:      attr.Name,
+			CredDefID: attr.CredDefId,
+		})
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, PresentProofOperationResponse{}) or use other options such as http.Ok ...
-	//return Response(200, PresentProofOperationResponse{}), nil
+	threadId, err := s.a.ProposeProof(connectionID, attributes)
+	if err == nil {
+		return Response(200, PresentProofOperationResponse{State: PROOF_PROPOSAL_SENT, ThreadId: threadId}), nil
+	}
 
-	return Response(http.StatusNotImplemented, nil), errors.New("PresentProofSendProposal method not implemented")
+	return Response(http.StatusInternalServerError, nil), err
 }
 
 // PresentProofSendRequest - Send presentation request

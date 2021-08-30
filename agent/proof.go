@@ -12,6 +12,7 @@ import (
 )
 
 type ProofStatus = agency.ProtocolStatus_PresentProofStatus
+type ProofAttribute = agency.Protocol_Proof_Attribute
 
 type Proof struct {
 	ID        string `json:"referent"`
@@ -95,6 +96,32 @@ func (s *ProofStore) SendProofPresentation(id string) (threadID string, err erro
 
 	return threadID, nil
 }
+
+func (s *CredentialStore) ProposeProof(connectionID string, attributes []*ProofAttribute) (threadID string, err error) {
+	defer err2.Return(&err)
+
+	log.Printf("Propose proof, conn id: %s, attrs: %v", connectionID, attributes)
+
+	protocol := &agency.Protocol{
+		ConnectionID: connectionID,
+		TypeID:       agency.Protocol_PRESENT_PROOF,
+		Role:         agency.Protocol_ADDRESSEE,
+		StartMsg: &agency.Protocol_PresentProof{
+			PresentProof: &agency.Protocol_PresentProofMsg{
+				AttrFmt: &agency.Protocol_PresentProofMsg_Attributes{
+					Attributes: &agency.Protocol_Proof{
+						Attributes: attributes,
+					},
+				},
+			},
+		},
+	}
+	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
+	err2.Check(err)
+
+	return res.ID, nil
+}
+
 
 func (s *ProofStore) AddProof(id string, c *ProofStatus) (*Proof, error) {
 	s.Lock()

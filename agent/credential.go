@@ -22,7 +22,7 @@ type Credential struct {
 
 type CredentialStore struct {
 	agent  *AgencyClient
-	creds  map[string]CredentialStatus
+	creds  map[string]*CredentialStatus
 	offers map[string]string
 	sync.RWMutex
 }
@@ -30,7 +30,7 @@ type CredentialStore struct {
 func InitCredentials(a *AgencyClient) *CredentialStore {
 	return &CredentialStore{
 		agent:  a,
-		creds:  make(map[string]CredentialStatus),
+		creds:  make(map[string]*CredentialStatus),
 		offers: make(map[string]string),
 	}
 }
@@ -56,7 +56,6 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 				_, err = s.AddCredential(protocolID.ID, cred)
 				err2.Check(err)
 			}
-
 		}
 
 		// Cred offer received
@@ -68,7 +67,10 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 	return nil
 }
 
-func (s *CredentialStore) ProposeCredential(connectionID, credDefID string, attributes []*CredentialAttribute) (threadID string, err error) {
+func (s *CredentialStore) ProposeCredential(
+	connectionID, credDefID string,
+	attributes []*CredentialAttribute,
+) (threadID string, err error) {
 	defer err2.Return(&err)
 
 	log.Printf("Propose credential, conn id: %s, credDefID: %s, attrs: %v", connectionID, credDefID, attributes)
@@ -122,7 +124,7 @@ func (s *CredentialStore) AddCredential(id string, c *CredentialStatus) (*Creden
 	s.Lock()
 	defer s.Unlock()
 	if c != nil {
-		s.creds[id] = *c
+		s.creds[id] = c
 		res := &Credential{
 			ID:        id,
 			CredDefID: c.CredDefID,

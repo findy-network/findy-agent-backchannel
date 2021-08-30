@@ -103,9 +103,9 @@ func (a *Agent) Login() {
 			notification := chRes.GetNotification()
 			fmt.Printf("Received agent notification %v\n", notification)
 
-			a.HandleConnectionNotification(notification)
-			a.HandleCredentialNotification(notification)
-			a.HandleProofNotification(notification)
+			_ = a.HandleConnectionNotification(notification)
+			_ = a.HandleCredentialNotification(notification)
+			_ = a.HandleProofNotification(notification)
 		}
 	}()
 }

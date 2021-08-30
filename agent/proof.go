@@ -21,19 +21,19 @@ type Proof struct {
 }
 
 type ProofStore struct {
-	agent    *AgencyClient
-	readyProofs   map[string]ProofStatus
-	sentProofs   map[string]string
-	requests map[string]string
+	agent       *AgencyClient
+	readyProofs map[string]*ProofStatus
+	sentProofs  map[string]string
+	requests    map[string]string
 	sync.RWMutex
 }
 
 func InitProofs(a *AgencyClient) *ProofStore {
 	return &ProofStore{
-		agent:    a,
-		readyProofs:   make(map[string]ProofStatus),
-		sentProofs:   make(map[string]string),
-		requests: make(map[string]string),
+		agent:       a,
+		readyProofs: make(map[string]*ProofStatus),
+		sentProofs:  make(map[string]string),
+		requests:    make(map[string]string),
 	}
 }
 
@@ -58,7 +58,6 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 				_, err = s.AddProof(protocolID.ID, proof)
 				err2.Check(err)
 			}
-
 		}
 
 		// Cred request received
@@ -122,12 +121,11 @@ func (s *CredentialStore) ProposeProof(connectionID string, attributes []*ProofA
 	return res.ID, nil
 }
 
-
 func (s *ProofStore) AddProof(id string, c *ProofStatus) (*Proof, error) {
 	s.Lock()
 	defer s.Unlock()
 	if c != nil {
-		s.readyProofs[id] = *c
+		s.readyProofs[id] = c
 		res := &Proof{
 			ID: id,
 		}

@@ -21,7 +21,7 @@ type Connection struct {
 
 type ConnectionStore struct {
 	agent       *AgencyClient
-	conns       map[string]ConnectionStatus
+	conns       map[string]*ConnectionStatus
 	invitations map[string]string
 	User        string
 	sync.RWMutex
@@ -30,7 +30,7 @@ type ConnectionStore struct {
 func InitConnections(a *AgencyClient, userName string) *ConnectionStore {
 	return &ConnectionStore{
 		agent:       a,
-		conns:       make(map[string]ConnectionStatus),
+		conns:       make(map[string]*ConnectionStatus),
 		invitations: make(map[string]string),
 		User:        userName,
 	}
@@ -50,7 +50,8 @@ func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Noti
 			err2.Check(err)
 			if status.State.State == agency.ProtocolState_OK {
 				fmt.Printf("New connection %v\n", status.GetDIDExchange())
-				s.AddConnection(status.GetDIDExchange().ID, status.GetDIDExchange())
+				_, err = s.AddConnection(status.GetDIDExchange().ID, status.GetDIDExchange())
+				err2.Check(err)
 			}
 		}
 	}
@@ -110,7 +111,7 @@ func (s *ConnectionStore) AddConnection(id string, c *ConnectionStatus) (*Connec
 	s.Lock()
 	defer s.Unlock()
 	if c != nil {
-		s.conns[id] = *c
+		s.conns[id] = c
 		res := &Connection{
 			ID: id,
 		}

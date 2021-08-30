@@ -51,7 +51,7 @@ linters:
     - deadcode
     - depguard
     - dogsled
-    - dupl
+#    - dupl
     - errcheck
     - exhaustive
     - exportloopref

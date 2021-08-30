@@ -35,10 +35,16 @@ func NewPresentProofApiService(a *agent.Agent) PresentProofApiServicer {
 func (s *PresentProofApiService) PresentProofGetByThreadId(ctx context.Context, presentationExchangeThreadId string) (ImplResponse, error) {
 	if cred, err := s.a.GetProof(presentationExchangeThreadId); err == nil {
 		return Response(200, PresentProofOperationResponse{
-			State:    PROOF_PRESENTATION_SENT,
+			State:    PROOF_DONE,
 			ThreadId: cred.ID,
 		}), nil
 
+	}
+	if threadID, _ := s.a.GetSentProof(presentationExchangeThreadId); threadID != "" {
+		return Response(200, PresentProofOperationResponse{
+			State:    PROOF_PRESENTATION_SENT,
+			ThreadId: threadID,
+		}), nil
 	}
 	if threadID, _ := s.a.GetProofRequest(presentationExchangeThreadId); threadID != "" {
 		return Response(200, PresentProofOperationResponse{

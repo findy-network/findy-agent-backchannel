@@ -21,7 +21,8 @@ type Proof struct {
 
 type ProofStore struct {
 	agent    *AgencyClient
-	proofs   map[string]ProofStatus
+	readyProofs   map[string]ProofStatus
+	sentProofs   map[string]string
 	requests map[string]string
 	sync.RWMutex
 }
@@ -29,7 +30,8 @@ type ProofStore struct {
 func InitProofs(a *AgencyClient) *ProofStore {
 	return &ProofStore{
 		agent:    a,
-		proofs:   make(map[string]ProofStatus),
+		readyProofs:   make(map[string]ProofStatus),
+		sentProofs:   make(map[string]string),
 		requests: make(map[string]string),
 	}
 }
@@ -88,6 +90,9 @@ func (s *ProofStore) SendProofPresentation(id string) (threadID string, err erro
 	)
 	err2.Check(err)
 
+	_, err = s.AddSentProof(id)
+	err2.Check(err)
+
 	return threadID, nil
 }
 
@@ -95,11 +100,9 @@ func (s *ProofStore) AddProof(id string, c *ProofStatus) (*Proof, error) {
 	s.Lock()
 	defer s.Unlock()
 	if c != nil {
-		s.proofs[id] = *c
+		s.readyProofs[id] = *c
 		res := &Proof{
 			ID: id,
-			//CredDefID: c.CredDefID,
-			//SchemaID:  c.SchemaID,
 		}
 		return res, nil
 	}
@@ -109,15 +112,32 @@ func (s *ProofStore) AddProof(id string, c *ProofStatus) (*Proof, error) {
 func (s *ProofStore) GetProof(id string) (*Proof, error) {
 	s.RLock()
 	defer s.RUnlock()
-	if _, ok := s.proofs[id]; ok {
+	if _, ok := s.readyProofs[id]; ok {
 		res := &Proof{
 			ID: id,
-			//CredDefID: proof.CredDefID,
-			//SchemaID:  proof.SchemaID,
 		}
 		return res, nil
 	}
 	return nil, fmt.Errorf("proof by the id %s not found", id)
+}
+
+func (s *ProofStore) AddSentProof(id string) (string, error) {
+	s.Lock()
+	defer s.Unlock()
+	if id != "" {
+		s.sentProofs[id] = id
+		return id, nil
+	}
+	return "", fmt.Errorf("cannot add sent proof with id %s", id)
+}
+
+func (s *ProofStore) GetSentProof(id string) (string, error) {
+	s.RLock()
+	defer s.RUnlock()
+	if _, ok := s.sentProofs[id]; ok {
+		return id, nil
+	}
+	return "", fmt.Errorf("sent proof by the id %s not found", id)
 }
 
 func (s *ProofStore) AddProofRequest(id string) (string, error) {

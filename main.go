@@ -17,27 +17,11 @@ import (
 	"strings"
 
 	"github.com/findy-network/findy-agent-backchannel/agent"
-	openapi "github.com/findy-network/findy-agent-backchannel/go"
+	"github.com/findy-network/findy-agent-backchannel/openapi"
 )
 
 func main() {
-	for _, a := range os.Args {
-		log.Println(a)
-	}
-
-	name := os.Getenv("AGENT_NAME")
 	port := "9999"
-	switch name {
-	case "Acme":
-		port = "9010"
-	case "Bob":
-		port = "9020"
-	case "Faber":
-		port = "9030"
-	case "Alice":
-		port = "9040"
-	}
-
 	if strings.HasPrefix(os.Args[2], "9") {
 		port = os.Args[2]
 	}

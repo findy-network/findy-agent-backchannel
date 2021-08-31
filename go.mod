@@ -1,4 +1,4 @@
-module github.com/findy-network/findy-test-harness
+module github.com/findy-network/findy-agent-backchannel
 
 go 1.16
 

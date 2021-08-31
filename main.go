@@ -16,8 +16,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/findy-network/findy-test-harness/agent"
-	openapi "github.com/findy-network/findy-test-harness/go"
+	"github.com/findy-network/findy-agent-backchannel/agent"
+	openapi "github.com/findy-network/findy-agent-backchannel/go"
 )
 
 func main() {

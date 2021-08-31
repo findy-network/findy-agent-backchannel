@@ -15,7 +15,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/findy-network/findy-test-harness/agent"
+	"github.com/findy-network/findy-agent-backchannel/agent"
 )
 
 // ConnectionApiService is a service that implents the logic for the ConnectionApiServicer

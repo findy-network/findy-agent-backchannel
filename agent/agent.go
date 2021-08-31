@@ -49,7 +49,7 @@ func Init() *Agent {
 		url = "localhost"
 	}
 	authnCmd.Url = fmt.Sprintf("http://%s:8888", url)
-	authnCmd.UserName = fmt.Sprintf("findy-test-harness-%d", time.Now().UnixNano())
+	authnCmd.UserName = fmt.Sprintf("findy-agent-backchannel-%d", time.Now().UnixNano())
 
 	myCmd := authnCmd
 	myCmd.SubCmd = "register"

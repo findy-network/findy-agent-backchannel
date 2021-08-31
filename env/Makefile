@@ -1,7 +1,10 @@
 VON_NETWORK_VERSION:=37fa43673678b64c0f6080c5e2b50c7ea5354cb4
 AATH_VERSION:=11260b718b7bd67a5aa5f2dc39ba92408e626302
+EXPECTED_RESULT:="2 features passed"
+TEST_TAGS:="@T001-RFC0160,@T003-RFC0036"
 
 aath-up: generate clone rm up aath
+aath-check: generate clone rm up aath-check
 
 generate:
 	$(eval DOCKERHOST=$(shell docker run --rm --net=host eclipse/che-ip))
@@ -20,6 +23,7 @@ von-up:
 	cd .docker/von-network && ./manage build && ./manage start
 
 aath: image aath-build aath-test
+aath-check: image aath-build aath-test-check
 
 aath-build: 
 	cd .docker/aries-agent-test-harness && \
@@ -29,7 +33,18 @@ aath-test:
 	cd .docker/aries-agent-test-harness && \
 		mkdir -p aries-backchannels/findy && \
 		touch aries-backchannels/findy/Dockerfile.findy && \
-		./manage run -d acapy -b findy -t @T001-RFC0160,@T003-RFC0036
+		./manage run -d acapy -b findy -t $(TEST_TAGS)
+	
+aath-test-check: 
+	cd .docker/aries-agent-test-harness && \
+		mkdir -p aries-backchannels/findy && \
+		touch aries-backchannels/findy/Dockerfile.findy && \
+		./manage run -d acapy -b findy -t $(TEST_TAGS) > output.log && \
+		cat output.log && \
+		cat output.log | grep $(EXPECTED_RESULT)
+
+
+#		./manage run -d acapy -b findy -t @T001-RFC0160,@T003-RFC0036
 #		./manage run -d acapy -b findy -t @AIP10 -t ~@wip
 
 image:

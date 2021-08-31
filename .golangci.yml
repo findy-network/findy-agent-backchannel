@@ -108,6 +108,6 @@ issues:
         - stylecheck
 run:
   skip-dirs:
-    - go
+    - openapi
 service:
   golangci-lint-version: 1.37.x # use the fixed version to not introduce new linters unexpectedly

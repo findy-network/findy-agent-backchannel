@@ -9,4 +9,4 @@ cd env
 make aath-up
 ```
 
-The backchannel server sources are generated with (openapi-generator)[https://openapi-generator.tech/] using [AATH openapi specification](https://github.com/hyperledger/aries-agent-test-harness/blob/main/docs/assets/openapi-spec.yml).
+The backchannel server sources are generated with [openapi-generator](https://openapi-generator.tech/) using [AATH openapi specification](https://github.com/hyperledger/aries-agent-test-harness/blob/main/docs/assets/openapi-spec.yml).

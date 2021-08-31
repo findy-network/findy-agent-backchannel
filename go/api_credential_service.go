@@ -13,7 +13,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/findy-network/findy-test-harness/agent"
+	"github.com/findy-network/findy-agent-backchannel/agent"
 )
 
 // CredentialApiService is a service that implents the logic for the CredentialApiServicer

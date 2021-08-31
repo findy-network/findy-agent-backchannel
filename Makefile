@@ -33,11 +33,11 @@ check: check_fmt vet shadow
 
 dbuild:
 	docker build \
-		-t findy-test-harness \
+		-t findy-agent-backchannel \
 		.
 
 drun:
-	docker run -it --rm findy-test-harness
+	docker run -it --rm findy-agent-backchannel
 
 scan:
 	@./scripts/scan.sh $(ARGS)

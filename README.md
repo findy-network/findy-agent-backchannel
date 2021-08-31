@@ -1,4 +1,4 @@
-# findy-test-harness
+# findy-agent-backchannel
 
 Findy Agency backchannel for testing agency interoperability using Aries Agent Test Harness.
 

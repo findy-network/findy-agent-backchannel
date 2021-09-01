@@ -29,16 +29,18 @@ aath-build:
 	cd .docker/aries-agent-test-harness && \
 		./manage build -a acapy
 
-aath-test: 
+gen-findy:
 	cd .docker/aries-agent-test-harness && \
 		mkdir -p aries-backchannels/findy && \
 		touch aries-backchannels/findy/Dockerfile.findy && \
+		cp -R ../../cert aries-backchannels/findy/findy.data
+
+aath-test: gen-findy
+	cd .docker/aries-agent-test-harness && \
 		./manage run -d acapy -b findy -t $(TEST_TAGS)
 	
-aath-test-check: 
+aath-test-check:  gen-findy
 	cd .docker/aries-agent-test-harness && \
-		mkdir -p aries-backchannels/findy && \
-		touch aries-backchannels/findy/Dockerfile.findy && \
 		./manage run -d acapy -b findy -t $(TEST_TAGS) > output.log && \
 		cat output.log && \
 		cat output.log | grep $(EXPECTED_RESULT)

@@ -12,7 +12,7 @@ package openapi
 type PresentationPreview struct {
 	Type string `json:"@type"`
 
-	Attributes []PresentationPreviewAttributes `json:"requested_attributes"`
+	Attributes []PresentationPreviewAttributes `json:"attributes"`
 
 	Predicates []PresentationPreviewPredicates `json:"predicates"`
 }

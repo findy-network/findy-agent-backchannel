@@ -53,7 +53,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:acapy-bc-latest
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:acapy-bc-latest
           cache-to: type=inline
-          context: ./env/.docker/aries-agent-test-harness/aries-backchannels/acapy
+          context: ./env/.docker/aries-agent-test-harness/aries-backchannels
           file: ./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy
 
   # merge:

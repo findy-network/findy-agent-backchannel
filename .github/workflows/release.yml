@@ -1,23 +1,23 @@
 name: release
-on:
-  push:
-    tags:
-      - '*'
+on: push
+#  push:
+#    tags:
+#      - '*'
 
 jobs:
 
-  full-iop:
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: test
-        run: cd ./env && make aath-check
-        env:
-          NO_TTY: "1"
+  # full-iop:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v2
+  #     - name: test
+  #       run: cd ./env && make aath-check
+  #       env:
+  #         NO_TTY: "1"
 
   push-images:
-    needs: full-iop
+  #  needs: full-iop
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -70,16 +70,28 @@ jobs:
           context: ./env/.docker/aries-agent-test-harness/aries-backchannels
           file: ./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy
 
-  merge:
-    needs: push-images
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
+      - uses: docker/build-push-action@v2
         with:
-          ref: master
-      - name: merge
-        run:  |
-          git fetch --tags origin
-          git merge $GITHUB_REF
-          git push origin master
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:aath-${{ env.version }}
+            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:aath-latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:aath-latest
+          cache-to: type=inline
+          context: ./env/.docker/aries-agent-test-harness/aries-test-harness
+          file: ./env/.docker/aries-agent-test-harness/aries-test-harness/Dockerfile.harness
+
+  # merge:
+  #   needs: push-images
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         ref: master
+  #     - name: merge
+  #       run:  |
+  #         git fetch --tags origin
+  #         git merge $GITHUB_REF
+  #         git push origin master

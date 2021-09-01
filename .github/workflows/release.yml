@@ -1,23 +1,23 @@
 name: release
-on: push
-#  push:
-#    tags:
-#      - '*'
+on:
+ push:
+   tags:
+     - '*'
 
 jobs:
 
-  # full-iop:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v2
-  #     - name: test
-  #       run: cd ./env && make aath-check
-  #       env:
-  #         NO_TTY: "1"
+  full-iop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: test
+        run: cd ./env && make aath-check
+        env:
+          NO_TTY: "1"
 
   push-images:
-  #  needs: full-iop
+    needs: full-iop
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -82,16 +82,16 @@ jobs:
           context: ./env/.docker/aries-agent-test-harness/aries-test-harness
           file: ./env/.docker/aries-agent-test-harness/aries-test-harness/Dockerfile.harness
 
-  # merge:
-  #   needs: push-images
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v2
-  #       with:
-  #         ref: master
-  #     - name: merge
-  #       run:  |
-  #         git fetch --tags origin
-  #         git merge $GITHUB_REF
-  #         git push origin master
+  merge:
+    needs: push-images
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          ref: master
+      - name: merge
+        run:  |
+          git fetch --tags origin
+          git merge $GITHUB_REF
+          git push origin master

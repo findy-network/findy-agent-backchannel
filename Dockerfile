@@ -16,6 +16,6 @@ COPY --from=build /go/src/backchannel ./
 
 EXPOSE "9020-9059"
 
-ADD ./env/cert ./env/cert
+ENV CERT_PATH /data-mount
 
 ENTRYPOINT ["./backchannel"]

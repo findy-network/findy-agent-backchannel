@@ -75,7 +75,7 @@ func (a *Agent) Login() {
 	a.JWT = r.Token
 
 	conf := client.BuildClientConnBase(
-		"./env/cert",
+		os.Getenv("CERT_PATH"),
 		a.AgencyHost,
 		AgencyPort,
 		[]grpc.DialOption{},

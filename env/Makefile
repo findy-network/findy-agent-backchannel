@@ -1,7 +1,9 @@
 VON_NETWORK_VERSION:=37fa43673678b64c0f6080c5e2b50c7ea5354cb4
-AATH_VERSION:=11260b718b7bd67a5aa5f2dc39ba92408e626302
-EXPECTED_RESULT:="2 features passed"
-TEST_TAGS:="@T001-RFC0160,@T003-RFC0036"
+AATH_VERSION:=4aa61a516816cdc52c368c74d5eb3965ec87c18f
+EXPECTED_RESULT:="3 features passed"
+INCLUDE_TAGS:=@AIP10
+EXCLUDE_TAGS:=~@wip,~@T006-RFC0160,~@T003-RFC0160,~@T004-RFC0160
+
 
 aath-up: generate clone rm up aath
 aath-check: generate clone rm up aath-check
@@ -29,23 +31,23 @@ aath-build:
 	cd .docker/aries-agent-test-harness && \
 		./manage build -a acapy
 
-aath-test: 
+gen-findy:
 	cd .docker/aries-agent-test-harness && \
 		mkdir -p aries-backchannels/findy && \
 		touch aries-backchannels/findy/Dockerfile.findy && \
-		./manage run -d acapy -b findy -t $(TEST_TAGS)
+		mkdir -p aries-backchannels/findy/.build && \
+		rm -rf aries-backchannels/findy/.build/findy.data && \
+		cp -R ../../cert aries-backchannels/findy/.build/findy.data
+
+aath-test: gen-findy
+	cd .docker/aries-agent-test-harness && \
+		./manage run -d acapy -b findy -t $(INCLUDE_TAGS) -t $(EXCLUDE_TAGS)
 	
-aath-test-check: 
+aath-test-check:  gen-findy
 	cd .docker/aries-agent-test-harness && \
-		mkdir -p aries-backchannels/findy && \
-		touch aries-backchannels/findy/Dockerfile.findy && \
-		./manage run -d acapy -b findy -t $(TEST_TAGS) > output.log && \
+		./manage run -d acapy -b findy -t $(INCLUDE_TAGS) -t $(EXCLUDE_TAGS) > output.log && \
 		cat output.log && \
 		cat output.log | grep $(EXPECTED_RESULT)
-
-
-#		./manage run -d acapy -b findy -t @T001-RFC0160,@T003-RFC0036
-#		./manage run -d acapy -b findy -t @AIP10 -t ~@wip
 
 image:
 	cd .. && docker build -t findy-agent-backchannel .

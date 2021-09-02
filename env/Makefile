@@ -1,9 +1,10 @@
 VON_NETWORK_VERSION:=37fa43673678b64c0f6080c5e2b50c7ea5354cb4
 AATH_VERSION:=4aa61a516816cdc52c368c74d5eb3965ec87c18f
 EXPECTED_RESULT:="3 features passed"
-INCLUDE_TAGS:=@AIP10
-EXCLUDE_TAGS:=~@wip,~@T006-RFC0160,~@T003-RFC0160,~@T004-RFC0160
-
+INCLUDE_TAGS?=@AIP10
+EXCLUDE_TAGS?=~@wip,~@T006-RFC0160,~@T003-RFC0160,~@T004-RFC0160
+AGENT_DEFAULT?=acapy
+AGENT_BOB?=findy
 
 aath-up: generate clone rm up aath
 aath-check: generate clone rm up aath-check
@@ -24,7 +25,7 @@ clone:
 von-up:
 	cd .docker/von-network && ./manage build && ./manage start
 
-aath: image aath-build aath-test
+aath: clone image aath-build aath-test
 aath-check: image aath-build aath-test-check
 
 aath-build: 
@@ -39,13 +40,26 @@ gen-findy:
 		rm -rf aries-backchannels/findy/.build/findy.data && \
 		cp -R ../../cert aries-backchannels/findy/.build/findy.data
 
-aath-test: gen-findy
+info:
+	@printf "\n\n******************************************************\n"
+	@printf "\nBob is $(AGENT_BOB), other agents are $(AGENT_DEFAULT)\n"
+	@printf "\n******************************************************\n\n"
+
+aath-test: gen-findy info
 	cd .docker/aries-agent-test-harness && \
-		./manage run -d acapy -b findy -t $(INCLUDE_TAGS) -t $(EXCLUDE_TAGS)
+		./manage run \
+			-d $(AGENT_DEFAULT) \
+			-b $(AGENT_BOB) \
+			-t $(INCLUDE_TAGS) \
+			-t $(EXCLUDE_TAGS)
 	
-aath-test-check:  gen-findy
+aath-test-check:  gen-findy info
 	cd .docker/aries-agent-test-harness && \
-		./manage run -d acapy -b findy -t $(INCLUDE_TAGS) -t $(EXCLUDE_TAGS) > output.log && \
+		./manage run \
+			-d $(AGENT_DEFAULT) \
+			-b $(AGENT_BOB) \
+			-t $(INCLUDE_TAGS) \
+			-t $(EXCLUDE_TAGS) > output.log && \
 		cat output.log && \
 		cat output.log | grep $(EXPECTED_RESULT)
 

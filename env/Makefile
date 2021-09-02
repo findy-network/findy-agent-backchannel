@@ -3,7 +3,8 @@ AATH_VERSION:=4aa61a516816cdc52c368c74d5eb3965ec87c18f
 EXPECTED_RESULT:="3 features passed"
 INCLUDE_TAGS:=@AIP10
 EXCLUDE_TAGS:=~@wip,~@T006-RFC0160,~@T003-RFC0160,~@T004-RFC0160
-
+DEFAULT_AGENT:=acapy
+BOB_AGENT:=findy
 
 aath-up: generate clone rm up aath
 aath-check: generate clone rm up aath-check
@@ -41,11 +42,11 @@ gen-findy:
 
 aath-test: gen-findy
 	cd .docker/aries-agent-test-harness && \
-		./manage run -d acapy -b findy -t $(INCLUDE_TAGS) -t $(EXCLUDE_TAGS)
+		./manage run -d $(DEFAULT_AGENT) -b $(BOB_AGENT) -t $(INCLUDE_TAGS) -t $(EXCLUDE_TAGS)
 	
 aath-test-check:  gen-findy
 	cd .docker/aries-agent-test-harness && \
-		./manage run -d acapy -b findy -t $(INCLUDE_TAGS) -t $(EXCLUDE_TAGS) > output.log && \
+		./manage run -d $(DEFAULT_AGENT) -b $(BOB_AGENT) -t $(INCLUDE_TAGS) -t $(EXCLUDE_TAGS) > output.log && \
 		cat output.log && \
 		cat output.log | grep $(EXPECTED_RESULT)
 

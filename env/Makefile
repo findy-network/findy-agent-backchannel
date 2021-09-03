@@ -2,7 +2,6 @@ VON_NETWORK_VERSION:=37fa43673678b64c0f6080c5e2b50c7ea5354cb4
 AATH_VERSION:=4aa61a516816cdc52c368c74d5eb3965ec87c18f
 EXPECTED_RESULT:="3 features passed"
 INCLUDE_TAGS?=@AIP10
-EXCLUDE_TAGS?=~@wip,~@T006-RFC0160,~@T003-RFC0160,~@T004-RFC0160
 AGENT_DEFAULT?=acapy
 AGENT_BOB?=findy
 
@@ -45,13 +44,14 @@ info:
 	@printf "\nBob is $(AGENT_BOB), other agents are $(AGENT_DEFAULT)\n"
 	@printf "\n******************************************************\n\n"
 
+# exclude tests with '~': WIP and special cases that lack support from acapy/findy
 aath-test: gen-findy info
 	cd .docker/aries-agent-test-harness && \
 		./manage run \
 			-d $(AGENT_DEFAULT) \
 			-b $(AGENT_BOB) \
 			-t $(INCLUDE_TAGS) \
-			-t $(EXCLUDE_TAGS)
+			-t ~@wip -t ~@T006-RFC0160 -t ~@T003-RFC0160 -t ~@T004-RFC0160
 	
 aath-test-check:  gen-findy info
 	cd .docker/aries-agent-test-harness && \
@@ -59,7 +59,8 @@ aath-test-check:  gen-findy info
 			-d $(AGENT_DEFAULT) \
 			-b $(AGENT_BOB) \
 			-t $(INCLUDE_TAGS) \
-			-t $(EXCLUDE_TAGS) > output.log && \
+			-t ~@wip -t ~@T006-RFC0160 -t ~@T003-RFC0160 -t ~@T004-RFC0160 \
+			> output.log && \
 		cat output.log && \
 		cat output.log | grep $(EXPECTED_RESULT)
 

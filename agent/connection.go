@@ -9,7 +9,6 @@ import (
 
 	"github.com/findy-network/findy-common-go/agency/client/async"
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
-	"github.com/google/uuid"
 	"github.com/lainio/err2"
 )
 
@@ -63,12 +62,10 @@ func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Noti
 func (s *ConnectionStore) CreateInvitation() (invitation string, err error) {
 	defer err2.Return(&err)
 
-	id := uuid.New().String()
-
 	var res *agency.Invitation
 	res, err = s.agent.AgentClient.CreateInvitation(
 		context.TODO(),
-		&agency.InvitationBase{Label: s.User, ID: id},
+		&agency.InvitationBase{Label: s.User},
 	)
 	err2.Check(err)
 

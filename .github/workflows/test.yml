@@ -29,7 +29,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - name: test
-        run: cd ./env && make aath-check
+        run: cd ./env && make aath-check INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
         env:
           NO_TTY: "1"
 

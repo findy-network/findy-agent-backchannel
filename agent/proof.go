@@ -69,6 +69,11 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 	return nil
 }
 
+func (s *CredentialStore) HandleProofQuestion(question *agency.Question) (err error) {
+	defer err2.Return(&err)
+	return nil
+}
+
 func (s *ProofStore) SendProofPresentation(id string) (threadID string, err error) {
 	defer err2.Return(&err)
 

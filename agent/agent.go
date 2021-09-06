@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -108,4 +109,93 @@ func (a *Agent) Login() {
 			_ = a.HandleProofNotification(notification)
 		}
 	}()
+
+	questionCh, err := a.Client.Conn.Wait(context.TODO(), &agency.ClientID{ID: uuid.New().String()})
+	err2.Check(err)
+
+	go func() {
+		for {
+			chRes, ok := <-questionCh
+			if !ok {
+				panic("Waiting failed")
+			}
+			fmt.Printf("Received question %v\n", chRes)
+
+			_ = a.HandleCredentialQuestion(chRes)
+			_ = a.HandleProofQuestion(chRes)
+		}
+	}()
+}
+
+func (a *Agent) CreateSchema(name, version string, attributes []string) (id string, err error) {
+	defer err2.Return(&err)
+
+	var res *agency.Schema
+	res, err = a.Client.AgentClient.CreateSchema(
+		context.TODO(),
+		&agency.SchemaCreate{
+			Name:       name,
+			Version:    version,
+			Attributes: attributes,
+		},
+	)
+	err2.Check(err)
+
+	id = res.ID
+	log.Printf("CreateSchema: %s", id)
+
+	return
+}
+
+func (a *Agent) GetSchema(schemaID string) (schemaJSON string, err error) {
+	defer err2.Return(&err)
+
+	var res *agency.SchemaData
+	res, err = a.Client.AgentClient.GetSchema(
+		context.TODO(), &agency.Schema{
+			ID: schemaID,
+		},
+	)
+	err2.Check(err)
+
+	schemaJSON = res.Data
+	log.Printf("GetSchema: %v", schemaJSON)
+
+	return
+}
+
+func (a *Agent) CreateCredDef(schemaID, tag string) (id string, err error) {
+	defer err2.Return(&err)
+
+	var res *agency.CredDef
+	res, err = a.Client.AgentClient.CreateCredDef(
+		context.TODO(),
+		&agency.CredDefCreate{
+			SchemaID: schemaID,
+			Tag:      tag,
+		},
+	)
+	err2.Check(err)
+
+	id = res.ID
+	log.Printf("CreateCredDef: %s", id)
+
+	return
+}
+
+func (a *Agent) GetCredDef(credDefID string) (credDefJSON string, err error) {
+	defer err2.Return(&err)
+
+	var res *agency.CredDefData
+	res, err = a.Client.AgentClient.GetCredDef(
+		context.TODO(), &agency.CredDef{
+			ID: credDefID,
+		},
+	)
+	err2.Check(err)
+
+	credDefJSON = res.Data
+	log.Printf("GetCredDef: %v", credDefJSON)
+
+	return
 }

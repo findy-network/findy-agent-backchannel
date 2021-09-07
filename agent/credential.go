@@ -65,7 +65,7 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 			if status.State.State == agency.ProtocolState_OK {
 				// save cred only if we are holder
 				// TODO: role in notification should indicate this
-				if _, err := s.GetCredentialOffer(notification.ProtocolID); err == nil {
+				if _, err = s.GetCredentialOffer(notification.ProtocolID); err == nil {
 					cred := status.GetIssueCredential()
 					log.Printf("New credential %v\n", cred)
 					_, err = s.AddCredential(protocolID.ID, cred)
@@ -88,8 +88,7 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 
 func (s *CredentialStore) HandleCredentialQuestion(question *agency.Question) (err error) {
 	defer err2.Return(&err)
-	switch question.TypeID {
-	case agency.Question_ISSUE_PROPOSE_WAITS:
+	if question.TypeID == agency.Question_ISSUE_PROPOSE_WAITS {
 		_, err := s.AddCredentialProposal(question.Status.Notification.ProtocolID, &CredentialQuestion{
 			header: QuestionHeader{
 				questionID: question.Status.Notification.ID,

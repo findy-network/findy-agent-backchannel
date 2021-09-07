@@ -64,7 +64,7 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 
 			if status.State.State == agency.ProtocolState_OK {
 				proof := status.GetPresentProof()
-				if _, err := s.GetProofRequest(notification.ProtocolID); err == nil {
+				if _, err = s.GetProofRequest(notification.ProtocolID); err == nil {
 					log.Printf("New proof %v\n", proof)
 					_, err = s.AddProof(protocolID.ID, proof)
 					err2.Check(err)
@@ -88,8 +88,7 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) {
 	defer err2.Return(&err)
 
-	switch question.TypeID {
-	case agency.Question_PROOF_VERIFY_WAITS:
+	if question.TypeID == agency.Question_PROOF_VERIFY_WAITS {
 		proof := question.GetProofVerify()
 		_, err := s.AddProofPresentation(question.Status.Notification.ProtocolID, &ProofQuestion{
 			header: QuestionHeader{
@@ -108,7 +107,6 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 			Ack:      true,
 		})
 		err2.Check(err)
-
 	}
 
 	return nil

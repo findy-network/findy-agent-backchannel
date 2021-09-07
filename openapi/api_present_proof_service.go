@@ -11,7 +11,6 @@ package openapi
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/findy-network/findy-agent-backchannel/agent"
@@ -52,6 +51,12 @@ func (s *PresentProofApiService) PresentProofGetByThreadId(ctx context.Context, 
 			ThreadId: threadID,
 		}), nil
 	}
+	if proof, _ := s.a.GetProofPresentation(presentationExchangeThreadId); proof != nil {
+		return Response(200, PresentProofOperationResponse{
+			State:    PROOF_PRESENTATION_RECEIVED,
+			ThreadId: presentationExchangeThreadId,
+		}), nil
+	}
 	return Response(http.StatusNotFound, nil), nil
 }
 
@@ -87,22 +92,33 @@ func (s *PresentProofApiService) PresentProofSendProposal(ctx context.Context, i
 
 // PresentProofSendRequest - Send presentation request
 func (s *PresentProofApiService) PresentProofSendRequest(ctx context.Context, inlineObject8 InlineObject8) (ImplResponse, error) {
-	// TODO - update PresentProofSendRequest with the required logic for this service method.
-	// Add api_present_proof_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	connectionID := inlineObject8.Data.ConnectionId
+	proposalAttributes := ((inlineObject8.Data.PresentationRequest["proof_request"].(map[string]interface{}))["data"].(map[string]interface{}))["requested_attributes"].(map[string]interface{})
+	attributes := make([]*agent.ProofAttribute, 0)
+	for _, value := range proposalAttributes {
+		attributes = append(attributes, &agent.ProofAttribute{
+			Name: (value.(map[string]interface{}))["name"].(string),
+		})
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, PresentProofOperationResponse{}) or use other options such as http.Ok ...
-	//return Response(200, PresentProofOperationResponse{}), nil
+	threadId, err := s.a.RequestProof(connectionID, attributes)
+	if err == nil {
+		return Response(200, PresentProofOperationResponse{State: PROOF_REQUEST_SENT, ThreadId: threadId}), nil
+	}
 
-	return Response(http.StatusNotImplemented, nil), errors.New("PresentProofSendRequest method not implemented")
+	return Response(http.StatusInternalServerError, nil), err
 }
 
 // PresentProofVerifyPresentation - Verify presentation
 func (s *PresentProofApiService) PresentProofVerifyPresentation(ctx context.Context, inlineObject10 InlineObject10) (ImplResponse, error) {
-	// TODO - update PresentProofVerifyPresentation with the required logic for this service method.
-	// Add api_present_proof_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	threadID, err := s.a.GetVerifiedProof(inlineObject10.Id)
 
-	//TODO: Uncomment the next line to return response Response(200, PresentProofOperationResponse{}) or use other options such as http.Ok ...
-	//return Response(200, PresentProofOperationResponse{}), nil
+	if err == nil {
+		return Response(200, PresentProofOperationResponse{
+			State:    PROOF_DONE,
+			ThreadId: threadID,
+		}), nil
+	}
 
-	return Response(http.StatusNotImplemented, nil), errors.New("PresentProofVerifyPresentation method not implemented")
+	return Response(http.StatusInternalServerError, nil), err
 }

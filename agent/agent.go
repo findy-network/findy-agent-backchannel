@@ -33,6 +33,11 @@ type Agent struct {
 	*ProofStore
 }
 
+type QuestionHeader struct {
+	questionID string
+	clientID   string
+}
+
 var authnCmd = authn.Cmd{
 	SubCmd:   "",
 	UserName: "",

@@ -83,6 +83,10 @@ func (s *IssueCredentialApiService) IssueCredentialSendOffer(ctx context.Context
 	if err == nil {
 		return Response(200, IssueCredentialOperationResponse{ThreadId: req.Id, State: OFFER_SENT}), nil
 	}
+	_, err = s.a.AddPendingCredentialProposal(req.Id)
+	if err == nil {
+		return Response(200, IssueCredentialOperationResponse{ThreadId: req.Id, State: OFFER_SENT}), nil
+	}
 	return Response(http.StatusInternalServerError, nil), err
 }
 

@@ -93,4 +93,5 @@ down:
 
 rm: down
 	docker-compose rm
+	rm -rf .data
 

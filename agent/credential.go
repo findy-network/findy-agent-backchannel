@@ -276,7 +276,7 @@ func (s *CredentialStore) AddPendingCredentialProposal(id string) (string, error
 		s.acceptedProposals[id] = id
 		return id, nil
 	}
-	return "", errors.New("cannot add non-existent credential proposal")
+	return "", errors.New("cannot add non-existent pending credential proposal")
 }
 
 func (s *CredentialStore) GetPendingCredentialProposal(id string) (string, error) {

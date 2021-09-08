@@ -27,6 +27,14 @@ type IssueCredentialStoreRequest struct {
 
 type IssueCredentialOfferRequest struct {
 	Id string `json:"id"`
+
+	Data struct {
+		CredentialProposal CredentialPreview `json:"credential_preview,omitempty"`
+
+		CredDefId string `json:"cred_def_id,omitempty"`
+
+		ConnectionId string `json:"connection_id"`
+	} `json:"data"`
 }
 
 type IssueCredentialIssueRequest struct {

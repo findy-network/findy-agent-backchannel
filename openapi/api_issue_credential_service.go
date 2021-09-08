@@ -78,14 +78,32 @@ func (s *IssueCredentialApiService) IssueCredentialIssue(ctx context.Context, re
 }
 
 // IssueCredentialSendOffer - Send credential offer
-func (s *IssueCredentialApiService) IssueCredentialSendOffer(ctx context.Context, req IssueCredentialOfferRequest) (ImplResponse, error) {
-	_, err := s.a.AcceptCredentialProposal(req.Id)
-	if err == nil {
-		return Response(200, IssueCredentialOperationResponse{ThreadId: req.Id, State: OFFER_SENT}), nil
-	}
-	_, err = s.a.AddPendingCredentialProposal(req.Id)
-	if err == nil {
-		return Response(200, IssueCredentialOperationResponse{ThreadId: req.Id, State: OFFER_SENT}), nil
+func (s *IssueCredentialApiService) IssueCredentialSendOffer(ctx context.Context, req IssueCredentialOfferRequest) (r ImplResponse, err error) {
+	if req.Id == "" {
+		connectionID := req.Data.ConnectionId
+		credDefID := req.Data.CredDefId
+		previewAttributes := req.Data.CredentialProposal.Attributes
+		attributes := make([]*agent.CredentialAttribute, 0)
+		for _, attr := range previewAttributes {
+			attributes = append(attributes, &agent.CredentialAttribute{
+				Name:  attr.Name,
+				Value: attr.Value,
+			})
+		}
+		var threadId string
+		threadId, err = s.a.OfferCredential(connectionID, credDefID, attributes)
+		if err == nil {
+			return Response(200, IssueCredentialOperationResponse{State: OFFER_SENT, ThreadId: threadId}), nil
+		}
+	} else { // offer to proposal
+		_, err = s.a.AcceptCredentialProposal(req.Id)
+		if err == nil {
+			return Response(200, IssueCredentialOperationResponse{ThreadId: req.Id, State: OFFER_SENT}), nil
+		}
+		_, err = s.a.AddPendingCredentialProposal(req.Id)
+		if err == nil {
+			return Response(200, IssueCredentialOperationResponse{ThreadId: req.Id, State: OFFER_SENT}), nil
+		}
 	}
 	return Response(http.StatusInternalServerError, nil), err
 }

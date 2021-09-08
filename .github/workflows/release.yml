@@ -24,8 +24,7 @@ jobs:
           cd ./env
           make aath-check \
             AGENT_DEFAULT=findy \
-            AGENT_BOB=acapy \
-            INCLUDE_TAGS=@RFC0160
+            AGENT_BOB=acapy
         env:
           NO_TTY: "1"
 

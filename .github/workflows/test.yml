@@ -43,7 +43,7 @@ jobs:
           make aath-test-check \
             AGENT_DEFAULT=findy \
             AGENT_BOB=acapy \
-            INCLUDE_TAGS=@T001-RFC0160
+            INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
         env:
           NO_TTY: "1"
 

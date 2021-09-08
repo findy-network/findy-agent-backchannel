@@ -12,5 +12,26 @@ package openapi
 type AgentCommandProofSendRequestData struct {
 	ConnectionId string `json:"connection_id"`
 
-	PresentationRequest map[string]interface{} `json:"presentation_request"`
+	PresentationRequest AgentCommandProofSendRequestDataPresentationRequest `json:"presentation_request"`
+}
+
+type AgentCommandProofSendRequestDataPresentationRequest struct {
+	Comment string `json:"comment,omitempty"`
+
+	ProofRequest struct {
+		Data struct {
+			Name                string                                  `json:"name,omitempty"`
+			RequestedAttributes map[string]PresentationRequestAttribute `json:"requested_attributes,omitempty"`
+			RequestedPredicates map[string]interface{}                  `json:"requested_predicates,omitempty"`
+			Version             string                                  `json:"version,omitempty"`
+		} `json:"data,omitempty"`
+	} `json:"proof_request,omitempty"`
+
+	ConnectionId string `json:"connection_id"`
+}
+
+type PresentationRequestAttribute struct {
+	Name         string        `json:"name,omitempty"`
+	Names        []string      `json:"names,omitempty"`
+	Restrictions []interface{} `json:"restrictions,omitempty"`
 }

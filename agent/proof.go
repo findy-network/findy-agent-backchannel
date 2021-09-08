@@ -33,6 +33,7 @@ type ProofStore struct {
 	requests       map[string]string
 	presentations  map[string]*ProofQuestion
 	verifiedProofs map[string]string
+	proofProposals map[string]string
 	sync.RWMutex
 }
 
@@ -44,6 +45,7 @@ func InitProofs(a *AgencyClient) *ProofStore {
 		requests:       make(map[string]string),
 		presentations:  make(map[string]*ProofQuestion),
 		verifiedProofs: make(map[string]string),
+		proofProposals: make(map[string]string),
 	}
 }
 
@@ -107,6 +109,19 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 			Ack:      true,
 		})
 		err2.Check(err)
+	} else if question.TypeID == agency.Question_PROOF_PROPOSE_WAITS {
+		_, err := s.AddProofProposal(question.Status.Notification.ProtocolID)
+		err2.Check(err)
+
+		// just accept proof propose directly
+		log.Printf("Accept proof proposal with the thread id %s, question id %s", question.Status.ClientID.ID, question.Status.Notification.ID)
+		_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
+			ID:       question.Status.Notification.ID,
+			ClientID: &agency.ClientID{ID: question.Status.ClientID.ID},
+			Ack:      true,
+		})
+		err2.Check(err)
+
 	}
 
 	return nil
@@ -292,4 +307,23 @@ func (s *ProofStore) GetVerifiedProof(id string) (string, error) {
 		return p, nil
 	}
 	return "", fmt.Errorf("verified proof by the id %s not found", id)
+}
+
+func (s *ProofStore) AddProofProposal(id string) (string, error) {
+	s.Lock()
+	defer s.Unlock()
+	if id != "" {
+		s.proofProposals[id] = id
+		return id, nil
+	}
+	return "", errors.New("cannot add non-existent proof proposal")
+}
+
+func (s *ProofStore) GetProofProposal(id string) (string, error) {
+	s.RLock()
+	defer s.RUnlock()
+	if p, ok := s.proofProposals[id]; ok {
+		return p, nil
+	}
+	return "", fmt.Errorf("proof proposal by the id %s not found", id)
 }

@@ -57,6 +57,12 @@ func (s *PresentProofApiService) PresentProofGetByThreadId(ctx context.Context, 
 			ThreadId: presentationExchangeThreadId,
 		}), nil
 	}
+	if threadID, _ := s.a.GetProofProposal(presentationExchangeThreadId); threadID != "" {
+		return Response(200, PresentProofOperationResponse{
+			State:    PROOF_PROPOSAL_RECEIVED,
+			ThreadId: threadID,
+		}), nil
+	}
 	return Response(http.StatusNotFound, nil), nil
 }
 
@@ -93,12 +99,20 @@ func (s *PresentProofApiService) PresentProofSendProposal(ctx context.Context, i
 // PresentProofSendRequest - Send presentation request
 func (s *PresentProofApiService) PresentProofSendRequest(ctx context.Context, inlineObject8 InlineObject8) (ImplResponse, error) {
 	connectionID := inlineObject8.Data.ConnectionId
-	proposalAttributes := ((inlineObject8.Data.PresentationRequest["proof_request"].(map[string]interface{}))["data"].(map[string]interface{}))["requested_attributes"].(map[string]interface{})
+	proposalAttributes := inlineObject8.Data.PresentationRequest.ProofRequest.Data.RequestedAttributes
 	attributes := make([]*agent.ProofAttribute, 0)
 	for _, value := range proposalAttributes {
-		attributes = append(attributes, &agent.ProofAttribute{
-			Name: (value.(map[string]interface{}))["name"].(string),
-		})
+		if value.Name != "" {
+			attributes = append(attributes, &agent.ProofAttribute{
+				Name: value.Name,
+			})
+		} else {
+			for _, name := range value.Names {
+				attributes = append(attributes, &agent.ProofAttribute{
+					Name: name,
+				})
+			}
+		}
 	}
 
 	threadId, err := s.a.RequestProof(connectionID, attributes)

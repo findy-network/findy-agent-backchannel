@@ -16,10 +16,10 @@ generate:
 
 clone:
 	mkdir -p .docker
-	-git clone https://github.com/bcgov/von-network .docker/von-network && \
-		cd .docker/von-network && git checkout $(VON_NETWORK_VERSION)
-	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness && \
-		cd .docker/aries-agent-test-harness && git checkout $(AATH_VERSION)
+	-git clone https://github.com/bcgov/von-network .docker/von-network
+	cd .docker/von-network && git reset --hard $(VON_NETWORK_VERSION)
+	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
+	cd .docker/aries-agent-test-harness && git reset --hard $(AATH_VERSION)
 
 von-up:
 	cd .docker/von-network && ./manage build && ./manage start

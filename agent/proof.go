@@ -121,7 +121,6 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 			Ack:      true,
 		})
 		err2.Check(err)
-
 	}
 
 	return nil

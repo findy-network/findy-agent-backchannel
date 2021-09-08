@@ -22,7 +22,7 @@ jobs:
       - name: test findy as Acme
         run: |
           cd ./env
-          make aath-check \
+          make aath-test-check \
             AGENT_DEFAULT=findy \
             AGENT_BOB=acapy
         env:

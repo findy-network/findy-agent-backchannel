@@ -162,6 +162,14 @@ func (s *CredentialStore) OfferCredential(
 	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
 	err2.Check(err)
 
+	// Just add these to make the states work correctly
+	// even though there is not cred proposal
+	_, err = s.AddPendingCredentialProposal(res.GetID())
+	err2.Check(err)
+
+	_, err = s.AddCredentialProposal(res.GetID(), &CredentialQuestion{})
+	err2.Check(err)
+
 	return res.ID, nil
 }
 

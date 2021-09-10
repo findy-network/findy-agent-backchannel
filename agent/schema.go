@@ -29,7 +29,8 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 
 	storeID := name + version
 
-	if schemaID, err := s.GetStoredSchema(storeID); err == nil {
+	schemaID := ""
+	if schemaID, err = s.GetStoredSchema(storeID); err == nil {
 		return schemaID, nil
 	}
 
@@ -47,7 +48,8 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 	id = res.ID
 	log.Printf("CreateSchema: %s", id)
 
-	s.AddStoredSchema(storeID, id)
+	_, err = s.AddStoredSchema(storeID, id)
+	err2.Check(err)
 
 	return
 }

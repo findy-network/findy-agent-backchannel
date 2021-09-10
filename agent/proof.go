@@ -179,7 +179,11 @@ func (s *CredentialStore) ProposeProof(connectionID string, attributes []*ProofA
 	return res.ID, nil
 }
 
-func (s *CredentialStore) RequestProof(connectionID string, attributes []*ProofAttribute, predicates []*ProofPredicate) (threadID string, err error) {
+func (s *CredentialStore) RequestProof(
+	connectionID string,
+	attributes []*ProofAttribute,
+	predicates []*ProofPredicate,
+) (threadID string, err error) {
 	defer err2.Return(&err)
 
 	log.Printf("Request proof, conn id: %s, attrs: %v", connectionID, attributes)

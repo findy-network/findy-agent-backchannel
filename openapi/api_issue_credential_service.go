@@ -51,6 +51,12 @@ func (s *IssueCredentialApiService) IssueCredentialGetByThreadId(ctx context.Con
 	// ISSUER
 	if threadID, _ := s.a.GetIssuedCredential(credentialExchangeThreadId); threadID != "" {
 		return Response(200, IssueCredentialOperationResponse{
+			State:    DONE,
+			ThreadId: threadID,
+		}), nil
+	}
+	if threadID, _ := s.a.GetPendingCredentialProposal(credentialExchangeThreadId); threadID != "" {
+		return Response(200, IssueCredentialOperationResponse{
 			State:    REQUEST_RECEIVED,
 			ThreadId: threadID,
 		}), nil
@@ -66,11 +72,11 @@ func (s *IssueCredentialApiService) IssueCredentialGetByThreadId(ctx context.Con
 
 // IssueCredentialIssue - Issue Credential
 func (s *IssueCredentialApiService) IssueCredentialIssue(ctx context.Context, req IssueCredentialIssueRequest) (ImplResponse, error) {
-	threadID, err := s.a.GetIssuedCredential(req.Id)
-	if threadID != "" {
+	_, err := s.a.GetCredentialProposal(req.Id)
+	if err == nil {
 		return Response(200, IssueCredentialOperationResponse{
 			State:    CREDENTIAL_ISSUED,
-			ThreadId: threadID,
+			ThreadId: req.Id,
 		}), nil
 	}
 
@@ -97,10 +103,6 @@ func (s *IssueCredentialApiService) IssueCredentialSendOffer(ctx context.Context
 		}
 	} else { // offer to proposal
 		_, err = s.a.AcceptCredentialProposal(req.Id)
-		if err == nil {
-			return Response(200, IssueCredentialOperationResponse{ThreadId: req.Id, State: OFFER_SENT}), nil
-		}
-		_, err = s.a.AddPendingCredentialProposal(req.Id)
 		if err == nil {
 			return Response(200, IssueCredentialOperationResponse{ThreadId: req.Id, State: OFFER_SENT}), nil
 		}

@@ -31,6 +31,7 @@ type Agent struct {
 	*ConnectionStore
 	*CredentialStore
 	*ProofStore
+	*SchemaStore
 }
 
 type QuestionHeader struct {
@@ -96,6 +97,7 @@ func (a *Agent) Login() {
 	a.ConnectionStore = InitConnections(a.Client, a.User)
 	a.CredentialStore = InitCredentials(a.Client)
 	a.ProofStore = InitProofs(a.Client)
+	a.SchemaStore = InitSchemas(a.Client)
 
 	ch, err := a.Client.Conn.ListenStatus(context.TODO(), &agency.ClientID{ID: uuid.New().String()})
 	err2.Check(err)
@@ -130,43 +132,6 @@ func (a *Agent) Login() {
 			_ = a.HandleProofQuestion(chRes)
 		}
 	}()
-}
-
-func (a *Agent) CreateSchema(name, version string, attributes []string) (id string, err error) {
-	defer err2.Return(&err)
-
-	var res *agency.Schema
-	res, err = a.Client.AgentClient.CreateSchema(
-		context.TODO(),
-		&agency.SchemaCreate{
-			Name:       name,
-			Version:    version,
-			Attributes: attributes,
-		},
-	)
-	err2.Check(err)
-
-	id = res.ID
-	log.Printf("CreateSchema: %s", id)
-
-	return
-}
-
-func (a *Agent) GetSchema(schemaID string) (schemaJSON string, err error) {
-	defer err2.Return(&err)
-
-	var res *agency.SchemaData
-	res, err = a.Client.AgentClient.GetSchema(
-		context.TODO(), &agency.Schema{
-			ID: schemaID,
-		},
-	)
-	err2.Check(err)
-
-	schemaJSON = res.Data
-	log.Printf("GetSchema: %v", schemaJSON)
-
-	return
 }
 
 func (a *Agent) CreateCredDef(schemaID, tag string) (id string, err error) {

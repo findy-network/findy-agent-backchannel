@@ -13,6 +13,7 @@ import (
 
 type ProofStatus = agency.ProtocolStatus_PresentProofStatus
 type ProofAttribute = agency.Protocol_Proof_Attribute
+type ProofPredicate = agency.Protocol_Predicates_Predicate
 type ProofPresentation = agency.Question_ProofVerifyMsg
 
 type ProofQuestion struct {
@@ -178,7 +179,7 @@ func (s *CredentialStore) ProposeProof(connectionID string, attributes []*ProofA
 	return res.ID, nil
 }
 
-func (s *CredentialStore) RequestProof(connectionID string, attributes []*ProofAttribute) (threadID string, err error) {
+func (s *CredentialStore) RequestProof(connectionID string, attributes []*ProofAttribute, predicates []*ProofPredicate) (threadID string, err error) {
 	defer err2.Return(&err)
 
 	log.Printf("Request proof, conn id: %s, attrs: %v", connectionID, attributes)
@@ -192,6 +193,11 @@ func (s *CredentialStore) RequestProof(connectionID string, attributes []*ProofA
 				AttrFmt: &agency.Protocol_PresentProofMsg_Attributes{
 					Attributes: &agency.Protocol_Proof{
 						Attributes: attributes,
+					},
+				},
+				PredFmt: &agency.Protocol_PresentProofMsg_Predicates{
+					Predicates: &agency.Protocol_Predicates{
+						Predicates: predicates,
 					},
 				},
 			},

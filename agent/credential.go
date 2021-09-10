@@ -194,14 +194,16 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 
 	var header *QuestionHeader
 	header, err = s.GetCredentialProposal(id)
-	err2.Check(err)
-
-	log.Printf("Accept credential proposal with the thread id %s, question id %s", id, header.questionID)
-	_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
-		ID:       header.questionID,
-		ClientID: &agency.ClientID{ID: header.clientID},
-		Ack:      true,
-	})
+	if err == nil {
+		log.Printf("Accept credential proposal with the thread id %s, question id %s", id, header.questionID)
+		_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
+			ID:       header.questionID,
+			ClientID: &agency.ClientID{ID: header.clientID},
+			Ack:      true,
+		})
+		err2.Check(err)
+	}
+	_, err = s.AddPendingCredentialProposal(id)
 	err2.Check(err)
 
 	return id, nil

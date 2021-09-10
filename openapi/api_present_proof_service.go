@@ -101,21 +101,35 @@ func (s *PresentProofApiService) PresentProofSendRequest(ctx context.Context, in
 	connectionID := inlineObject8.Data.ConnectionId
 	proposalAttributes := inlineObject8.Data.PresentationRequest.ProofRequest.Data.RequestedAttributes
 	attributes := make([]*agent.ProofAttribute, 0)
-	for _, value := range proposalAttributes {
+	for key, value := range proposalAttributes {
 		if value.Name != "" {
 			attributes = append(attributes, &agent.ProofAttribute{
 				Name: value.Name,
+				ID:   key,
 			})
 		} else {
 			for _, name := range value.Names {
 				attributes = append(attributes, &agent.ProofAttribute{
 					Name: name,
+					ID:   key,
 				})
 			}
 		}
 	}
 
-	threadId, err := s.a.RequestProof(connectionID, attributes)
+	proposalPredicates := inlineObject8.Data.PresentationRequest.ProofRequest.Data.RequestedPredicates
+	predicates := make([]*agent.ProofPredicate, 0)
+	for key, value := range proposalPredicates {
+		valueMap := value.(map[string]interface{})
+		predicates = append(predicates, &agent.ProofPredicate{
+			ID:     key,
+			Name:   valueMap["name"].(string),
+			PType:  valueMap["p_type"].(string),
+			PValue: int64(valueMap["p_value"].(float64)), // TODO: check does indy support float or int
+		})
+	}
+
+	threadId, err := s.a.RequestProof(connectionID, attributes, predicates)
 	if err == nil {
 		return Response(200, PresentProofOperationResponse{State: PROOF_REQUEST_SENT, ThreadId: threadId}), nil
 	}

@@ -148,5 +148,5 @@ func (s *PresentProofApiService) PresentProofVerifyPresentation(ctx context.Cont
 		}), nil
 	}
 
-	return Response(http.StatusInternalServerError, nil), err
+	return Response(http.StatusNotFound, nil), err
 }

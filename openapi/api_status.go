@@ -34,9 +34,9 @@ func (c *StatusApiController) Routes() Routes {
 			c.StatusGet,
 		},
 		{
-			"StatusGet_0",
+			"StatusGet_1",
 			strings.ToUpper("Get"),
-			"/agent/command/version",
+			"/agent/command/{version:version\\/?}",
 			c.StatusGet_1,
 		},
 	}
@@ -57,7 +57,7 @@ func (c *StatusApiController) StatusGet(w http.ResponseWriter, r *http.Request) 
 
 // StatusGet_1 - Get agent/backchannel version
 func (c *StatusApiController) StatusGet_1(w http.ResponseWriter, r *http.Request) {
-	result, err := c.service.StatusGet(r.Context())
+	result, err := c.service.StatusGet_1(r.Context())
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		EncodeJSONResponse(err.Error(), &result.Code, w)

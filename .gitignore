@@ -24,13 +24,11 @@
 
 .docker
 .data
+.logs
 
 # generated files
 env/conf/genesis.txt
-env/cert/client/cert.conf
-env/cert/client/client.crt
-env/cert/client/client.key
-env/cert/server/cert.conf
-env/cert/server/server.crt
-env/cert/server/server.key
+env/cert/**/*.conf
+env/cert/**/*.crt
+env/cert/**/*.key
 env/docker-compose.yml

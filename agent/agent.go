@@ -51,12 +51,14 @@ var authnCmd = authn.Cmd{
 }
 
 func Init() *Agent {
-	url := os.Getenv("DOCKERHOST")
+	url := os.Getenv("AGENCY_HOST")
 	if url == "" {
-		url = "localhost"
+		url = os.Getenv("DOCKERHOST")
 	}
 	authnCmd.Url = fmt.Sprintf("http://%s:8888", url)
 	authnCmd.UserName = fmt.Sprintf("findy-agent-backchannel-%d", time.Now().UnixNano())
+
+	log.Printf("Auth url %s, origin %s, user %s", authnCmd.Url, authnCmd.Origin, authnCmd.UserName)
 
 	myCmd := authnCmd
 	myCmd.SubCmd = "register"

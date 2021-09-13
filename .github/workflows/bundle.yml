@@ -1,5 +1,8 @@
 name: bundle
 on:
+  push:
+    branches:
+      - 'master'
   schedule:
     - cron: "5 0 * * 1"
   workflow_dispatch:
@@ -13,6 +16,11 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v2
+
+      - name: set version
+        run: |
+          NEW_AGENT_VERSION=$(curl https://raw.githubusercontent.com/findy-network/findy-agent/master/VERSION)
+          echo $NEW_AGENT_VERSION > ./AGENT_VERSION
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1

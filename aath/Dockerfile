@@ -9,7 +9,8 @@ RUN git clone https://github.com/findy-network/findy-agent-auth.git && \
 ADD . findy-agent-backchannel
 
 RUN cd findy-agent-backchannel && \
-    go build -o /go/bin/findy-agent-backchannel
+    go install -ldflags "-X 'github.com/findy-network/findy-agent-backchannel/openapi.Version=$(cat ./AGENT_VERSION)'" \
+    ./...
 
 FROM ghcr.io/findy-network/findy-base:indy-1.16.ubuntu-18.04
 

@@ -15,6 +15,10 @@ import (
 	"net/http"
 )
 
+var (
+	Version = "dev"
+)
+
 // StatusApiService is a service that implents the logic for the StatusApiServicer
 // This service should implement the business logic for every endpoint for the StatusApi API.
 // Include any external packages or services that will be required by this service.
@@ -53,11 +57,5 @@ func (s *StatusApiService) StatusGet_0(ctx context.Context) (ImplResponse, error
 
 // StatusGet_1 - Get agent/backchannel version
 func (s *StatusApiService) StatusGet_1(ctx context.Context) (ImplResponse, error) {
-	// TODO - update StatusGet_1 with the required logic for this service method.
-	// Add api_status_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, string{}) or use other options such as http.Ok ...
-	//return Response(200, string{}), nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("StatusGet_1 method not implemented")
+	return Response(200, Version), nil
 }

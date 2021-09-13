@@ -183,4 +183,5 @@ type SchemaApiServicer interface {
 type StatusApiServicer interface {
 	StatusGet(context.Context) (ImplResponse, error)
 	StatusGet_0(context.Context) (ImplResponse, error)
+	StatusGet_1(context.Context) (ImplResponse, error)
 }

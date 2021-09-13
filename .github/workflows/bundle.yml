@@ -1,6 +1,8 @@
-name: release
+name: bundle
 on:
- push
+  schedule:
+    - cron: "5 0 * * 1"
+
 
 jobs:
 

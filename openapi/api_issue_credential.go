@@ -25,6 +25,22 @@ type IssueCredentialStoreRequest struct {
 	Id string `json:"id"`
 }
 
+type IssueCredentialOfferRequest struct {
+	Id string `json:"id"`
+
+	Data struct {
+		CredentialProposal CredentialPreview `json:"credential_preview,omitempty"`
+
+		CredDefId string `json:"cred_def_id,omitempty"`
+
+		ConnectionId string `json:"connection_id"`
+	} `json:"data"`
+}
+
+type IssueCredentialIssueRequest struct {
+	Id string `json:"id"`
+}
+
 type UNKNOWN_BASE_TYPE struct{}
 
 // A IssueCredentialApiController binds http requests to an api service and writes the service results to the http response
@@ -97,7 +113,7 @@ func (c *IssueCredentialApiController) IssueCredentialGetByThreadId(w http.Respo
 
 // IssueCredentialIssue - Issue Credential
 func (c *IssueCredentialApiController) IssueCredentialIssue(w http.ResponseWriter, r *http.Request) {
-	uNKNOWNBASETYPE := &UNKNOWN_BASE_TYPE{}
+	uNKNOWNBASETYPE := &IssueCredentialIssueRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&uNKNOWNBASETYPE); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -115,7 +131,7 @@ func (c *IssueCredentialApiController) IssueCredentialIssue(w http.ResponseWrite
 
 // IssueCredentialSendOffer - Send credential offer
 func (c *IssueCredentialApiController) IssueCredentialSendOffer(w http.ResponseWriter, r *http.Request) {
-	uNKNOWNBASETYPE := &UNKNOWN_BASE_TYPE{}
+	uNKNOWNBASETYPE := &IssueCredentialOfferRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&uNKNOWNBASETYPE); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return

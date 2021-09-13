@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -30,6 +31,12 @@ type Agent struct {
 	*ConnectionStore
 	*CredentialStore
 	*ProofStore
+	*SchemaStore
+}
+
+type QuestionHeader struct {
+	questionID string
+	clientID   string
 }
 
 var authnCmd = authn.Cmd{
@@ -90,6 +97,7 @@ func (a *Agent) Login() {
 	a.ConnectionStore = InitConnections(a.Client, a.User)
 	a.CredentialStore = InitCredentials(a.Client)
 	a.ProofStore = InitProofs(a.Client)
+	a.SchemaStore = InitSchemas(a.Client)
 
 	ch, err := a.Client.Conn.ListenStatus(context.TODO(), &agency.ClientID{ID: uuid.New().String()})
 	err2.Check(err)
@@ -108,4 +116,56 @@ func (a *Agent) Login() {
 			_ = a.HandleProofNotification(notification)
 		}
 	}()
+
+	questionCh, err := a.Client.Conn.Wait(context.TODO(), &agency.ClientID{ID: uuid.New().String()})
+	err2.Check(err)
+
+	go func() {
+		for {
+			chRes, ok := <-questionCh
+			if !ok {
+				panic("Waiting failed")
+			}
+			fmt.Printf("Received question %v\n", chRes)
+
+			_ = a.HandleCredentialQuestion(chRes)
+			_ = a.HandleProofQuestion(chRes)
+		}
+	}()
+}
+
+func (a *Agent) CreateCredDef(schemaID, tag string) (id string, err error) {
+	defer err2.Return(&err)
+
+	var res *agency.CredDef
+	res, err = a.Client.AgentClient.CreateCredDef(
+		context.TODO(),
+		&agency.CredDefCreate{
+			SchemaID: schemaID,
+			Tag:      tag,
+		},
+	)
+	err2.Check(err)
+
+	id = res.ID
+	log.Printf("CreateCredDef: %s", id)
+
+	return
+}
+
+func (a *Agent) GetCredDef(credDefID string) (credDefJSON string, err error) {
+	defer err2.Return(&err)
+
+	var res *agency.CredDefData
+	res, err = a.Client.AgentClient.GetCredDef(
+		context.TODO(), &agency.CredDef{
+			ID: credDefID,
+		},
+	)
+	err2.Check(err)
+
+	credDefJSON = res.Data
+	log.Printf("GetCredDef: %v", credDefJSON)
+
+	return
 }

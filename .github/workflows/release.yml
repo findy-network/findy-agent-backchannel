@@ -11,8 +11,20 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: test
-        run: cd ./env && make aath-check
+      - name: test findy as Bob
+        run: |
+          cd ./env
+          make aath-check \
+            AGENT_DEFAULT=acapy \
+            AGENT_BOB=findy
+        env:
+          NO_TTY: "1"
+      - name: test findy as Acme
+        run: |
+          cd ./env
+          make aath-test-check \
+            AGENT_DEFAULT=findy \
+            AGENT_BOB=acapy
         env:
           NO_TTY: "1"
 

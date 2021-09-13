@@ -13,3 +13,4 @@ type InlineObject8 struct {
 
 	Data AgentCommandProofSendRequestData `json:"data"`
 }
+

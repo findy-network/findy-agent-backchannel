@@ -140,8 +140,8 @@ type DIDApiServicer interface {
 // and updated with the logic required for the API.
 type IssueCredentialApiServicer interface {
 	IssueCredentialGetByThreadId(context.Context, string) (ImplResponse, error)
-	IssueCredentialIssue(context.Context, UNKNOWN_BASE_TYPE) (ImplResponse, error)
-	IssueCredentialSendOffer(context.Context, UNKNOWN_BASE_TYPE) (ImplResponse, error)
+	IssueCredentialIssue(context.Context, IssueCredentialIssueRequest) (ImplResponse, error)
+	IssueCredentialSendOffer(context.Context, IssueCredentialOfferRequest) (ImplResponse, error)
 	IssueCredentialSendProposal(context.Context, InlineObject6) (ImplResponse, error)
 	IssueCredentialSendRequest(context.Context, SendIssueCredentialRequest) (ImplResponse, error)
 	IssueCredentialStore(context.Context, IssueCredentialStoreRequest) (ImplResponse, error)

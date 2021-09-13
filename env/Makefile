@@ -1,7 +1,7 @@
 VON_NETWORK_VERSION:=37fa43673678b64c0f6080c5e2b50c7ea5354cb4
 AATH_VERSION:=4aa61a516816cdc52c368c74d5eb3965ec87c18f
 EXPECTED_RESULT:="3 features passed"
-INCLUDE_TAGS?=@AIP10
+INCLUDE_TAGS?=@AcceptanceTest
 AGENT_DEFAULT?=acapy
 AGENT_BOB?=findy
 
@@ -16,10 +16,10 @@ generate:
 
 clone:
 	mkdir -p .docker
-	-git clone https://github.com/bcgov/von-network .docker/von-network && \
-		cd .docker/von-network && git checkout $(VON_NETWORK_VERSION)
-	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness && \
-		cd .docker/aries-agent-test-harness && git checkout $(AATH_VERSION)
+	-git clone https://github.com/bcgov/von-network .docker/von-network
+	cd .docker/von-network && git reset --hard $(VON_NETWORK_VERSION)
+	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
+	cd .docker/aries-agent-test-harness && git reset --hard $(AATH_VERSION)
 
 von-up:
 	cd .docker/von-network && ./manage build && ./manage start
@@ -51,7 +51,9 @@ aath-test: gen-findy info
 			-d $(AGENT_DEFAULT) \
 			-b $(AGENT_BOB) \
 			-t $(INCLUDE_TAGS) \
-			-t ~@wip -t ~@T006-RFC0160 -t ~@T003-RFC0160 -t ~@T004-RFC0160
+			-t @AIP10 \
+			-t ~@revocation \
+			-t ~@wip
 	
 aath-test-check:  gen-findy info
 	cd .docker/aries-agent-test-harness && \
@@ -59,7 +61,9 @@ aath-test-check:  gen-findy info
 			-d $(AGENT_DEFAULT) \
 			-b $(AGENT_BOB) \
 			-t $(INCLUDE_TAGS) \
-			-t ~@wip -t ~@T006-RFC0160 -t ~@T003-RFC0160 -t ~@T004-RFC0160 \
+			-t @AIP10 \
+			-t ~@revocation \
+			-t ~@wip \
 			> output.log && \
 		cat output.log && \
 		cat output.log | grep $(EXPECTED_RESULT)
@@ -85,8 +89,9 @@ up: von-up gen-cert
 
 down:
 	docker-compose down
-	cd .docker/von-network && ./manage stop
+	cd .docker/von-network && ./manage down
 
 rm: down
 	docker-compose rm
+	rm -rf .data
 

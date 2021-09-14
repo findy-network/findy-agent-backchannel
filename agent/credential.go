@@ -116,7 +116,9 @@ func (s *CredentialStore) HandleCredentialQuestion(question *agency.Question) (e
 		}
 
 		_, state, err := s.GetCredential(question.Status.Notification.ProtocolID)
-		if err == nil && state == OFFER {
+
+		log.Println("Received credential question, current state", state)
+		if err == nil && state >= REQUEST {
 			err := s.addCredData(data.id, data)
 			err2.Check(err)
 
@@ -247,26 +249,37 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 
 func (s *CredentialStore) IssueCredential(id string) (err error) {
 	defer err2.Return(&err)
-	err = s.addCredData(id, &credData{
+
+	// TODO:
+	// when testing with acapy, cred notification is not received -> why?
+	// force state change here for reported and actual
+	err = s.doAddCredData(id, &credData{
 		id:          id,
 		actualState: CREDENTIAL,
 		issuer:      true,
-	})
+	}, true)
 	err2.Check(err)
 
-	return nil
+	return err
 }
 
 func (s *CredentialStore) addCredData(id string, c *credData) error {
+	return s.doAddCredData(id, c, false)
+}
+
+func (s *CredentialStore) doAddCredData(id string, c *credData, resetReported bool) error {
 	s.Lock()
 	defer s.Unlock()
 	if c != nil {
 		reportedState := c.actualState
-		if data, ok := s.store[id]; ok {
-			reportedState = data.reportedState
+		if !resetReported {
+			if data, ok := s.store[id]; ok {
+				reportedState = data.reportedState
+			}
 		}
 		c.reportedState = reportedState
 		s.store[id] = *c
+		log.Println("Store cred data id", c.id, "state", c.actualState, "reported", c.reportedState)
 		return nil
 	}
 	return fmt.Errorf("cannot add non-existent credential with id %s", id)
@@ -281,10 +294,10 @@ func (s *CredentialStore) GetCredential(id string) (bool, IssueCredentialState, 
 		// we do not get all protocol notifications from agency so simulate here
 		// "step-by-step"-functionality
 		if cred.actualState > state || state == DONE-1 {
-			state++
+			cred.reportedState++
 		}
-		cred.reportedState = state
 		s.store[id] = cred
+		log.Println("Update reported cred data state", cred.id, "state", cred.actualState, "reported", cred.reportedState)
 		return issuer, state, nil
 	}
 	return false, 0, fmt.Errorf("credential by the id %s not found", id)

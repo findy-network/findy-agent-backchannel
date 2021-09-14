@@ -74,7 +74,8 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 				log.Printf("New credential %v\n", cred)
 
 				// TODO: role in notification should indicate if we are holder or not
-				issuer, _, err := s.GetCredential(notification.ProtocolID)
+				var issuer bool
+				issuer, _, err = s.GetCredential(notification.ProtocolID)
 				err2.Check(err)
 
 				data := &credData{
@@ -106,7 +107,6 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 func (s *CredentialStore) HandleCredentialQuestion(question *agency.Question) (err error) {
 	defer err2.Return(&err)
 	if question.TypeID == agency.Question_ISSUE_PROPOSE_WAITS {
-
 		data := &credData{
 			id:          question.Status.Notification.ProtocolID,
 			questionID:  question.Status.Notification.ID,

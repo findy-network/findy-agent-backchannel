@@ -29,10 +29,11 @@ type ConnectionStore struct {
 
 func InitConnections(a *AgencyClient, userName string) *ConnectionStore {
 	return &ConnectionStore{
-		agent:       a,
-		conns:       make(map[string]*ConnectionStatus),
-		invitations: make(map[string]string),
-		User:        userName,
+		agent:        a,
+		conns:        make(map[string]*ConnectionStatus),
+		invitations:  make(map[string]string),
+		pendingPings: make(map[string]string),
+		User:         userName,
 	}
 }
 
@@ -55,7 +56,8 @@ func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Noti
 
 				_, err := s.GetPendingPing(status.GetDIDExchange().ID)
 				if err == nil {
-					s.TrustPing(status.GetDIDExchange().ID)
+					_, err = s.TrustPing(status.GetDIDExchange().ID)
+					err2.Check(err)
 				}
 			} else {
 				log.Printf("Connection status NOK %v\n", status)
@@ -103,11 +105,14 @@ func (s *ConnectionStore) TrustPing(connectionID string) (res string, err error)
 	defer err2.Return(&err)
 
 	_, err = s.GetConnection(connectionID)
-	err2.Check(err)
-
-	pw := async.NewPairwise(s.agent.Conn, connectionID)
-	_, err = pw.Ping(context.TODO())
-	err2.Check(err)
+	if err == nil {
+		pw := async.NewPairwise(s.agent.Conn, connectionID)
+		_, err = pw.Ping(context.TODO())
+		err2.Check(err)
+	} else {
+		_, err = s.AddPendingPing(connectionID)
+		err2.Check(err)
+	}
 
 	return connectionID, nil
 }

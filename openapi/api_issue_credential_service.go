@@ -11,10 +11,40 @@ package openapi
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/findy-network/findy-agent-backchannel/agent"
 )
+
+func getCredStatus(issuer bool, state agent.IssueCredentialState) IssueCredentialState {
+	res := CREDENTIAL_RECEIVED
+	switch state {
+	case agent.PROPOSAL:
+		res = PROPOSAL_RECEIVED
+		if !issuer {
+			res = PROPOSAL_SENT
+		}
+	case agent.OFFER:
+		res = OFFER_SENT
+		if !issuer {
+			res = OFFER_RECEIVED
+		}
+	case agent.REQUEST:
+		res = REQUEST_RECEIVED
+		if !issuer {
+			res = REQUEST_SENT
+		}
+	case agent.CREDENTIAL:
+		res = CREDENTIAL_ISSUED
+		if !issuer {
+			res = CREDENTIAL_RECEIVED
+		}
+	case agent.DONE:
+		res = DONE
+	}
+	return res
+}
 
 // IssueCredentialApiService is a service that implents the logic for the IssueCredentialApiServicer
 // This service should implement the business logic for every endpoint for the IssueCredentialApi API.
@@ -33,54 +63,40 @@ func NewIssueCredentialApiService(a *agent.Agent) IssueCredentialApiServicer {
 // IssueCredentialGetByThreadId - Get credential exchange record by thread id
 func (s *IssueCredentialApiService) IssueCredentialGetByThreadId(ctx context.Context, credentialExchangeThreadId string) (ImplResponse, error) {
 
-	// HOLDER
-	if cred, err := s.a.GetCredential(credentialExchangeThreadId); err == nil {
-		return Response(200, IssueCredentialOperationResponse{
-			State:    CREDENTIAL_RECEIVED,
-			ThreadId: cred.ID,
-		}), nil
-
-	}
-	if threadID, _ := s.a.GetCredentialOffer(credentialExchangeThreadId); threadID != "" {
-		return Response(200, IssueCredentialOperationResponse{
-			State:    OFFER_RECEIVED,
-			ThreadId: threadID,
-		}), nil
+	issuer, state, err := s.a.GetCredential(credentialExchangeThreadId)
+	if err != nil {
+		return Response(http.StatusNotFound, nil), err
 	}
 
-	// ISSUER
-	if threadID, _ := s.a.GetIssuedCredential(credentialExchangeThreadId); threadID != "" {
-		return Response(200, IssueCredentialOperationResponse{
-			State:    DONE,
-			ThreadId: threadID,
-		}), nil
-	}
-	if threadID, _ := s.a.GetPendingCredentialProposal(credentialExchangeThreadId); threadID != "" {
-		return Response(200, IssueCredentialOperationResponse{
-			State:    REQUEST_RECEIVED,
-			ThreadId: threadID,
-		}), nil
-	}
-	if _, err := s.a.GetCredentialProposal(credentialExchangeThreadId); err == nil {
-		return Response(200, IssueCredentialOperationResponse{
-			State:    PROPOSAL_RECEIVED,
-			ThreadId: credentialExchangeThreadId,
-		}), nil
-	}
-	return Response(http.StatusNotFound, nil), nil
+	res := getCredStatus(issuer, state)
+	log.Println("IssueCredentialGetByThreadId Credential status ", res, credentialExchangeThreadId)
+
+	return Response(200, IssueCredentialOperationResponse{
+		State:    res,
+		ThreadId: credentialExchangeThreadId,
+	}), nil
+
 }
 
 // IssueCredentialIssue - Issue Credential
 func (s *IssueCredentialApiService) IssueCredentialIssue(ctx context.Context, req IssueCredentialIssueRequest) (ImplResponse, error) {
-	_, err := s.a.GetCredentialProposal(req.Id)
-	if err == nil {
-		return Response(200, IssueCredentialOperationResponse{
-			State:    CREDENTIAL_ISSUED,
-			ThreadId: req.Id,
-		}), nil
+	err := s.a.IssueCredential(req.Id)
+	if err != nil {
+		return Response(http.StatusInternalServerError, nil), err
 	}
 
-	return Response(http.StatusInternalServerError, nil), err
+	issuer, state, err := s.a.GetCredential(req.Id)
+	if err != nil {
+		return Response(http.StatusNotFound, nil), err
+	}
+
+	res := getCredStatus(issuer, state)
+	log.Println("IssueCredentialIssue Credential status ", res, req.Id)
+
+	return Response(200, IssueCredentialOperationResponse{
+		State:    res,
+		ThreadId: req.Id,
+	}), nil
 }
 
 // IssueCredentialSendOffer - Send credential offer
@@ -143,9 +159,18 @@ func (s *IssueCredentialApiService) IssueCredentialSendRequest(ctx context.Conte
 
 // IssueCredentialStore - Store Credential
 func (s *IssueCredentialApiService) IssueCredentialStore(ctx context.Context, req IssueCredentialStoreRequest) (ImplResponse, error) {
-	cred, err := s.a.GetCredential(req.Id)
+	issuer, state, err := s.a.GetCredential(req.Id)
 	if err != nil {
 		return Response(http.StatusNotFound, nil), err
 	}
-	return Response(200, IssueCredentialOperationResponse{ThreadId: cred.ID, CredentialId: cred.ID, State: DONE}), nil
+
+	res := getCredStatus(issuer, state)
+
+	log.Println("IssueCredentialStore Credential status ", res, req.Id)
+
+	return Response(200, IssueCredentialOperationResponse{
+		State:        res,
+		ThreadId:     req.Id,
+		CredentialId: req.Id,
+	}), nil
 }

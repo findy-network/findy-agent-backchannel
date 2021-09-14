@@ -101,5 +101,5 @@ func (s *ConnectionApiService) ConnectionSendPing(ctx context.Context, inlineObj
 	if err == nil {
 		return Response(200, InlineResponse2002{ConnectionId: id, State: ACTIVE}), nil
 	}
-	return Response(http.StatusInternalServerError, nil), err
+	return Response(http.StatusNotFound, nil), err
 }

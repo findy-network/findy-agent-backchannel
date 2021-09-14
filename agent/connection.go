@@ -19,10 +19,11 @@ type Connection struct {
 }
 
 type ConnectionStore struct {
-	agent       *AgencyClient
-	conns       map[string]*ConnectionStatus
-	invitations map[string]string
-	User        string
+	agent        *AgencyClient
+	conns        map[string]*ConnectionStatus
+	invitations  map[string]string
+	pendingPings map[string]string
+	User         string
 	sync.RWMutex
 }
 
@@ -51,6 +52,11 @@ func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Noti
 				log.Printf("New connection %v\n", status.GetDIDExchange())
 				_, err = s.AddConnection(status.GetDIDExchange().ID, status.GetDIDExchange())
 				err2.Check(err)
+
+				_, err := s.GetPendingPing(status.GetDIDExchange().ID)
+				if err == nil {
+					s.TrustPing(status.GetDIDExchange().ID)
+				}
 			} else {
 				log.Printf("Connection status NOK %v\n", status)
 			}
@@ -148,4 +154,23 @@ func (s *ConnectionStore) GetConnectionInvitation(id string) (string, error) {
 		return invitation, nil
 	}
 	return "", fmt.Errorf("connection invitation by the id %s not found", id)
+}
+
+func (s *ConnectionStore) AddPendingPing(id string) (string, error) {
+	s.Lock()
+	defer s.Unlock()
+	if _, ok := s.invitations[id]; ok && id != "" {
+		s.pendingPings[id] = id
+		return id, nil
+	}
+	return "", errors.New("cannot add non-existent pending ping")
+}
+
+func (s *ConnectionStore) GetPendingPing(id string) (string, error) {
+	s.RLock()
+	defer s.RUnlock()
+	if _, ok := s.pendingPings[id]; ok {
+		return id, nil
+	}
+	return "", fmt.Errorf("pending ping by the id %s not found", id)
 }

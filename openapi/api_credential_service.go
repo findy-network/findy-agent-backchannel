@@ -32,7 +32,7 @@ func NewCredentialApiService(a *agent.Agent) CredentialApiServicer {
 
 // CredentialGetById - Get credential by id
 func (s *CredentialApiService) CredentialGetById(ctx context.Context, credentialId string) (ImplResponse, error) {
-	cred, err := s.a.GetCredential(credentialId)
+	cred, err := s.a.GetCredentialContent(credentialId)
 	if err != nil {
 		return Response(http.StatusNotFound, nil), err
 	}

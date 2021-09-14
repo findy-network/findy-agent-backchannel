@@ -25,6 +25,12 @@ jobs:
           make aath-test-check \
             AGENT_DEFAULT=findy \
             AGENT_BOB=acapy
+      - name: test findy as default
+        run: |
+          cd ./env
+          make aath-test-check \
+            AGENT_DEFAULT=findy \
+            AGENT_BOB=findy
         env:
           NO_TTY: "1"
 

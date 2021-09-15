@@ -30,6 +30,23 @@ const (
 	DONE       IssueCredentialState = 5
 )
 
+func (e IssueCredentialState) String() string {
+	switch e {
+	case PROPOSAL:
+		return "PROPOSAL"
+	case OFFER:
+		return "OFFER"
+	case REQUEST:
+		return "REQUEST"
+	case CREDENTIAL:
+		return "CREDENTIAL"
+	case DONE:
+		return "DONE"
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
+
 type credData struct {
 	id            string
 	questionID    string
@@ -111,13 +128,14 @@ func (s *CredentialStore) HandleCredentialQuestion(question *agency.Question) (e
 			id:          question.Status.Notification.ProtocolID,
 			questionID:  question.Status.Notification.ID,
 			clientID:    question.Status.ClientID.ID,
-			issuer:      false,
+			issuer:      true,
 			actualState: REQUEST,
 		}
 
 		_, state, err := s.GetCredential(question.Status.Notification.ProtocolID)
 
 		log.Println("Received credential question, current state", state)
+		// the proposal has already been accepted
 		if err == nil && state >= REQUEST {
 			err := s.addCredData(data.id, data)
 			err2.Check(err)
@@ -125,6 +143,7 @@ func (s *CredentialStore) HandleCredentialQuestion(question *agency.Question) (e
 			_, err = s.AcceptCredentialProposal(question.Status.Notification.ProtocolID)
 			err2.Check(err)
 		} else {
+			// wait for proposal acceptance
 			data.actualState = PROPOSAL
 			err := s.addCredData(data.id, data)
 			err2.Check(err)
@@ -226,7 +245,7 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 	defer err2.Return(&err)
 
 	var header *QuestionHeader
-	header, err = s.GetCredentialQuestion(id)
+	header, err = s.getCredentialQuestion(id)
 	if err == nil {
 		log.Printf("Accept credential proposal with the thread id %s, question id %s", id, header.questionID)
 		_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
@@ -303,7 +322,7 @@ func (s *CredentialStore) GetCredential(id string) (bool, IssueCredentialState, 
 	return false, 0, fmt.Errorf("credential by the id %s not found", id)
 }
 
-func (s *CredentialStore) GetCredentialQuestion(id string) (*QuestionHeader, error) {
+func (s *CredentialStore) getCredentialQuestion(id string) (*QuestionHeader, error) {
 	s.Lock()
 	defer s.Unlock()
 	if cred, ok := s.store[id]; ok {

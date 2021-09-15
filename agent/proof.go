@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -16,37 +15,55 @@ type ProofAttribute = agency.Protocol_Proof_Attribute
 type ProofPredicate = agency.Protocol_Predicates_Predicate
 type ProofPresentation = agency.Question_ProofVerifyMsg
 
-type ProofQuestion struct {
-	header       QuestionHeader
-	presentation *ProofPresentation
+type PresentProofState int
+
+const (
+	PROOF_PROPOSAL     PresentProofState = 1
+	PROOF_REQUEST      PresentProofState = 2
+	PROOF_PRESENTATION PresentProofState = 3
+	PROOF_DONE         PresentProofState = 4
+)
+
+func (e PresentProofState) String() string {
+	switch e {
+	case PROOF_PROPOSAL:
+		return "PROOF_PROPOSAL"
+	case PROOF_REQUEST:
+		return "PROOF_REQUEST"
+	case PROOF_PRESENTATION:
+		return "PROOF_PRESENTATION"
+	case PROOF_DONE:
+		return "PROOF_DONE"
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
+
+type proofData struct {
+	id            string
+	questionID    string
+	clientID      string
+	actualState   PresentProofState
+	reportedState PresentProofState
+	verifier      bool
 }
 
 type Proof struct {
-	ID        string `json:"referent"`
-	CredDefID string `json:"proof_def_id"`
-	SchemaID  string `json:"schema_id"`
+	ID         string `json:"referent"`
+	ProofDefID string `json:"proof_def_id"`
+	SchemaID   string `json:"schema_id"`
 }
 
 type ProofStore struct {
-	agent          *AgencyClient
-	readyProofs    map[string]*ProofStatus
-	sentProofs     map[string]string
-	requests       map[string]string
-	presentations  map[string]*ProofQuestion
-	verifiedProofs map[string]string
-	proofProposals map[string]string
+	agent *AgencyClient
+	store map[string]proofData
 	sync.RWMutex
 }
 
 func InitProofs(a *AgencyClient) *ProofStore {
 	return &ProofStore{
-		agent:          a,
-		readyProofs:    make(map[string]*ProofStatus),
-		sentProofs:     make(map[string]string),
-		requests:       make(map[string]string),
-		presentations:  make(map[string]*ProofQuestion),
-		verifiedProofs: make(map[string]string),
-		proofProposals: make(map[string]string),
+		agent: a,
+		store: make(map[string]proofData),
 	}
 }
 
@@ -67,22 +84,32 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 
 			if status.State.State == agency.ProtocolState_OK {
 				proof := status.GetPresentProof()
-				if _, err = s.GetProofRequest(notification.ProtocolID); err == nil {
-					log.Printf("New proof %v\n", proof)
-					_, err = s.AddProof(protocolID.ID, proof)
-					err2.Check(err)
-				} else {
-					log.Printf("Proof verified %v\n", proof)
-					_, err = s.AddVerifiedProof(protocolID.ID)
-					err2.Check(err)
+				log.Printf("Proof ready %v\n", proof)
+
+				// TODO: role in notification should indicate if we are holder or not
+				var verifier bool
+				verifier, _, err = s.GetProof(notification.ProtocolID)
+				err2.Check(err)
+
+				data := &proofData{
+					id:          protocolID.ID,
+					verifier:    verifier,
+					actualState: PROOF_DONE,
 				}
+				err = s.addProofData(protocolID.ID, data)
+				err2.Check(err)
 			}
 		}
 
 		// Proof request received
 	} else if notification.GetProtocolType() == agency.Protocol_PRESENT_PROOF &&
 		notification.GetTypeID() == agency.Notification_PROTOCOL_PAUSED {
-		_, err = s.AddProofRequest(notification.ProtocolID)
+		data := &proofData{
+			id:          notification.ProtocolID,
+			verifier:    false,
+			actualState: PROOF_REQUEST,
+		}
+		err = s.addProofData(notification.ProtocolID, data)
 		err2.Check(err)
 	}
 	return nil
@@ -92,26 +119,42 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 	defer err2.Return(&err)
 
 	if question.TypeID == agency.Question_PROOF_VERIFY_WAITS {
+
+		data := &proofData{
+			id:          question.Status.Notification.ProtocolID,
+			questionID:  question.Status.Notification.ID,
+			clientID:    question.Status.ClientID.ID,
+			verifier:    true,
+			actualState: PROOF_PRESENTATION,
+		}
+
 		proof := question.GetProofVerify()
-		_, err := s.AddProofPresentation(question.Status.Notification.ProtocolID, &ProofQuestion{
-			header: QuestionHeader{
-				clientID:   question.Status.ClientID.ID,
-				questionID: question.Status.Notification.ID,
-			},
-			presentation: proof,
-		})
+		log.Printf("Proof presented %v\n", proof)
+
+		err := s.addProofData(data.id, data)
 		err2.Check(err)
 
-		// just accept proof directly
+		/*// just accept proof directly
 		log.Printf("Accept proof values with the thread id %s, question id %s", question.Status.ClientID.ID, question.Status.Notification.ID)
 		_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
 			ID:       question.Status.Notification.ID,
 			ClientID: &agency.ClientID{ID: question.Status.ClientID.ID},
 			Ack:      true,
 		})
-		err2.Check(err)
+		err2.Check(err)*/
 	} else if question.TypeID == agency.Question_PROOF_PROPOSE_WAITS {
-		_, err := s.AddProofProposal(question.Status.Notification.ProtocolID)
+		data := &proofData{
+			id:          question.Status.Notification.ProtocolID,
+			questionID:  question.Status.Notification.ID,
+			clientID:    question.Status.ClientID.ID,
+			verifier:    true,
+			actualState: PROOF_PROPOSAL,
+		}
+
+		proof := question.GetProofVerify()
+		log.Printf("Proof proposal %v\n", proof)
+
+		err := s.addProofData(data.id, data)
 		err2.Check(err)
 
 		// just accept proof propose directly
@@ -130,7 +173,7 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 func (s *ProofStore) SendProofPresentation(id string) (threadID string, err error) {
 	defer err2.Return(&err)
 
-	threadID, err = s.GetProofRequest(id)
+	_, _, err = s.GetProof(id)
 	err2.Check(err)
 
 	state := &agency.ProtocolState{
@@ -148,13 +191,17 @@ func (s *ProofStore) SendProofPresentation(id string) (threadID string, err erro
 	)
 	err2.Check(err)
 
-	_, err = s.AddSentProof(id)
+	err = s.addProofData(id, &proofData{
+		id:          id,
+		verifier:    false,
+		actualState: PROOF_PRESENTATION,
+	})
 	err2.Check(err)
 
 	return threadID, nil
 }
 
-func (s *CredentialStore) ProposeProof(connectionID string, attributes []*ProofAttribute) (threadID string, err error) {
+func (s *ProofStore) ProposeProof(connectionID string, attributes []*ProofAttribute) (threadID string, err error) {
 	defer err2.Return(&err)
 
 	log.Printf("Propose proof, conn id: %s, attrs: %v", connectionID, attributes)
@@ -179,7 +226,7 @@ func (s *CredentialStore) ProposeProof(connectionID string, attributes []*ProofA
 	return res.ID, nil
 }
 
-func (s *CredentialStore) RequestProof(
+func (s *ProofStore) RequestProof(
 	connectionID string,
 	attributes []*ProofAttribute,
 	predicates []*ProofPredicate,
@@ -213,126 +260,80 @@ func (s *CredentialStore) RequestProof(
 	return res.ID, nil
 }
 
-func (s *ProofStore) AddProof(id string, c *ProofStatus) (*Proof, error) {
+func (s *ProofStore) VerifyPresentation(id string) (err error) {
+	defer err2.Return(&err)
+
+	var question *QuestionHeader
+	question, err = s.getProofQuestion(id)
+	err2.Check(err)
+
+	log.Printf("Accept proof values with the thread id %s, question id %s", question.clientID, question.questionID)
+	_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
+		ID:       question.questionID,
+		ClientID: &agency.ClientID{ID: question.clientID},
+		Ack:      true,
+	})
+	err2.Check(err)
+
+	err = s.doAddProofData(id, &proofData{
+		id:          id,
+		actualState: PROOF_DONE,
+		verifier:    true,
+	}, true)
+	err2.Check(err)
+
+	return err
+}
+
+func (s *ProofStore) addProofData(id string, c *proofData) error {
+	return s.doAddProofData(id, c, false)
+}
+
+func (s *ProofStore) doAddProofData(id string, c *proofData, resetReported bool) error {
 	s.Lock()
 	defer s.Unlock()
 	if c != nil {
-		s.readyProofs[id] = c
-		res := &Proof{
-			ID: id,
+		reportedState := c.actualState
+		if !resetReported {
+			if data, ok := s.store[id]; ok {
+				reportedState = data.reportedState
+			}
 		}
-		return res, nil
+		c.reportedState = reportedState
+		s.store[id] = *c
+		log.Println("Store proof data id", c.id, "state", c.actualState, "reported", c.reportedState)
+		return nil
 	}
-	return nil, fmt.Errorf("cannot add non-existent proof with id %s", id)
+	return fmt.Errorf("cannot add non-existent proof with id %s", id)
 }
 
-func (s *ProofStore) GetProof(id string) (*Proof, error) {
-	s.RLock()
-	defer s.RUnlock()
-	if _, ok := s.readyProofs[id]; ok {
-		res := &Proof{
-			ID: id,
+func (s *ProofStore) GetProof(id string) (bool, PresentProofState, error) {
+	s.Lock()
+	defer s.Unlock()
+	if proof, ok := s.store[id]; ok {
+		state := proof.reportedState
+		verifier := proof.verifier
+		// we do not get all protocol notifications from agency so simulate here
+		// "step-by-step"-functionality
+		if proof.actualState > state || state == PROOF_DONE-1 {
+			proof.reportedState++
 		}
-		return res, nil
+		s.store[id] = proof
+		log.Println("Update reported proof data state", proof.id, "state", proof.actualState, "reported", proof.reportedState)
+		return verifier, state, nil
+	}
+	return false, 0, fmt.Errorf("proof by the id %s not found", id)
+}
+
+func (s *ProofStore) getProofQuestion(id string) (*QuestionHeader, error) {
+	s.Lock()
+	defer s.Unlock()
+	if proof, ok := s.store[id]; ok {
+		q := &QuestionHeader{
+			questionID: proof.questionID,
+			clientID:   proof.clientID,
+		}
+		return q, nil
 	}
 	return nil, fmt.Errorf("proof by the id %s not found", id)
-}
-
-func (s *ProofStore) AddSentProof(id string) (string, error) {
-	s.Lock()
-	defer s.Unlock()
-	if id != "" {
-		s.sentProofs[id] = id
-		return id, nil
-	}
-	return "", fmt.Errorf("cannot add sent proof with id %s", id)
-}
-
-func (s *ProofStore) GetSentProof(id string) (string, error) {
-	s.RLock()
-	defer s.RUnlock()
-	if _, ok := s.sentProofs[id]; ok {
-		return id, nil
-	}
-	return "", fmt.Errorf("sent proof by the id %s not found", id)
-}
-
-func (s *ProofStore) AddProofRequest(id string) (string, error) {
-	s.Lock()
-	defer s.Unlock()
-	if id != "" {
-		s.requests[id] = id
-		return id, nil
-	}
-	return "", errors.New("cannot add non-existent proof request")
-}
-
-func (s *ProofStore) GetProofRequest(id string) (string, error) {
-	s.RLock()
-	defer s.RUnlock()
-	if request, ok := s.requests[id]; ok {
-		return request, nil
-	}
-	return "", fmt.Errorf("proof request by the id %s not found", id)
-}
-
-func (s *ProofStore) AddProofPresentation(id string, p *ProofQuestion) (string, error) {
-	s.Lock()
-	defer s.Unlock()
-	if p != nil {
-		s.presentations[id] = p
-		return id, nil
-	}
-	return "", errors.New("cannot add non-existent proof presentation")
-}
-
-func (s *ProofStore) GetProofPresentation(id string) (*QuestionHeader, error) {
-	s.RLock()
-	defer s.RUnlock()
-	if presentation, ok := s.presentations[id]; ok {
-		h := &QuestionHeader{
-			clientID:   presentation.header.clientID,
-			questionID: presentation.header.questionID,
-		}
-		return h, nil
-	}
-	return nil, fmt.Errorf("proof presentation by the id %s not found", id)
-}
-
-func (s *ProofStore) AddVerifiedProof(id string) (string, error) {
-	s.Lock()
-	defer s.Unlock()
-	if id != "" {
-		s.verifiedProofs[id] = id
-		return id, nil
-	}
-	return "", errors.New("cannot add non-existent proof")
-}
-
-func (s *ProofStore) GetVerifiedProof(id string) (string, error) {
-	s.RLock()
-	defer s.RUnlock()
-	if p, ok := s.verifiedProofs[id]; ok {
-		return p, nil
-	}
-	return "", fmt.Errorf("verified proof by the id %s not found", id)
-}
-
-func (s *ProofStore) AddProofProposal(id string) (string, error) {
-	s.Lock()
-	defer s.Unlock()
-	if id != "" {
-		s.proofProposals[id] = id
-		return id, nil
-	}
-	return "", errors.New("cannot add non-existent proof proposal")
-}
-
-func (s *ProofStore) GetProofProposal(id string) (string, error) {
-	s.RLock()
-	defer s.RUnlock()
-	if p, ok := s.proofProposals[id]; ok {
-		return p, nil
-	}
-	return "", fmt.Errorf("proof proposal by the id %s not found", id)
 }

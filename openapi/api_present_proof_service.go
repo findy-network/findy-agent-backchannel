@@ -11,10 +11,35 @@ package openapi
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/findy-network/findy-agent-backchannel/agent"
 )
+
+func getProofStatus(verifier bool, state agent.PresentProofState) PresentProofState {
+	res := PROOF_DONE
+	switch state {
+	case agent.StateProofProposal:
+		res = PROOF_PROPOSAL_RECEIVED
+		if !verifier {
+			res = PROOF_PROPOSAL_SENT
+		}
+	case agent.StateProofRequest:
+		res = PROOF_REQUEST_SENT
+		if !verifier {
+			res = PROOF_REQUEST_RECEIVED
+		}
+	case agent.StateProofPresentation:
+		res = PROOF_PRESENTATION_RECEIVED
+		if !verifier {
+			res = PROOF_PRESENTATION_SENT
+		}
+	case agent.StateProofDone:
+		res = PROOF_DONE
+	}
+	return res
+}
 
 // PresentProofApiService is a service that implents the logic for the PresentProofApiServicer
 // This service should implement the business logic for every endpoint for the PresentProofApi API.
@@ -32,38 +57,19 @@ func NewPresentProofApiService(a *agent.Agent) PresentProofApiServicer {
 
 // PresentProofGetByThreadId - Get presentation exchange record by thread id
 func (s *PresentProofApiService) PresentProofGetByThreadId(ctx context.Context, presentationExchangeThreadId string) (ImplResponse, error) {
-	if cred, err := s.a.GetProof(presentationExchangeThreadId); err == nil {
-		return Response(200, PresentProofOperationResponse{
-			State:    PROOF_DONE,
-			ThreadId: cred.ID,
-		}), nil
+	verifier, state, err := s.a.GetProof(presentationExchangeThreadId)
+	if err != nil {
+		return Response(http.StatusNotFound, nil), err
+	}
 
-	}
-	if threadID, _ := s.a.GetSentProof(presentationExchangeThreadId); threadID != "" {
-		return Response(200, PresentProofOperationResponse{
-			State:    PROOF_PRESENTATION_SENT,
-			ThreadId: threadID,
-		}), nil
-	}
-	if threadID, _ := s.a.GetProofRequest(presentationExchangeThreadId); threadID != "" {
-		return Response(200, PresentProofOperationResponse{
-			State:    PROOF_REQUEST_RECEIVED,
-			ThreadId: threadID,
-		}), nil
-	}
-	if proof, _ := s.a.GetProofPresentation(presentationExchangeThreadId); proof != nil {
-		return Response(200, PresentProofOperationResponse{
-			State:    PROOF_PRESENTATION_RECEIVED,
-			ThreadId: presentationExchangeThreadId,
-		}), nil
-	}
-	if threadID, _ := s.a.GetProofProposal(presentationExchangeThreadId); threadID != "" {
-		return Response(200, PresentProofOperationResponse{
-			State:    PROOF_PROPOSAL_RECEIVED,
-			ThreadId: threadID,
-		}), nil
-	}
-	return Response(http.StatusNotFound, nil), nil
+	res := getProofStatus(verifier, state)
+	log.Println("PresentProofGetByThreadId Proof status ", res, presentationExchangeThreadId)
+
+	return Response(200, PresentProofOperationResponse{
+		State:    res,
+		ThreadId: presentationExchangeThreadId,
+	}), nil
+
 }
 
 // PresentProofSendPresentation - Send presentation
@@ -139,14 +145,21 @@ func (s *PresentProofApiService) PresentProofSendRequest(ctx context.Context, in
 
 // PresentProofVerifyPresentation - Verify presentation
 func (s *PresentProofApiService) PresentProofVerifyPresentation(ctx context.Context, inlineObject10 InlineObject10) (ImplResponse, error) {
-	threadID, err := s.a.GetVerifiedProof(inlineObject10.Id)
-
-	if err == nil {
-		return Response(200, PresentProofOperationResponse{
-			State:    PROOF_DONE,
-			ThreadId: threadID,
-		}), nil
+	err := s.a.VerifyPresentation(inlineObject10.Id)
+	if err != nil {
+		return Response(http.StatusInternalServerError, nil), err
 	}
 
-	return Response(http.StatusNotFound, nil), err
+	verifier, state, err := s.a.GetProof(inlineObject10.Id)
+	if err != nil {
+		return Response(http.StatusNotFound, nil), err
+	}
+
+	res := getProofStatus(verifier, state)
+	log.Println("PresentProofVerifyPresentation Proof status ", res, inlineObject10.Id)
+
+	return Response(200, PresentProofOperationResponse{
+		State:    res,
+		ThreadId: inlineObject10.Id,
+	}), nil
 }

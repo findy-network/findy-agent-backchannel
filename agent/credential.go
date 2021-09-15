@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -15,35 +14,60 @@ type CredentialStatus = agency.ProtocolStatus_IssueCredentialStatus
 type CredentialAttribute = agency.Protocol_IssuingAttributes_Attribute
 type CredentialProposal = agency.Question_IssueProposeMsg
 
-type CredentialQuestion struct {
-	header   QuestionHeader
-	proposal *CredentialProposal
-}
-
 type Credential struct {
 	ID        string `json:"referent"`
 	CredDefID string `json:"cred_def_id"`
 	SchemaID  string `json:"schema_id"`
 }
 
+type IssueCredentialState int
+
+const (
+	PROPOSAL   IssueCredentialState = 1
+	OFFER      IssueCredentialState = 2
+	REQUEST    IssueCredentialState = 3
+	CREDENTIAL IssueCredentialState = 4
+	DONE       IssueCredentialState = 5
+)
+
+func (e IssueCredentialState) String() string {
+	switch e {
+	case PROPOSAL:
+		return "PROPOSAL"
+	case OFFER:
+		return "OFFER"
+	case REQUEST:
+		return "REQUEST"
+	case CREDENTIAL:
+		return "CREDENTIAL"
+	case DONE:
+		return "DONE"
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
+
+type credData struct {
+	id            string
+	questionID    string
+	clientID      string
+	actualState   IssueCredentialState
+	reportedState IssueCredentialState
+	issuer        bool
+	credDefID     string
+	schemaID      string
+}
+
 type CredentialStore struct {
-	agent             *AgencyClient
-	creds             map[string]*CredentialStatus
-	offers            map[string]string
-	acceptedProposals map[string]string
-	proposals         map[string]*CredentialQuestion
-	issuedCreds       map[string]string
+	agent *AgencyClient
+	store map[string]credData
 	sync.RWMutex
 }
 
 func InitCredentials(a *AgencyClient) *CredentialStore {
 	return &CredentialStore{
-		agent:             a,
-		creds:             make(map[string]*CredentialStatus),
-		offers:            make(map[string]string),
-		acceptedProposals: make(map[string]string),
-		proposals:         make(map[string]*CredentialQuestion),
-		issuedCreds:       make(map[string]string),
+		agent: a,
+		store: make(map[string]credData),
 	}
 }
 
@@ -63,24 +87,35 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 			err2.Check(err)
 
 			if status.State.State == agency.ProtocolState_OK {
-				// save cred only if we are holder
-				// TODO: role in notification should indicate this
-				if _, err = s.GetCredentialOffer(notification.ProtocolID); err == nil {
-					cred := status.GetIssueCredential()
-					log.Printf("New credential %v\n", cred)
-					_, err = s.AddCredential(protocolID.ID, cred)
-					err2.Check(err)
-				} else {
-					_, err = s.AddIssuedCredential(protocolID.ID)
-					err2.Check(err)
+				cred := status.GetIssueCredential()
+				log.Printf("New credential %v\n", cred)
+
+				// TODO: role in notification should indicate if we are holder or not
+				var issuer bool
+				issuer, _, err = s.GetCredential(notification.ProtocolID)
+				err2.Check(err)
+
+				data := &credData{
+					id:          protocolID.ID,
+					issuer:      issuer,
+					actualState: CREDENTIAL,
+					credDefID:   cred.CredDefID,
+					schemaID:    cred.SchemaID,
 				}
+				err = s.addCredData(protocolID.ID, data)
+				err2.Check(err)
 			}
 		}
 
 		// Cred offer received
 	} else if notification.GetProtocolType() == agency.Protocol_ISSUE_CREDENTIAL &&
 		notification.GetTypeID() == agency.Notification_PROTOCOL_PAUSED {
-		_, err = s.AddCredentialOffer(notification.ProtocolID)
+		data := &credData{
+			id:          notification.ProtocolID,
+			issuer:      false,
+			actualState: OFFER,
+		}
+		err = s.addCredData(notification.ProtocolID, data)
 		err2.Check(err)
 	}
 	return nil
@@ -89,18 +124,28 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 func (s *CredentialStore) HandleCredentialQuestion(question *agency.Question) (err error) {
 	defer err2.Return(&err)
 	if question.TypeID == agency.Question_ISSUE_PROPOSE_WAITS {
-		_, err := s.AddCredentialProposal(question.Status.Notification.ProtocolID, &CredentialQuestion{
-			header: QuestionHeader{
-				questionID: question.Status.Notification.ID,
-				clientID:   question.Status.ClientID.ID,
-			},
-			proposal: question.GetIssuePropose(),
-		})
-		err2.Check(err)
-		_, err = s.GetPendingCredentialProposal(question.Status.Notification.ProtocolID)
-		if err == nil {
-			// proposal is pending, proceed directly
+		data := &credData{
+			id:          question.Status.Notification.ProtocolID,
+			questionID:  question.Status.Notification.ID,
+			clientID:    question.Status.ClientID.ID,
+			issuer:      true,
+			actualState: REQUEST,
+		}
+
+		_, state, err := s.GetCredential(question.Status.Notification.ProtocolID)
+
+		log.Println("Received credential question, current state", state)
+		// the proposal has already been accepted
+		if err == nil && state >= REQUEST {
+			err := s.addCredData(data.id, data)
+			err2.Check(err)
+
 			_, err = s.AcceptCredentialProposal(question.Status.Notification.ProtocolID)
+			err2.Check(err)
+		} else {
+			// wait for proposal acceptance
+			data.actualState = PROPOSAL
+			err := s.addCredData(data.id, data)
 			err2.Check(err)
 		}
 	}
@@ -162,12 +207,11 @@ func (s *CredentialStore) OfferCredential(
 	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
 	err2.Check(err)
 
-	// Just add these to make the states work correctly
-	// even though there is not cred proposal
-	_, err = s.AddPendingCredentialProposal(res.GetID())
-	err2.Check(err)
-
-	_, err = s.AddCredentialProposal(res.GetID(), &CredentialQuestion{})
+	err = s.addCredData(res.GetID(), &credData{
+		id:          res.GetID(),
+		actualState: REQUEST,
+		issuer:      true,
+	})
 	err2.Check(err)
 
 	return res.ID, nil
@@ -176,7 +220,7 @@ func (s *CredentialStore) OfferCredential(
 func (s *CredentialStore) RequestCredential(id string) (threadID string, err error) {
 	defer err2.Return(&err)
 
-	threadID, err = s.GetCredentialOffer(id)
+	_, _, err = s.GetCredential(id)
 	err2.Check(err)
 
 	state := &agency.ProtocolState{
@@ -201,7 +245,7 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 	defer err2.Return(&err)
 
 	var header *QuestionHeader
-	header, err = s.GetCredentialProposal(id)
+	header, err = s.getCredentialQuestion(id)
 	if err == nil {
 		log.Printf("Accept credential proposal with the thread id %s, question id %s", id, header.questionID)
 		_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
@@ -211,117 +255,96 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 		})
 		err2.Check(err)
 	}
-	_, err = s.AddPendingCredentialProposal(id)
+
+	err = s.addCredData(id, &credData{
+		id:          id,
+		actualState: REQUEST,
+		issuer:      true,
+	})
 	err2.Check(err)
 
 	return id, nil
 }
 
-func (s *CredentialStore) AddCredential(id string, c *CredentialStatus) (*Credential, error) {
+func (s *CredentialStore) IssueCredential(id string) (err error) {
+	defer err2.Return(&err)
+
+	// TODO:
+	// when testing with acapy, cred notification is not received -> why?
+	// force state change here for reported and actual
+	err = s.doAddCredData(id, &credData{
+		id:          id,
+		actualState: CREDENTIAL,
+		issuer:      true,
+	}, true)
+	err2.Check(err)
+
+	return err
+}
+
+func (s *CredentialStore) addCredData(id string, c *credData) error {
+	return s.doAddCredData(id, c, false)
+}
+
+func (s *CredentialStore) doAddCredData(id string, c *credData, resetReported bool) error {
 	s.Lock()
 	defer s.Unlock()
 	if c != nil {
-		s.creds[id] = c
-		res := &Credential{
-			ID:        id,
-			CredDefID: c.CredDefID,
-			SchemaID:  c.SchemaID,
+		reportedState := c.actualState
+		if !resetReported {
+			if data, ok := s.store[id]; ok {
+				reportedState = data.reportedState
+			}
 		}
-		return res, nil
+		c.reportedState = reportedState
+		s.store[id] = *c
+		log.Println("Store cred data id", c.id, "state", c.actualState, "reported", c.reportedState)
+		return nil
 	}
-	return nil, fmt.Errorf("cannot add non-existent credential with id %s", id)
+	return fmt.Errorf("cannot add non-existent credential with id %s", id)
 }
 
-func (s *CredentialStore) GetCredential(id string) (*Credential, error) {
-	s.RLock()
-	defer s.RUnlock()
-	if cred, ok := s.creds[id]; ok {
-		res := &Credential{
-			ID:        id,
-			CredDefID: cred.CredDefID,
-			SchemaID:  cred.SchemaID,
+func (s *CredentialStore) GetCredential(id string) (bool, IssueCredentialState, error) {
+	s.Lock()
+	defer s.Unlock()
+	if cred, ok := s.store[id]; ok {
+		state := cred.reportedState
+		issuer := cred.issuer
+		// we do not get all protocol notifications from agency so simulate here
+		// "step-by-step"-functionality
+		if cred.actualState > state || state == DONE-1 {
+			cred.reportedState++
 		}
-		return res, nil
+		s.store[id] = cred
+		log.Println("Update reported cred data state", cred.id, "state", cred.actualState, "reported", cred.reportedState)
+		return issuer, state, nil
+	}
+	return false, 0, fmt.Errorf("credential by the id %s not found", id)
+}
+
+func (s *CredentialStore) getCredentialQuestion(id string) (*QuestionHeader, error) {
+	s.Lock()
+	defer s.Unlock()
+	if cred, ok := s.store[id]; ok {
+		q := &QuestionHeader{
+			questionID: cred.questionID,
+			clientID:   cred.clientID,
+		}
+		return q, nil
 	}
 	return nil, fmt.Errorf("credential by the id %s not found", id)
 }
 
-func (s *CredentialStore) AddCredentialOffer(id string) (string, error) {
+func (s *CredentialStore) GetCredentialContent(id string) (*Credential, error) {
 	s.Lock()
 	defer s.Unlock()
-	if id != "" {
-		s.offers[id] = id
-		return id, nil
-	}
-	return "", errors.New("cannot add non-existent credential offer")
-}
-
-func (s *CredentialStore) GetCredentialOffer(id string) (string, error) {
-	s.RLock()
-	defer s.RUnlock()
-	if offer, ok := s.offers[id]; ok {
-		return offer, nil
-	}
-	return "", fmt.Errorf("credential offer by the id %s not found", id)
-}
-
-func (s *CredentialStore) AddCredentialProposal(id string, proposal *CredentialQuestion) (string, error) {
-	s.Lock()
-	defer s.Unlock()
-	if proposal != nil {
-		s.proposals[id] = proposal
-		return id, nil
-	}
-	return "", errors.New("cannot add non-existent credential proposal")
-}
-
-func (s *CredentialStore) GetCredentialProposal(id string) (*QuestionHeader, error) {
-	s.RLock()
-	defer s.RUnlock()
-	if proposal, ok := s.proposals[id]; ok {
-		h := &QuestionHeader{
-			clientID:   proposal.header.clientID,
-			questionID: proposal.header.questionID,
+	if cred, ok := s.store[id]; ok {
+		c := &Credential{
+			ID:        id,
+			SchemaID:  cred.schemaID,
+			CredDefID: cred.credDefID,
 		}
-		return h, nil
+		return c, nil
 	}
-	return nil, fmt.Errorf("credential proposal by the id %s not found", id)
-}
-
-func (s *CredentialStore) AddIssuedCredential(id string) (string, error) {
-	s.Lock()
-	defer s.Unlock()
-	if id != "" {
-		s.issuedCreds[id] = id
-		return id, nil
-	}
-	return "", errors.New("cannot add non-existent credential")
-}
-
-func (s *CredentialStore) GetIssuedCredential(id string) (string, error) {
-	s.RLock()
-	defer s.RUnlock()
-	if cred, ok := s.issuedCreds[id]; ok {
-		return cred, nil
-	}
-	return "", fmt.Errorf("issued credential by the id %s not found", id)
-}
-
-func (s *CredentialStore) AddPendingCredentialProposal(id string) (string, error) {
-	s.Lock()
-	defer s.Unlock()
-	if id != "" {
-		s.acceptedProposals[id] = id
-		return id, nil
-	}
-	return "", errors.New("cannot add non-existent pending credential proposal")
-}
-
-func (s *CredentialStore) GetPendingCredentialProposal(id string) (string, error) {
-	s.RLock()
-	defer s.RUnlock()
-	if cred, ok := s.acceptedProposals[id]; ok {
-		return cred, nil
-	}
-	return "", fmt.Errorf("pending credential proposal by the id %s not found", id)
+	return nil, fmt.Errorf("credential by the id %s not found", id)
 }

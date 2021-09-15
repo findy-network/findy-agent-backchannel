@@ -18,21 +18,21 @@ type ProofPresentation = agency.Question_ProofVerifyMsg
 type PresentProofState int
 
 const (
-	PROOF_PROPOSAL     PresentProofState = 1
-	PROOF_REQUEST      PresentProofState = 2
-	PROOF_PRESENTATION PresentProofState = 3
-	PROOF_DONE         PresentProofState = 4
+	StateProofProposal     PresentProofState = 1
+	StateProofRequest      PresentProofState = 2
+	StateProofPresentation PresentProofState = 3
+	StateProofDone         PresentProofState = 4
 )
 
 func (e PresentProofState) String() string {
 	switch e {
-	case PROOF_PROPOSAL:
+	case StateProofProposal:
 		return "PROOF_PROPOSAL"
-	case PROOF_REQUEST:
+	case StateProofRequest:
 		return "PROOF_REQUEST"
-	case PROOF_PRESENTATION:
+	case StateProofPresentation:
 		return "PROOF_PRESENTATION"
-	case PROOF_DONE:
+	case StateProofDone:
 		return "PROOF_DONE"
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -94,7 +94,7 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 				data := &proofData{
 					id:          protocolID.ID,
 					verifier:    verifier,
-					actualState: PROOF_DONE,
+					actualState: StateProofDone,
 				}
 				err = s.addProofData(protocolID.ID, data)
 				err2.Check(err)
@@ -107,7 +107,7 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 		data := &proofData{
 			id:          notification.ProtocolID,
 			verifier:    false,
-			actualState: PROOF_REQUEST,
+			actualState: StateProofRequest,
 		}
 		err = s.addProofData(notification.ProtocolID, data)
 		err2.Check(err)
@@ -119,13 +119,12 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 	defer err2.Return(&err)
 
 	if question.TypeID == agency.Question_PROOF_VERIFY_WAITS {
-
 		data := &proofData{
 			id:          question.Status.Notification.ProtocolID,
 			questionID:  question.Status.Notification.ID,
 			clientID:    question.Status.ClientID.ID,
 			verifier:    true,
-			actualState: PROOF_PRESENTATION,
+			actualState: StateProofPresentation,
 		}
 
 		proof := question.GetProofVerify()
@@ -148,7 +147,7 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 			questionID:  question.Status.Notification.ID,
 			clientID:    question.Status.ClientID.ID,
 			verifier:    true,
-			actualState: PROOF_PROPOSAL,
+			actualState: StateProofProposal,
 		}
 
 		proof := question.GetProofVerify()
@@ -194,7 +193,7 @@ func (s *ProofStore) SendProofPresentation(id string) (threadID string, err erro
 	err = s.addProofData(id, &proofData{
 		id:          id,
 		verifier:    false,
-		actualState: PROOF_PRESENTATION,
+		actualState: StateProofPresentation,
 	})
 	err2.Check(err)
 
@@ -277,7 +276,7 @@ func (s *ProofStore) VerifyPresentation(id string) (err error) {
 
 	err = s.doAddProofData(id, &proofData{
 		id:          id,
-		actualState: PROOF_DONE,
+		actualState: StateProofDone,
 		verifier:    true,
 	}, true)
 	err2.Check(err)
@@ -315,7 +314,7 @@ func (s *ProofStore) GetProof(id string) (bool, PresentProofState, error) {
 		verifier := proof.verifier
 		// we do not get all protocol notifications from agency so simulate here
 		// "step-by-step"-functionality
-		if proof.actualState > state || state == PROOF_DONE-1 {
+		if proof.actualState > state || state == StateProofDone-1 {
 			proof.reportedState++
 		}
 		s.store[id] = proof

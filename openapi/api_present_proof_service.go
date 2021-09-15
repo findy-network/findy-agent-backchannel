@@ -20,22 +20,22 @@ import (
 func getProofStatus(verifier bool, state agent.PresentProofState) PresentProofState {
 	res := PROOF_DONE
 	switch state {
-	case agent.PROOF_PROPOSAL:
+	case agent.StateProofProposal:
 		res = PROOF_PROPOSAL_RECEIVED
 		if !verifier {
 			res = PROOF_PROPOSAL_SENT
 		}
-	case agent.PROOF_REQUEST:
+	case agent.StateProofRequest:
 		res = PROOF_REQUEST_SENT
 		if !verifier {
 			res = PROOF_REQUEST_RECEIVED
 		}
-	case agent.PROOF_PRESENTATION:
+	case agent.StateProofPresentation:
 		res = PROOF_PRESENTATION_RECEIVED
 		if !verifier {
 			res = PROOF_PRESENTATION_SENT
 		}
-	case agent.PROOF_DONE:
+	case agent.StateProofDone:
 		res = PROOF_DONE
 	}
 	return res

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/lainio/err2"
@@ -132,15 +133,6 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 
 		err := s.addProofData(data.id, data)
 		err2.Check(err)
-
-		/*// just accept proof directly
-		log.Printf("Accept proof values with the thread id %s, question id %s", question.Status.ClientID.ID, question.Status.Notification.ID)
-		_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
-			ID:       question.Status.Notification.ID,
-			ClientID: &agency.ClientID{ID: question.Status.ClientID.ID},
-			Ack:      true,
-		})
-		err2.Check(err)*/
 	} else if question.TypeID == agency.Question_PROOF_PROPOSE_WAITS {
 		data := &proofData{
 			id:          question.Status.Notification.ProtocolID,
@@ -264,6 +256,14 @@ func (s *ProofStore) VerifyPresentation(id string) (err error) {
 
 	var question *QuestionHeader
 	question, err = s.getProofQuestion(id)
+	var totalWaitTime time.Duration
+	// TODO: use waitgroups or such
+	for err != nil && totalWaitTime < MaxWaitTime {
+		totalWaitTime += WaitTime
+		log.Println("Proof not found, waiting for to receive the proof", id)
+		time.Sleep(WaitTime)
+		question, err = s.getProofQuestion(id)
+	}
 	err2.Check(err)
 
 	log.Printf("Accept proof values with the thread id %s, question id %s", question.clientID, question.questionID)

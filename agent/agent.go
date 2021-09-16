@@ -16,6 +16,8 @@ import (
 )
 
 const AgencyPort = 50051
+const WaitTime = time.Millisecond * 100
+const MaxWaitTime = time.Minute
 
 type AgencyClient struct {
 	Conn           client.Conn

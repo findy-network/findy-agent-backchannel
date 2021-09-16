@@ -310,15 +310,16 @@ func (s *ProofStore) GetProof(id string) (bool, PresentProofState, error) {
 	s.Lock()
 	defer s.Unlock()
 	if proof, ok := s.store[id]; ok {
-		state := proof.reportedState
+		state := proof.actualState
 		verifier := proof.verifier
-		// we do not get all protocol notifications from agency so simulate here
+		/*// we do not get all protocol notifications from agency so simulate here
 		// "step-by-step"-functionality
 		if proof.actualState > state || state == StateProofDone-1 {
 			proof.reportedState++
 		}
 		s.store[id] = proof
-		log.Println("Update reported proof data state", proof.id, "state", proof.actualState, "reported", proof.reportedState)
+		log.Println("Update reported proof data state", proof.id, "state", proof.actualState, "reported", proof.reportedState)*/
+		log.Println("Proof state", id, state)
 		return verifier, state, nil
 	}
 	return false, 0, fmt.Errorf("proof by the id %s not found", id)

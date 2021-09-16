@@ -159,6 +159,12 @@ func (s *IssueCredentialApiService) IssueCredentialSendRequest(ctx context.Conte
 
 // IssueCredentialStore - Store Credential
 func (s *IssueCredentialApiService) IssueCredentialStore(ctx context.Context, req IssueCredentialStoreRequest) (ImplResponse, error) {
+
+	err := s.a.ReceiveCredential(req.Id)
+	if err != nil {
+		return Response(http.StatusNotFound, nil), err
+	}
+
 	issuer, state, err := s.a.GetCredential(req.Id)
 	if err != nil {
 		return Response(http.StatusNotFound, nil), err

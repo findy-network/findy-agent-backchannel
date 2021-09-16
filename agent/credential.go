@@ -53,7 +53,6 @@ type credData struct {
 	questionID    string
 	clientID      string
 	actualState   IssueCredentialState
-	reportedState IssueCredentialState
 	issuer        bool
 	credDefID     string
 	schemaID      string
@@ -263,36 +262,62 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 func (s *CredentialStore) IssueCredential(id string) (err error) {
 	defer err2.Return(&err)
 
-	// TODO:
-	// when testing with acapy, cred notification is not received -> why?
-	// force state change here for reported and actual
-	err = s.doAddCredData(id, &credData{
+	err = s.addCredData(id, &credData{
 		id:          id,
 		actualState: CREDENTIAL,
 		issuer:      true,
-	}, true)
+	})
+	err2.Check(err)
+
+	return err
+}
+
+func (s *CredentialStore) ReceiveCredential(id string) (err error) {
+	defer err2.Return(&err)
+
+	var state IssueCredentialState
+	_, state, err = s.GetCredential(id)
+	var totalWaitTime time.Duration
+	// TODO: use waitgroups or such
+	for (err != nil || state != CREDENTIAL) && totalWaitTime < MaxWaitTime {
+		totalWaitTime += WaitTime
+		log.Println("Credential not found, waiting for to receive the credential", id)
+		time.Sleep(WaitTime)
+		_, state, err = s.GetCredential(id)
+	}
+	err2.Check(err)
+
+	err = s.addCredData(id, &credData{
+		id:          id,
+		actualState: DONE,
+		issuer:      false,
+	})
 	err2.Check(err)
 
 	return err
 }
 
 func (s *CredentialStore) addCredData(id string, c *credData) error {
-	return s.doAddCredData(id, c, false)
-}
-
-func (s *CredentialStore) doAddCredData(id string, c *credData, resetReported bool) error {
 	s.Lock()
 	defer s.Unlock()
 	if c != nil {
-		reportedState := c.actualState
-		if !resetReported {
-			if data, ok := s.store[id]; ok {
-				reportedState = data.reportedState
+		if data, ok := s.store[id]; ok {
+			c.issuer = data.issuer
+			if data.questionID != "" {
+				c.questionID = data.questionID
+			}
+			if data.clientID != "" {
+				c.clientID = data.clientID
+			}
+			if data.schemaID != "" {
+				c.schemaID = data.schemaID
+			}
+			if data.credDefID != "" {
+				c.credDefID = data.credDefID
 			}
 		}
-		c.reportedState = reportedState
 		s.store[id] = *c
-		log.Println("Store cred data id", c.id, "state", c.actualState, "reported", c.reportedState)
+		log.Println("Store cred data id", c.id, "state", c.actualState)
 		return nil
 	}
 	return fmt.Errorf("cannot add non-existent credential with id %s", id)
@@ -302,15 +327,9 @@ func (s *CredentialStore) GetCredential(id string) (bool, IssueCredentialState, 
 	s.Lock()
 	defer s.Unlock()
 	if cred, ok := s.store[id]; ok {
-		state := cred.reportedState
+		state := cred.actualState
 		issuer := cred.issuer
-		// we do not get all protocol notifications from agency so simulate here
-		// "step-by-step"-functionality
-		if cred.actualState > state || state == DONE-1 {
-			cred.reportedState++
-		}
-		s.store[id] = cred
-		log.Println("Update reported cred data state", cred.id, "state", cred.actualState, "reported", cred.reportedState)
+		log.Println("Credential state", id, state)
 		return issuer, state, nil
 	}
 	return false, 0, fmt.Errorf("credential by the id %s not found", id)

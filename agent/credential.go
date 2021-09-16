@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/lainio/err2"
@@ -131,23 +132,8 @@ func (s *CredentialStore) HandleCredentialQuestion(question *agency.Question) (e
 			issuer:      true,
 			actualState: REQUEST,
 		}
-
-		_, state, err := s.GetCredential(question.Status.Notification.ProtocolID)
-
-		log.Println("Received credential question, current state", state)
-		// the proposal has already been accepted
-		if err == nil && state >= REQUEST {
-			err := s.addCredData(data.id, data)
-			err2.Check(err)
-
-			_, err = s.AcceptCredentialProposal(question.Status.Notification.ProtocolID)
-			err2.Check(err)
-		} else {
-			// wait for proposal acceptance
-			data.actualState = PROPOSAL
-			err := s.addCredData(data.id, data)
-			err2.Check(err)
-		}
+		err := s.addCredData(data.id, data)
+		err2.Check(err)
 	}
 	return nil
 }
@@ -246,15 +232,23 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 
 	var header *QuestionHeader
 	header, err = s.getCredentialQuestion(id)
-	if err == nil {
-		log.Printf("Accept credential proposal with the thread id %s, question id %s", id, header.questionID)
-		_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
-			ID:       header.questionID,
-			ClientID: &agency.ClientID{ID: header.clientID},
-			Ack:      true,
-		})
-		err2.Check(err)
+	var totalWaitTime time.Duration
+	// TODO: use waitgroups or such
+	for err != nil && totalWaitTime < MaxWaitTime {
+		totalWaitTime += WaitTime
+		log.Println("Credential not found, waiting for to receive the credential", id)
+		time.Sleep(WaitTime)
+		header, err = s.getCredentialQuestion(id)
 	}
+	err2.Check(err)
+
+	log.Printf("Accept credential proposal with the thread id %s, question id %s", id, header.questionID)
+	_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
+		ID:       header.questionID,
+		ClientID: &agency.ClientID{ID: header.clientID},
+		Ack:      true,
+	})
+	err2.Check(err)
 
 	err = s.addCredData(id, &credData{
 		id:          id,

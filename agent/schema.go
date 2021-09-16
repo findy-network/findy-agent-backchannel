@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/lainio/err2"
@@ -45,13 +46,24 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 	)
 	err2.Check(err)
 
+	_, err = s.GetSchema(res.ID)
+	var totalWaitTime time.Duration
+	// TODO: use waitgroups or such
+	for err != nil && totalWaitTime < MaxWaitTime {
+		totalWaitTime += WaitTime
+		log.Println("Schema not found, waiting for schem to found in ledger", res.ID)
+		time.Sleep(WaitTime)
+		_, err = s.GetSchema(res.ID)
+	}
+	err2.Check(err)
+
 	id = res.ID
 	log.Printf("CreateSchema: %s", id)
 
 	_, err = s.AddStoredSchema(storeID, id)
 	err2.Check(err)
 
-	return
+	return id, nil
 }
 
 func (s *SchemaStore) GetSchema(schemaID string) (schemaJSON string, err error) {

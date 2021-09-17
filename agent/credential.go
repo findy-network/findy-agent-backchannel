@@ -267,24 +267,21 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 func (s *CredentialStore) IssueCredential(id string) (err error) {
 	defer err2.Return(&err)
 
-	var cred *Credential
-	cred, err = s.GetCredentialContent(id)
-	var totalWaitTime time.Duration
-	// TODO: use waitgroups or such
-	for (err != nil || cred.CredDefID == "") && totalWaitTime < MaxWaitTime {
-		totalWaitTime += WaitTime
-		log.Println("Credential content not found, waiting for to receive the credential data", id)
-		time.Sleep(WaitTime)
-		cred, err = s.GetCredentialContent(id)
-	}
+	var state IssueCredentialState
+	_, state, err = s.GetCredential(id)
 	err2.Check(err)
 
-	err = s.addCredData(id, &credData{
-		id:          id,
-		actualState: CREDENTIAL,
-		issuer:      false,
-	})
-	err2.Check(err)
+	if state == REQUEST {
+		err = s.addCredData(id, &credData{
+			id:          id,
+			actualState: CREDENTIAL,
+			issuer:      false,
+		})
+		err2.Check(err)
+	} else {
+		err = fmt.Errorf("unable to issue credential %s with state %s", id, state)
+		err2.Check(err)
+	}
 
 	return err
 }
@@ -303,6 +300,10 @@ func (s *CredentialStore) ReceiveCredential(id string) (err error) {
 		_, state, err = s.GetCredential(id)
 	}
 	err2.Check(err)
+	if state != CREDENTIAL {
+		err = fmt.Errorf("Credential not received", id)
+		err2.Check(err)
+	}
 
 	err = s.addCredData(id, &credData{
 		id:          id,

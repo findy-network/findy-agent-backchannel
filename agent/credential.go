@@ -49,13 +49,13 @@ func (e IssueCredentialState) String() string {
 }
 
 type credData struct {
-	id            string
-	questionID    string
-	clientID      string
-	actualState   IssueCredentialState
-	issuer        bool
-	credDefID     string
-	schemaID      string
+	id          string
+	questionID  string
+	clientID    string
+	actualState IssueCredentialState
+	issuer      bool
+	credDefID   string
+	schemaID    string
 }
 
 type CredentialStore struct {
@@ -303,6 +303,7 @@ func (s *CredentialStore) addCredData(id string, c *credData) error {
 	if c != nil {
 		if data, ok := s.store[id]; ok {
 			c.issuer = data.issuer
+			c.id = data.id
 			if data.questionID != "" {
 				c.questionID = data.questionID
 			}

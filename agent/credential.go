@@ -95,10 +95,15 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 				issuer, _, err = s.GetCredential(notification.ProtocolID)
 				err2.Check(err)
 
+				state := CREDENTIAL
+				if issuer {
+					state = REQUEST
+				}
+
 				data := &credData{
 					id:          protocolID.ID,
 					issuer:      issuer,
-					actualState: CREDENTIAL,
+					actualState: state,
 					credDefID:   cred.CredDefID,
 					schemaID:    cred.SchemaID,
 				}
@@ -262,10 +267,22 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 func (s *CredentialStore) IssueCredential(id string) (err error) {
 	defer err2.Return(&err)
 
+	var cred *Credential
+	cred, err = s.GetCredentialContent(id)
+	var totalWaitTime time.Duration
+	// TODO: use waitgroups or such
+	for (err != nil || cred.CredDefID == "") && totalWaitTime < MaxWaitTime {
+		totalWaitTime += WaitTime
+		log.Println("Credential content not found, waiting for to receive the credential data", id)
+		time.Sleep(WaitTime)
+		cred, err = s.GetCredentialContent(id)
+	}
+	err2.Check(err)
+
 	err = s.addCredData(id, &credData{
 		id:          id,
 		actualState: CREDENTIAL,
-		issuer:      true,
+		issuer:      false,
 	})
 	err2.Check(err)
 

@@ -301,7 +301,7 @@ func (s *CredentialStore) ReceiveCredential(id string) (err error) {
 	}
 	err2.Check(err)
 	if state != CREDENTIAL {
-		err = fmt.Errorf("Credential not received", id)
+		err = fmt.Errorf("Credential %s not received", id)
 		err2.Check(err)
 	}
 

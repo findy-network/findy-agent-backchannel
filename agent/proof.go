@@ -41,12 +41,11 @@ func (e PresentProofState) String() string {
 }
 
 type proofData struct {
-	id            string
-	questionID    string
-	clientID      string
-	actualState   PresentProofState
-	reportedState PresentProofState
-	verifier      bool
+	id          string
+	questionID  string
+	clientID    string
+	actualState PresentProofState
+	verifier    bool
 }
 
 type Proof struct {
@@ -274,33 +273,33 @@ func (s *ProofStore) VerifyPresentation(id string) (err error) {
 	})
 	err2.Check(err)
 
-	err = s.doAddProofData(id, &proofData{
+	err = s.addProofData(id, &proofData{
 		id:          id,
 		actualState: StateProofDone,
 		verifier:    true,
-	}, true)
+	})
 	err2.Check(err)
 
 	return err
 }
 
 func (s *ProofStore) addProofData(id string, c *proofData) error {
-	return s.doAddProofData(id, c, false)
-}
-
-func (s *ProofStore) doAddProofData(id string, c *proofData, resetReported bool) error {
 	s.Lock()
 	defer s.Unlock()
 	if c != nil {
-		reportedState := c.actualState
-		if !resetReported {
-			if data, ok := s.store[id]; ok {
-				reportedState = data.reportedState
+		if data, ok := s.store[id]; ok {
+			c.verifier = data.verifier
+			c.id = data.id
+			if data.questionID != "" {
+				c.questionID = data.questionID
+			}
+			if data.clientID != "" {
+				c.clientID = data.clientID
 			}
 		}
-		c.reportedState = reportedState
+
 		s.store[id] = *c
-		log.Println("Store proof data id", c.id, "state", c.actualState, "reported", c.reportedState)
+		log.Println("Store proof data id", c.id, "state", c.actualState)
 		return nil
 	}
 	return fmt.Errorf("cannot add non-existent proof with id %s", id)
@@ -310,15 +309,9 @@ func (s *ProofStore) GetProof(id string) (bool, PresentProofState, error) {
 	s.Lock()
 	defer s.Unlock()
 	if proof, ok := s.store[id]; ok {
-		state := proof.reportedState
+		state := proof.actualState
 		verifier := proof.verifier
-		// we do not get all protocol notifications from agency so simulate here
-		// "step-by-step"-functionality
-		if proof.actualState > state || state == StateProofDone-1 {
-			proof.reportedState++
-		}
-		s.store[id] = proof
-		log.Println("Update reported proof data state", proof.id, "state", proof.actualState, "reported", proof.reportedState)
+		log.Println("Proof state", id, state)
 		return verifier, state, nil
 	}
 	return false, 0, fmt.Errorf("proof by the id %s not found", id)

@@ -11,6 +11,7 @@ package openapi
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/findy-network/findy-agent-backchannel/agent"
@@ -33,6 +34,7 @@ func NewCredentialApiService(a *agent.Agent) CredentialApiServicer {
 // CredentialGetById - Get credential by id
 func (s *CredentialApiService) CredentialGetById(ctx context.Context, credentialId string) (ImplResponse, error) {
 	cred, err := s.a.GetCredentialContent(credentialId)
+	log.Println("Credential content", cred, credentialId)
 	if err != nil {
 		return Response(http.StatusNotFound, nil), err
 	}

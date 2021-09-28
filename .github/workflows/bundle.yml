@@ -2,13 +2,13 @@ name: bundle
 on:
   push:
     branches:
-      - 'master'
+      - "master"
   schedule:
     - cron: "5 0 * * 1"
+  repository_dispatch:
   workflow_dispatch:
 
 jobs:
-
   push-bundle:
     runs-on: ubuntu-latest
     permissions:

@@ -7,7 +7,7 @@ echo "Starting backchannel to port $BC_PORT and agent to port $AGENT_PORT"
 
 echo "Fetching genesis txn from $LEDGER_URL/genesis"
 
-curl "http://${LEDGER_URL}/genesis" > /genesis.txt
+curl "${LEDGER_URL}/genesis" > /genesis.txt
 
 mkdir -p logs
 

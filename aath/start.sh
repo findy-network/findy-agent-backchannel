@@ -40,8 +40,7 @@ nohup /findy-agent-auth \
 nohup /findy-agent agency start \
     --server-port=$AGENT_PORT \
     --host-port=$AGENT_PORT \
-    --host-address=$DOCKERHOST \
-    --grpc=true > /logs/core.log &
+    --host-address=$DOCKERHOST > /logs/core.log &
 
 sleep 1
 

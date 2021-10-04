@@ -114,7 +114,8 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 
 		// Cred offer received
 	} else if notification.GetProtocolType() == agency.Protocol_ISSUE_CREDENTIAL &&
-		notification.GetTypeID() == agency.Notification_PROTOCOL_PAUSED {
+		notification.GetTypeID() == agency.Notification_PROTOCOL_PAUSED &&
+		notification.GetRole() == agency.Protocol_ADDRESSEE {
 		data := &credData{
 			id:          notification.ProtocolID,
 			issuer:      false,

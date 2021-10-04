@@ -103,7 +103,8 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 
 		// Proof request received
 	} else if notification.GetProtocolType() == agency.Protocol_PRESENT_PROOF &&
-		notification.GetTypeID() == agency.Notification_PROTOCOL_PAUSED {
+		notification.GetTypeID() == agency.Notification_PROTOCOL_PAUSED &&
+		notification.GetRole() == agency.Protocol_ADDRESSEE {
 		data := &proofData{
 			id:          notification.ProtocolID,
 			verifier:    false,

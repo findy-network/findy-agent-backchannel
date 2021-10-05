@@ -51,7 +51,7 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 	// TODO: use waitgroups or such
 	for err != nil && totalWaitTime < MaxWaitTime {
 		totalWaitTime += WaitTime
-		log.Println("Schema not found, waiting for schem to found in ledger", res.ID)
+		log.Println("Schema not found, waiting for schema to be found in ledger", res.ID)
 		time.Sleep(WaitTime)
 		_, err = s.GetSchema(res.ID)
 	}

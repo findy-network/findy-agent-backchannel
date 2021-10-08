@@ -258,7 +258,7 @@ func (s *ProofStore) VerifyPresentation(id string) (err error) {
 	question, err = s.getProofQuestion(id)
 	var totalWaitTime time.Duration
 	// TODO: use waitgroups or such
-	for err != nil && totalWaitTime < MaxWaitTime {
+	for (err != nil || question.questionID == "") && totalWaitTime < MaxWaitTime {
 		totalWaitTime += WaitTime
 		log.Println("Proof not found, waiting for to receive the proof", id)
 		time.Sleep(WaitTime)

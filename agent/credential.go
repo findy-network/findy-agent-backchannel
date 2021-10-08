@@ -239,7 +239,7 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 	header, err = s.getCredentialQuestion(id)
 	var totalWaitTime time.Duration
 	// TODO: use waitgroups or such
-	for err != nil && totalWaitTime < MaxWaitTime {
+	for (err != nil || header.questionID == "") && totalWaitTime < MaxWaitTime {
 		totalWaitTime += WaitTime
 		log.Println("Credential not found, waiting for to receive the credential", id)
 		time.Sleep(WaitTime)

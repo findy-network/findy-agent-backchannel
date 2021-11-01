@@ -1,5 +1,7 @@
 # findy-agent-backchannel
 
+[![test](https://github.com/findy-network/findy-agent-backchannel/actions/workflows/test.yml/badge.svg?branch=dev)](https://github.com/findy-network/findy-agent-backchannel/actions/workflows/test.yml)
+
 Findy Agency backchannel for testing agency interoperability using Aries Agent Test Harness.
 
 Running the tests:

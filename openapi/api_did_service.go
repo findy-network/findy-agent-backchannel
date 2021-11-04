@@ -32,7 +32,7 @@ func NewDIDApiService(a *agent.Agent) DIDApiServicer {
 // DIDGetPublic - Get public DID
 func (s *DIDApiService) DIDGetPublic(ctx context.Context) (ImplResponse, error) {
 	return Response(200, InlineResponse2003{
-		Did:    "Y9oNbFNTgxrRuvxQk3xEzr",                       // TODO
-		Verkey: "HymVhRozF7o9Sh9iyKXu5WKHP95YERhrpZxGx5d6WhYw", // TODO
+		Did:    agent.PublicDID(),
+		Verkey: agent.PublicVerkey(),
 	}), nil
 }

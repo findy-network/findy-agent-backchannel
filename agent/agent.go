@@ -57,9 +57,13 @@ func Init() *Agent {
 	if url == "" {
 		url = os.Getenv("DOCKERHOST")
 	}
+	publicDIDSeed := ""
+	if os.Getenv("REGISTER_DID") == "true" {
+		publicDIDSeed = registerDID()
+	}
 	authnCmd.Url = fmt.Sprintf("http://%s:8888", url)
 	authnCmd.UserName = fmt.Sprintf("findy-agent-backchannel-%d", time.Now().UnixNano())
-
+	authnCmd.PublicDIDSeed = publicDIDSeed
 	log.Printf("Auth url %s, origin %s, user %s", authnCmd.Url, authnCmd.Origin, authnCmd.UserName)
 
 	myCmd := authnCmd

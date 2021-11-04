@@ -2,6 +2,7 @@ package agent
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -47,7 +48,8 @@ func generateRandomString(n int) (string, error) {
 }
 
 func registerDID() string {
-	seed := err2.String.Try(generateRandomString(32))
+	const seedLength = 32
+	seed := err2.String.Try(generateRandomString(seedLength))
 	go registerDIDToLedger(seed)
 	return seed
 }
@@ -55,19 +57,19 @@ func registerDID() string {
 func registerDIDToLedger(seed string) {
 	payload := []byte(fmt.Sprintf(`{"seed":"%s"}`, seed))
 	path := fmt.Sprintf("%s/register", os.Getenv("LEDGER_URL"))
-	res := err2.Bytes.Try(doHttpPostRequest(path, payload))
-	var registerResponse registerResponse
-	if err := json.Unmarshal(res, &registerResponse); err == nil {
-		publicDID = registerResponse.Did
-		publicVerkey = registerResponse.Verkey
+	res := err2.Bytes.Try(doHTTPPostRequest(path, payload))
+	var registerRes registerResponse
+	if err := json.Unmarshal(res, &registerRes); err == nil {
+		publicDID = registerRes.Did
+		publicVerkey = registerRes.Verkey
 	} else {
 		fmt.Println("Error when registering DID:", string(res))
 	}
 }
 
-func doHttpPostRequest(url string, body []byte) ([]byte, error) {
+func doHTTPPostRequest(url string, body []byte) ([]byte, error) {
 	fmt.Println("post request", string(body), " to url:", url)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	req, err := http.NewRequestWithContext(context.TODO(), "POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}

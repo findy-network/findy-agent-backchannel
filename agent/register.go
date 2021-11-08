@@ -60,6 +60,7 @@ func registerDIDToLedger(seed string) {
 	res := err2.Bytes.Try(doHTTPPostRequest(path, payload))
 	var registerRes registerResponse
 	if err := json.Unmarshal(res, &registerRes); err == nil {
+		fmt.Println("Registered public DID", registerRes.Did, "and verkey", registerRes.Verkey)
 		publicDID = registerRes.Did
 		publicVerkey = registerRes.Verkey
 	} else {

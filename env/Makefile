@@ -86,6 +86,7 @@ gen-cert:
 
 up: von-up gen-cert
 	./wait-for-ledger.sh
+	mkdir -p conf
 	curl http://localhost:9000/genesis > conf/genesis.txt
 	docker-compose up -d
 

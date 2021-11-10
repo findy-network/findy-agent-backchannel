@@ -68,8 +68,10 @@ aath-test-check:  gen-findy info
 		cat output.log && \
 		cat output.log | grep $(EXPECTED_RESULT)
 
+ # with this image, backchannel will create endorser itself
+ # to test the agency capabilities without a steward
 image:
-	cd .. && docker build -t findy-agent-backchannel .
+	cd .. && docker build --build-arg REGISTER_DID=true -t findy-agent-backchannel .
 
 gen-cert:
 	$(eval DOCKERHOST=$(shell docker run --rm --net=host eclipse/che-ip))
@@ -84,6 +86,7 @@ gen-cert:
 
 up: von-up gen-cert
 	./wait-for-ledger.sh
+	mkdir -p conf
 	curl http://localhost:9000/genesis > conf/genesis.txt
 	docker-compose up -d
 

@@ -4,10 +4,10 @@ services:
     image: ghcr.io/findy-network/findy-agent:latest
     volumes:
       - ./conf/genesis.txt:/genesis.txt
-      - ./conf/steward.exported:/steward.exported
       - ./cert:/grpc
     environment:
       FCLI_POOL_GENESIS_TXN_FILE: '/genesis.txt'
+      FCLI_AGENCY_STEWARD_DID: ''
       FCLI_POOL_NAME: 'iop'
       FCLI_AGENCY_POOL_NAME: 'iop'
       FCLI_AGENCY_GRPC_TLS: 'true'

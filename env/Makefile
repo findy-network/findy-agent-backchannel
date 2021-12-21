@@ -1,4 +1,3 @@
-VON_NETWORK_VERSION:=d6789916e5190de1c37cc80913614d279d08650c
 AATH_VERSION:=d1e40afaf0cf3e2e9c378b43245cd9ec0d97ea8d
 EXPECTED_RESULT:="3 features passed"
 INCLUDE_TAGS?=@AcceptanceTest
@@ -9,20 +8,15 @@ aath-up: generate clone rm up aath
 aath-check: generate clone rm up aath-check
 
 generate:
-	$(eval DOCKERHOST=$(shell docker run --rm --net=host eclipse/che-ip))
+	$(eval DOCKERHOST=$(shell ./dockerhost.sh))
 	@cat ./docker-compose.yml.template > ./docker-compose.yml
 	awk '{sub("<IP_ADDRESS>","$(DOCKERHOST)")}1' ./docker-compose.yml > ./docker-compose.yml.tmp && \
 		mv ./docker-compose.yml.tmp ./docker-compose.yml
 
 clone:
 	mkdir -p .docker
-	-git clone https://github.com/bcgov/von-network .docker/von-network
-	cd .docker/von-network && git reset --hard $(VON_NETWORK_VERSION)
 	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
 	cd .docker/aries-agent-test-harness && git reset --hard $(AATH_VERSION)
-
-von-up:
-	cd .docker/von-network && ./manage build && ./manage start
 
 aath: clone image aath-build aath-test
 aath-check: image aath-build aath-test-check
@@ -74,15 +68,20 @@ image:
 	cd .. && docker build --build-arg REGISTER_DID=true -t findy-agent-backchannel .
 
 gen-cert:
-	$(eval DOCKERHOST=$(shell docker run --rm --net=host eclipse/che-ip))
+	$(eval DOCKERHOST_IP=$(shell docker run --rm --net=host eclipse/che-ip))
 	@cat ./cert/client/conf.template > ./cert/client/cert.conf
-	awk '{sub("<IP_ADDRESS>","$(DOCKERHOST)")}1' ./cert/client/cert.conf > ./cert/client/cert.conf.tmp && \
+	awk '{sub("<IP_ADDRESS>","$(DOCKERHOST_IP)")}1' ./cert/client/cert.conf > ./cert/client/cert.conf.tmp && \
 		mv ./cert/client/cert.conf.tmp ./cert/client/cert.conf
 	cd ./cert && ./gen.sh client
 	@cat ./cert/server/conf.template > ./cert/server/cert.conf
-	awk '{sub("<IP_ADDRESS>","$(DOCKERHOST)")}1' ./cert/server/cert.conf > ./cert/server/cert.conf.tmp && \
+	awk '{sub("<IP_ADDRESS>","$(DOCKERHOST_IP)")}1' ./cert/server/cert.conf > ./cert/server/cert.conf.tmp && \
 		mv ./cert/server/cert.conf.tmp ./cert/server/cert.conf
 	cd ./cert && ./gen.sh server
+
+von-up:
+	-cd .docker/aries-agent-test-harness && ./manage service start von-network
+	cd .docker/aries-agent-test-harness/services/von-network/.build/von-network && ./manage build
+	cd .docker/aries-agent-test-harness && ./manage service start von-network
 
 up: von-up gen-cert
 	./wait-for-ledger.sh
@@ -92,9 +91,15 @@ up: von-up gen-cert
 
 down:
 	docker-compose down
-	cd .docker/von-network && ./manage down
+	cd .docker/aries-agent-test-harness && ./manage stop && ./manage rm
 
 rm: down
 	docker-compose rm
+	cd .docker/aries-agent-test-harness && ./manage service stop von-network && ./manage service clean von-network
+	cd .docker/aries-agent-test-harness && ./manage service stop uniresolver && ./manage service clean uniresolver
+	cd .docker/aries-agent-test-harness && ./manage service stop indy-tails && ./manage service clean indy-tails
 	rm -rf .data
+
+clean: rm
+	rm -rf .docker
 

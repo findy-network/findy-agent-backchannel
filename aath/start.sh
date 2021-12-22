@@ -2,6 +2,16 @@
 
 BC_PORT=$2
 AGENT_PORT=$(($BC_PORT+1))
+AGENT_HOST=$(./ngrok-wait.sh)
+SERVER_PORT=$AGENT_PORT
+
+# trim ngrok endpoint, and let agency generate full url
+if [[ $AGENT_HOST == https* ]]; then
+    export FCLI_AGENCY_HOST_SCHEME="https"
+    AGENT_PORT="80"
+    prefix="https:\/\/"
+    AGENT_HOST=$(echo $AGENT_HOST | sed -e s/^$prefix//)
+fi
 
 echo "Starting backchannel to port $BC_PORT and agent to port $AGENT_PORT"
 
@@ -31,16 +41,13 @@ nohup /findy-agent-auth \
 /findy-agent ledger pool create \
     --name ${FCLI_POOL_NAME} \
     --genesis-txn-file /genesis.txt
-/findy-agent ledger steward create \
-    --pool-name ${FCLI_POOL_NAME} \
-    --seed 000000000000000000000000Steward1 \
-    --wallet-name ${FCLI_AGENCY_STEWARD_WALLET_NAME} \
-    --wallet-key ${FCLI_AGENCY_STEWARD_WALLET_KEY}
 
 nohup /findy-agent agency start \
     --server-port=$AGENT_PORT \
+    --host-scheme=$FCLI_AGENCY_HOST_SCHEME \
     --host-port=$AGENT_PORT \
-    --host-address=$DOCKERHOST > /logs/core.log &
+    --server-port=$SERVER_PORT \
+    --host-address=$AGENT_HOST > /logs/core.log &
 
 sleep 1
 

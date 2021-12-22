@@ -16,8 +16,8 @@ import (
 )
 
 const AgencyPort = 50051
-const WaitTime = time.Millisecond * 100
-const MaxWaitTime = time.Minute
+const WaitTime = time.Millisecond * 500
+const MaxWaitTime = time.Minute * 5
 
 type AgencyClient struct {
 	Conn           client.Conn
@@ -58,9 +58,8 @@ func Init() *Agent {
 		url = os.Getenv("DOCKERHOST")
 	}
 	publicDIDSeed := ""
-	if os.Getenv("REGISTER_DID") == "true" {
-		publicDIDSeed = registerDID()
-	}
+	publicDIDSeed = registerDID()
+
 	authnCmd.Url = fmt.Sprintf("http://%s:8888", url)
 	authnCmd.UserName = fmt.Sprintf("findy-agent-backchannel-%d", time.Now().UnixNano())
 	authnCmd.PublicDIDSeed = publicDIDSeed

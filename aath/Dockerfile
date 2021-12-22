@@ -14,13 +14,14 @@ RUN cd findy-agent-backchannel && \
 
 FROM ghcr.io/findy-network/findy-base:indy-1.16.ubuntu-18.04
 
-RUN apt-get update && apt-get install curl -y
+RUN apt-get update && apt-get install curl jq -y
 
 COPY --from=findy-agent /findy-agent /findy-agent
 COPY --from=builder /go/bin/findy-agent-auth /findy-agent-auth
 COPY --from=builder /go/bin/findy-agent-backchannel /findy-agent-backchannel
 
 ADD aath/start.sh /
+ADD aath/ngrok-wait.sh /
 ADD aath/cert /grpc-cert
 
 RUN mkdir -p /data && \
@@ -49,9 +50,7 @@ ENV FCLI_AGENCY_GRPC_CERT_PATH "/grpc-cert"
 ENV FCLI_AGENCY_POOL_NAME "FINDY_LEDGER,${FCLI_POOL_NAME},FINDY_MEM_LEDGER,cache"
 ENV FCLI_AGENCY_PSM_DATABASE_FILE "/root/findy.bolt"
 ENV FCLI_AGENCY_REGISTER_FILE "/root/findy.json"
-ENV FCLI_AGENCY_STEWARD_WALLET_NAME "steward"
-ENV FCLI_AGENCY_STEWARD_WALLET_KEY "9C5qFG3grXfU9LodHdMop7CNVb3HtKddjgRc7oK5KhWY"
-ENV FCLI_AGENCY_STEWARD_DID "Th7MpTaRZVRYnPiabds81Y"
+ENV FCLI_AGENCY_HOST_SCHEME="http"
 
 # backchannel
 ENV AGENCY_HOST "localhost"

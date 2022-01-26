@@ -29,6 +29,7 @@ const (
 	REQUEST    IssueCredentialState = 3
 	CREDENTIAL IssueCredentialState = 4
 	DONE       IssueCredentialState = 5
+	FAILURE    IssueCredentialState = 6
 )
 
 func (e IssueCredentialState) String() string {
@@ -43,6 +44,8 @@ func (e IssueCredentialState) String() string {
 		return "CREDENTIAL"
 	case DONE:
 		return "DONE"
+	case FAILURE:
+		return "FAILURE"
 	default:
 		return fmt.Sprintf("%d", int(e))
 	}
@@ -107,8 +110,13 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 					credDefID:   cred.CredDefID,
 					schemaID:    cred.SchemaID,
 				}
-				err = s.addCredData(protocolID.ID, data)
-				err2.Check(err)
+				err2.Check(s.addCredData(protocolID.ID, data))
+			} else if status.State.State == agency.ProtocolState_ERR {
+				log.Printf("Credential status ERR! %v\n", status.State)
+				err2.Check(s.addCredData(protocolID.ID, &credData{
+					id:          protocolID.ID,
+					actualState: FAILURE,
+				}))
 			}
 		}
 
@@ -294,7 +302,7 @@ func (s *CredentialStore) ReceiveCredential(id string) (err error) {
 	_, state, err = s.GetCredential(id)
 	var totalWaitTime time.Duration
 	// TODO: use waitgroups or such
-	for (err != nil || state != CREDENTIAL) && totalWaitTime < MaxWaitTime {
+	for (err != nil || (state != CREDENTIAL && state != FAILURE)) && totalWaitTime < MaxWaitTime {
 		totalWaitTime += WaitTime
 		log.Println("Credential not found, waiting for to receive the credential", id)
 		time.Sleep(WaitTime)

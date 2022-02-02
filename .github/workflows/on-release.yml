@@ -1,11 +1,10 @@
 name: release
 on:
- push:
-   tags:
-     - '*'
+  push:
+    tags:
+      - "*"
 
 jobs:
-
   full-iop:
     runs-on: ubuntu-latest
     steps:
@@ -111,7 +110,7 @@ jobs:
         with:
           ref: master
       - name: merge
-        run:  |
+        run: |
           git fetch --tags origin
           git merge $GITHUB_REF
           git push origin master

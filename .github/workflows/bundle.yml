@@ -1,8 +1,8 @@
 name: bundle
 on:
   push:
-    branches:
-      - "master"
+    tags:
+      - "*"
   repository_dispatch:
   workflow_dispatch:
 

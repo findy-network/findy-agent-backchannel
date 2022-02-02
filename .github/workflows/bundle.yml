@@ -17,10 +17,21 @@ jobs:
         with:
           repository: "hyperledger/aries-agent-test-harness"
           ref: "main"
+
       - name: build acapy
         run: ./manage build -a acapy
+
+      - name: start ledger
+        run: |
+          ./manage service start von-network
+          cd services/von-network/.build/von-network
+          ./manage build
+
       - name: run test
-        run: ./manage run -d acapy -b findy -t @AcceptanceTest -t @AIP10 -t ~@wip -t ~@revocation
+        run: |
+          ./manage run -d acapy -b findy -t @AcceptanceTest -t @AIP10 -t ~@wip -t ~@revocation > output.log
+          cat output.log
+          cat output.log | grep "3 features passed"
         env:
           NO_TTY: "1"
 

@@ -1,13 +1,42 @@
 name: bundle
 on:
   push:
-    branches:
-      - "master"
+    tags:
+      - "*"
   repository_dispatch:
   workflow_dispatch:
 
 jobs:
+  test-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: build findy
+        run: docker build -t findy-agent-backchannel -f ./aath/Dockerfile .
+      - uses: actions/checkout@v2
+        with:
+          repository: "hyperledger/aries-agent-test-harness"
+          ref: "main"
+
+      - name: build acapy
+        run: ./manage build -a acapy
+
+      - name: start ledger
+        run: |
+          ./manage service start von-network
+          cd services/von-network/.build/von-network
+          ./manage build
+
+      - name: run test
+        run: |
+          ./manage run -d acapy -b findy -t @AcceptanceTest -t @AIP10 -t ~@wip -t ~@revocation > output.log
+          cat output.log
+          cat output.log | grep "3 features passed"
+        env:
+          NO_TTY: "1"
+
   push-bundle:
+    needs: test-bundle
     runs-on: ubuntu-latest
     permissions:
       packages: write

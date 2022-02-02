@@ -55,4 +55,19 @@ jobs:
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
         env:
           NO_TTY: "1"
-
+  test-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: build findy
+        run: docker build -t findy-agent-backchannel -f ./aath/Dockerfile .
+      - uses: actions/checkout@v2
+        with:
+          repository: "hyperledger/aries-agent-test-harness"
+          ref: "main"
+      - name: build acapy
+        run: ./manage build -a acapy
+      - name: run test
+        run: ./manage run -d acapy -b findy -t @AcceptanceTest -t @AIP10 -t ~@wip -t ~@revocation
+        env:
+          NO_TTY: "1"

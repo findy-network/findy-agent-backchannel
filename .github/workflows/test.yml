@@ -65,8 +65,10 @@ jobs:
         with:
           repository: "hyperledger/aries-agent-test-harness"
           ref: "main"
-      - name: build acapy
-        run: ./manage build -a acapy
+
+      - name: build dotnet
+        run: ./manage build -a dotnet-master
+
       - name: start ledger
         run: |
           ./manage service start von-network
@@ -74,6 +76,6 @@ jobs:
           ./manage build
 
       - name: run test
-        run: ./manage run -d acapy -b findy -t @AcceptanceTest -t @AIP10 -t ~@wip -t ~@revocation
+        run: ./manage run -d dotnet-master -b findy -t @AcceptanceTest -t @AIP10 -t ~@wip -t ~@revocation
         env:
           NO_TTY: "1"

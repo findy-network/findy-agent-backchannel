@@ -47,7 +47,8 @@ aath-test: gen-findy info
 			-t $(INCLUDE_TAGS) \
 			-t @AIP10 \
 			-t ~@revocation \
-			-t ~@wip
+			-t ~@wip \
+			-t ~@RFC0025
 	
 aath-test-check:  gen-findy info
 	cd .docker/aries-agent-test-harness && \
@@ -58,6 +59,7 @@ aath-test-check:  gen-findy info
 			-t @AIP10 \
 			-t ~@revocation \
 			-t ~@wip \
+			-t ~@RFC0025 \
 			> output.log && \
 		cat output.log && \
 		cat output.log | grep $(EXPECTED_RESULT)

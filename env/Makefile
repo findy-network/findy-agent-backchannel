@@ -85,7 +85,17 @@ von-up:
 	cd .docker/aries-agent-test-harness/services/von-network/.build/von-network && ./manage build
 	cd .docker/aries-agent-test-harness && ./manage service start von-network
 
-up: von-up gen-cert
+tails-up:
+	-cd .docker/aries-agent-test-harness && ./manage service start indy-tails
+	cd .docker/aries-agent-test-harness/services/indy-tails/.build/indy-tails-server/docker && ./manage build
+	cd .docker/aries-agent-test-harness && ./manage service start indy-tails
+
+resolver-up:
+	-cd .docker/aries-agent-test-harness && ./manage service start uniresolver
+
+services-up: von-up tails-up resolver-up
+
+up: services-up gen-cert
 	./wait-for-ledger.sh
 	mkdir -p conf
 	curl http://localhost:9000/genesis > conf/genesis.txt

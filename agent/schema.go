@@ -15,7 +15,7 @@ import (
 type SchemaStore struct {
 	agent   *AgencyClient
 	schemas map[string]string
-	sync.RWMutex
+	mtx     sync.RWMutex
 }
 
 func InitSchemas(a *AgencyClient) *SchemaStore {
@@ -84,8 +84,8 @@ func (s *SchemaStore) GetSchema(schemaID string) (schemaJSON string, err error) 
 }
 
 func (s *SchemaStore) GetStoredSchema(id string) (string, error) {
-	s.RLock()
-	defer s.RUnlock()
+	s.mtx.RLock()
+	defer s.mtx.RUnlock()
 	if schemaID, ok := s.schemas[id]; ok {
 		return schemaID, nil
 	}
@@ -93,8 +93,8 @@ func (s *SchemaStore) GetStoredSchema(id string) (string, error) {
 }
 
 func (s *SchemaStore) AddStoredSchema(storeID, id string) (string, error) {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	if id != "" {
 		s.schemas[storeID] = id
 		return id, nil

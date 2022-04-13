@@ -24,7 +24,7 @@ type ConnectionStore struct {
 	conns       map[string]*ConnectionStatus
 	invitations map[string]string
 	User        string
-	sync.RWMutex
+	mtx         sync.RWMutex
 }
 
 func InitConnections(a *AgencyClient, userName string) *ConnectionStore {
@@ -117,8 +117,8 @@ func (s *ConnectionStore) TrustPing(connectionID string) (res string, err error)
 }
 
 func (s *ConnectionStore) AddConnection(id string, c *ConnectionStatus) (*Connection, error) {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	if c != nil {
 		s.conns[id] = c
 		res := &Connection{
@@ -130,8 +130,8 @@ func (s *ConnectionStore) AddConnection(id string, c *ConnectionStatus) (*Connec
 }
 
 func (s *ConnectionStore) GetConnection(id string) (*Connection, error) {
-	s.RLock()
-	defer s.RUnlock()
+	s.mtx.RLock()
+	defer s.mtx.RUnlock()
 	if _, ok := s.conns[id]; ok {
 		res := &Connection{
 			ID: id,
@@ -142,8 +142,8 @@ func (s *ConnectionStore) GetConnection(id string) (*Connection, error) {
 }
 
 func (s *ConnectionStore) AddConnectionInvitation(id, invitationJSON string) (string, error) {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	if id != "" && invitationJSON != "" {
 		s.invitations[id] = invitationJSON
 		return id, nil
@@ -152,8 +152,8 @@ func (s *ConnectionStore) AddConnectionInvitation(id, invitationJSON string) (st
 }
 
 func (s *ConnectionStore) GetConnectionInvitation(id string) (string, error) {
-	s.RLock()
-	defer s.RUnlock()
+	s.mtx.RLock()
+	defer s.mtx.RUnlock()
 	if invitation, ok := s.invitations[id]; ok {
 		return invitation, nil
 	}

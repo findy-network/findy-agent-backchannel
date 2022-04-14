@@ -64,7 +64,7 @@ type credData struct {
 type CredentialStore struct {
 	agent *AgencyClient
 	store map[string]credData
-	sync.RWMutex
+	mtx   sync.RWMutex
 }
 
 func InitCredentials(a *AgencyClient) *CredentialStore {
@@ -325,8 +325,8 @@ func (s *CredentialStore) ReceiveCredential(id string) (err error) {
 }
 
 func (s *CredentialStore) addCredData(id string, c *credData) error {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	if c != nil {
 		if data, ok := s.store[id]; ok {
 			c.issuer = data.issuer
@@ -352,8 +352,8 @@ func (s *CredentialStore) addCredData(id string, c *credData) error {
 }
 
 func (s *CredentialStore) GetCredential(id string) (bool, IssueCredentialState, error) {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	if cred, ok := s.store[id]; ok {
 		state := cred.actualState
 		issuer := cred.issuer
@@ -364,8 +364,8 @@ func (s *CredentialStore) GetCredential(id string) (bool, IssueCredentialState, 
 }
 
 func (s *CredentialStore) getCredentialQuestion(id string) (*QuestionHeader, error) {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	if cred, ok := s.store[id]; ok {
 		q := &QuestionHeader{
 			questionID: cred.questionID,
@@ -377,8 +377,8 @@ func (s *CredentialStore) getCredentialQuestion(id string) (*QuestionHeader, err
 }
 
 func (s *CredentialStore) GetCredentialContent(id string) (*Credential, error) {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	if cred, ok := s.store[id]; ok {
 		c := &Credential{
 			ID:        id,

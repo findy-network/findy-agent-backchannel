@@ -6,7 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/big"
 	"net/http"
 	"os"
@@ -55,7 +55,7 @@ func registerDID() string {
 }
 
 func registerDIDToLedger(seed string) {
-	payload := []byte(fmt.Sprintf(`{"seed":"%s"}`, seed))
+	payload := []byte(fmt.Sprintf(`{"seed":%q}`, seed))
 	path := fmt.Sprintf("%s/register", os.Getenv("LEDGER_URL"))
 	res := err2.Bytes.Try(doHTTPPostRequest(path, payload))
 	var registerRes registerResponse
@@ -83,5 +83,5 @@ func doHTTPPostRequest(url string, body []byte) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }

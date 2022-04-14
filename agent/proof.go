@@ -57,7 +57,7 @@ type Proof struct {
 type ProofStore struct {
 	agent *AgencyClient
 	store map[string]proofData
-	sync.RWMutex
+	mtx   sync.RWMutex
 }
 
 func InitProofs(a *AgencyClient) *ProofStore {
@@ -285,8 +285,8 @@ func (s *ProofStore) VerifyPresentation(id string) (err error) {
 }
 
 func (s *ProofStore) addProofData(id string, c *proofData) error {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	if c != nil {
 		if data, ok := s.store[id]; ok {
 			c.verifier = data.verifier
@@ -307,8 +307,8 @@ func (s *ProofStore) addProofData(id string, c *proofData) error {
 }
 
 func (s *ProofStore) GetProof(id string) (bool, PresentProofState, error) {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	if proof, ok := s.store[id]; ok {
 		state := proof.actualState
 		verifier := proof.verifier
@@ -319,8 +319,8 @@ func (s *ProofStore) GetProof(id string) (bool, PresentProofState, error) {
 }
 
 func (s *ProofStore) getProofQuestion(id string) (*QuestionHeader, error) {
-	s.Lock()
-	defer s.Unlock()
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	if proof, ok := s.store[id]; ok {
 		q := &QuestionHeader{
 			questionID: proof.questionID,

@@ -1,11 +1,11 @@
-AATH_VERSION:=c40e0084aa73e408ff7a7504c5ec444407db46a2
+AATH_VERSION:=85ef5067313c0ffe44f63b5e8fe6e37b05005efb
 EXPECTED_RESULT:="3 features passed"
 INCLUDE_TAGS?=@AcceptanceTest
 AGENT_DEFAULT?=acapy-main
 AGENT_BOB?=findy
 
 aath-up: generate clone rm up aath
-aath-check: generate clone rm up aath-check
+aath-up-check: generate clone rm up aath-check
 
 generate:
 	$(eval DOCKERHOST=$(shell ./dockerhost.sh))
@@ -85,7 +85,17 @@ von-up:
 	cd .docker/aries-agent-test-harness/services/von-network/.build/von-network && ./manage build
 	cd .docker/aries-agent-test-harness && ./manage service start von-network
 
-up: von-up gen-cert
+tails-up:
+	-cd .docker/aries-agent-test-harness && ./manage service start indy-tails
+	cd .docker/aries-agent-test-harness/services/indy-tails/.build/indy-tails-server/docker && ./manage build
+	cd .docker/aries-agent-test-harness && ./manage service start indy-tails
+
+resolver-up:
+	-cd .docker/aries-agent-test-harness && ./manage service start uniresolver
+
+services-up: von-up tails-up resolver-up
+
+up: services-up gen-cert
 	./wait-for-ledger.sh
 	mkdir -p conf
 	curl http://localhost:9000/genesis > conf/genesis.txt

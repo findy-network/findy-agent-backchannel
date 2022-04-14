@@ -9,7 +9,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.37
+          version: v1.45
   test:
     runs-on: ubuntu-latest
     steps:
@@ -31,7 +31,7 @@ jobs:
       - name: test findy as Bob
         run: |
           cd ./env
-          make aath-check \
+          make aath-up-check \
             AGENT_DEFAULT=acapy-main \
             AGENT_BOB=findy \
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
@@ -55,3 +55,14 @@ jobs:
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
         env:
           NO_TTY: "1"
+      - name: Collect docker logs
+        if: ${{ failure() }}
+        uses: jwalton/gh-docker-logs@v2.0.2
+        with:
+          dest: "./tests_output/docker-logs"
+      - name: archive logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: iop-logs
+          path: tests_output

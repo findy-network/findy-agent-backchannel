@@ -31,7 +31,7 @@ jobs:
       - name: test findy as Bob
         run: |
           cd ./env
-          make aath-check \
+          make aath-up-check \
             AGENT_DEFAULT=acapy-main \
             AGENT_BOB=findy \
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'

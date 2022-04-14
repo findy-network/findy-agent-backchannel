@@ -5,7 +5,7 @@ AGENT_DEFAULT?=acapy-main
 AGENT_BOB?=findy
 
 aath-up: generate clone rm up aath
-aath-check: generate clone rm up aath-check
+aath-up-check: generate clone rm up aath-check
 
 generate:
 	$(eval DOCKERHOST=$(shell ./dockerhost.sh))

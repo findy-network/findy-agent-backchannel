@@ -55,7 +55,7 @@ func registerDID() string {
 }
 
 func registerDIDToLedger(seed string) {
-	payload := []byte(fmt.Sprintf(`{"seed":"%q"}`, seed))
+	payload := []byte(fmt.Sprintf(`{"seed":%q}`, seed))
 	path := fmt.Sprintf("%s/register", os.Getenv("LEDGER_URL"))
 	res := err2.Bytes.Try(doHTTPPostRequest(path, payload))
 	var registerRes registerResponse

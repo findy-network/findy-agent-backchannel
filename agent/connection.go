@@ -48,6 +48,8 @@ func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Noti
 			}
 			status, err := s.agent.ProtocolClient.Status(context.TODO(), protocolID)
 			err2.Check(err)
+
+			log.Printf("Connection status %v\n", status)
 			if status.State.State == agency.ProtocolState_OK {
 				log.Printf("New connection %v\n", status.GetDIDExchange())
 				_, err = s.AddConnection(status.GetDIDExchange().ID, status.GetDIDExchange())

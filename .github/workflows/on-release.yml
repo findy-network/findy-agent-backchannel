@@ -66,9 +66,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:findy-bc-${{ env.version }}
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:findy-bc-latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:findy-bc-latest
+            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/findy-bc:${{ env.version }}
+            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/findy-bc:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/findy-bc:latest
           cache-to: type=inline
 
       - name: clone acapy-bc
@@ -82,9 +82,9 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:acapy-bc-${{ env.version }}
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:acapy-bc-latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:acapy-bc-latest
+            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/acapy-bc:${{ env.version }}
+            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/acapy-bc:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/acapy-bc:latest
           cache-to: type=inline
           context: ./env/.docker/aries-agent-test-harness/aries-backchannels
           file: ./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy-main
@@ -94,9 +94,9 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:javascript-bc-${{ env.version }}
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:javascript-bc-latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:javascript-bc-latest
+            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/javascript-bc:${{ env.version }}
+            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/javascript-bc:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/javascript-bc:latest
           cache-to: type=inline
           context: ./env/.docker/aries-agent-test-harness/aries-backchannels
           file: ./env/.docker/aries-agent-test-harness/aries-backchannels/javascript/Dockerfile.javascript
@@ -106,9 +106,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:aath-${{ env.version }}
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:aath-latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel:aath-latest
+            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/aath:${{ env.version }}
+            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/aath:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/aath:latest
           cache-to: type=inline
           context: ./env/.docker/aries-agent-test-harness/aries-test-harness
           file: ./env/.docker/aries-agent-test-harness/aries-test-harness/Dockerfile.harness

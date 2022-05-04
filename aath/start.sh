@@ -19,9 +19,9 @@ echo "Fetching genesis txn from $LEDGER_URL/genesis"
 
 curl "${LEDGER_URL}/genesis" > /genesis.txt
 
-mkdir -p logs
+mkfifo /tmp/foo
 
-nohup /findy-agent-auth \
+/findy-agent-auth \
     --port $FAA_PORT \
     --agency $FAA_AGENCY_ADDR \
     --gport $FAA_AGENCY_PORT \
@@ -35,20 +35,23 @@ nohup /findy-agent-auth \
     --cors=$FAA_ENABLE_CORS \
     --local-tls=$FAA_LOCAL_TLS \
     --jwt-secret $FAA_JWT_VERIFICATION_KEY \
-    --timeout $FAA_TIMEOUT_SECS > /logs/auth.log &
+    --timeout $FAA_TIMEOUT_SECS | tee /tmp/foo &
 
 
 /findy-agent ledger pool create \
     --name ${FCLI_POOL_NAME} \
     --genesis-txn-file /genesis.txt
 
-nohup /findy-agent agency start \
+/findy-agent agency start \
     --server-port=$AGENT_PORT \
     --host-scheme=$FCLI_AGENCY_HOST_SCHEME \
     --host-port=$AGENT_PORT \
     --server-port=$SERVER_PORT \
-    --host-address=$AGENT_HOST > /logs/core.log &
+    --host-address=$AGENT_HOST | tee /tmp/foo &
 
 sleep 1
 
-/findy-agent-backchannel -p $BC_PORT
+/findy-agent-backchannel -p $BC_PORT | tee /tmp/foo &
+
+tail -f /tmp/foo
+

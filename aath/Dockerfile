@@ -1,6 +1,6 @@
 FROM ghcr.io/findy-network/findy-agent:latest AS findy-agent
 
-FROM golang:1.16-buster AS builder
+FROM golang:1.18-buster AS builder
 
 RUN git clone https://github.com/findy-network/findy-agent-auth.git && \
     cd findy-agent-auth && \

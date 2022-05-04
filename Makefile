@@ -44,10 +44,7 @@ scan:
 
 bundle_test:
 	docker build -t findy-aath-bundle -f ./aath/Dockerfile .
-	-rm -rf .logs
-	mkdir .logs
 	docker run -it --rm \
-		-v $(PWD)/.logs:/logs \
 		-e DOCKERHOST="192.168.65.3" \
 		-p 9020-9021:9020-9021 \
 		findy-aath-bundle -p 9020

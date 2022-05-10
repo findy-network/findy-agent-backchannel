@@ -6,7 +6,8 @@ inputs:
     required: true
   AGENT_NAME:
     description: "Image name"
-    required: true
+    required: false
+    default: ""
   FILE:
     description: "Path to Dockerfile"
     required: true

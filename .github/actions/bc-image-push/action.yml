@@ -77,14 +77,7 @@ runs:
 
         # start agents
         cd ../../../..
-        ./manage start -d ${{inputs.AGENT_NAME}}
-
-        # test that all agents are running
-        docker logs -n 1 acme_agent
-        docker logs -n 1 bob_agent
-        docker logs -n 1 faber_agent
-        docker logs -n 1 mallory_agent
-
+        ./manage start -d ${{inputs.AGENT_NAME}} | grep "failed" && exit 1 || echo "Agents started successfully."
       shell: bash
       env:
         NO_TTY: "1"

@@ -50,7 +50,11 @@ jobs:
           FILE: "./Dockerfile"
           CONTEXT: "./"
           PLATFORMS: "linux/amd64,linux/arm64"
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TOKEN:
+            ${{ secrets.GITHUB_TOKEN }}
+            # internal findy agency test image contains
+            # no agency so cannot be used for testing as "bundle"
+          SKIP_TEST: "true"
 
   push-acapy-bc:
     #    needs: full-iop

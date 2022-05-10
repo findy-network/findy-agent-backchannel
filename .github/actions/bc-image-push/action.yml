@@ -5,7 +5,7 @@ inputs:
     description: "Image name"
     required: true
   AGENT_NAME:
-    description: "Image name"
+    description: "Agent name to be tested"
     required: false
     default: ""
   FILE:

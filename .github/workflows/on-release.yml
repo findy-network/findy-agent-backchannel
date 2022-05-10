@@ -1,128 +1,134 @@
 name: release
 on:
   push:
-    tags:
-      - "*"
+#    tags:
+#      - "*"
 
 jobs:
-  full-iop:
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: test findy as Bob
-        run: |
-          cd ./env
-          make aath-up-check \
-            AGENT_DEFAULT=acapy-main \
-            AGENT_BOB=findy
-        env:
-          NO_TTY: "1"
-      - name: test findy as Acme
-        run: |
-          cd ./env
-          make aath-test-check \
-            AGENT_DEFAULT=findy \
-            AGENT_BOB=acapy-main
-        env:
-          NO_TTY: "1"
-      - name: test findy as default
-        run: |
-          cd ./env
-          make aath-test-check \
-            AGENT_DEFAULT=findy \
-            AGENT_BOB=findy
-        env:
-          NO_TTY: "1"
+  # full-iop:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v2
+  #     - name: test findy as Bob
+  #       run: |
+  #         cd ./env
+  #         make aath-up-check \
+  #           AGENT_DEFAULT=acapy-main \
+  #           AGENT_BOB=findy
+  #       env:
+  #         NO_TTY: "1"
+  #     - name: test findy as Acme
+  #       run: |
+  #         cd ./env
+  #         make aath-test-check \
+  #           AGENT_DEFAULT=findy \
+  #           AGENT_BOB=acapy-main
+  #       env:
+  #         NO_TTY: "1"
+  #     - name: test findy as default
+  #       run: |
+  #         cd ./env
+  #         make aath-test-check \
+  #           AGENT_DEFAULT=findy \
+  #           AGENT_BOB=findy
+  #       env:
+  #         NO_TTY: "1"
 
-  push-images:
-    needs: full-iop
+  push-bc:
+    #    needs: full-iop
     runs-on: ubuntu-latest
     permissions:
       packages: write
       contents: read
     steps:
       - uses: actions/checkout@v2
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+      - uses: ./.github/actions/bc-image-push
         with:
-          platforms: all
+          NAME: "findy-bc"
+          FILE: "./Dockerfile"
+          CONTEXT: "./"
+          PLATFORMS: "linux/amd64,linux/arm64"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+  #     - name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v2
+  #       with:
+  #         platforms: all
 
-      - name: Login to Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v2
 
-      - run: echo "version=$(cat ./VERSION)" >> $GITHUB_ENV
+  #     - name: Login to Registry
+  #       uses: docker/login-action@v2
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.repository_owner }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v2
-        with:
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/findy-bc:${{ env.version }}
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/findy-bc:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/findy-bc:latest
-          cache-to: type=inline
+  #     - run: echo "version=$(cat ./VERSION)" >> $GITHUB_ENV
 
-      - name: clone acapy-bc
-        run: |
-          cd env
-          make clone
+  #     - uses: docker/build-push-action@v3
+  #       with:
+  #         platforms: linux/amd64,linux/arm64
+  #         push: true
+  #         tags: |
+  #           ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/findy-bc:${{ env.version }}
+  #           ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/findy-bc:latest
+  #         cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/findy-bc:latest
+  #         cache-to: type=inline
 
-      - uses: docker/build-push-action@v2
-        with:
-          # no acapy support yet for linux/arm64
-          platforms: linux/amd64
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/acapy-bc:${{ env.version }}
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/acapy-bc:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/acapy-bc:latest
-          cache-to: type=inline
-          context: ./env/.docker/aries-agent-test-harness/aries-backchannels
-          file: ./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy-main
+  #     - name: clone acapy-bc
+  #       run: |
+  #         cd env
+  #         make clone
 
-      - uses: docker/build-push-action@v2
-        with:
-          platforms: linux/amd64
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/javascript-bc:${{ env.version }}
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/javascript-bc:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/javascript-bc:latest
-          cache-to: type=inline
-          context: ./env/.docker/aries-agent-test-harness/aries-backchannels
-          file: ./env/.docker/aries-agent-test-harness/aries-backchannels/javascript/Dockerfile.javascript
+  #     - uses: docker/build-push-action@v3
+  #       with:
+  #         # no acapy support yet for linux/arm64
+  #         platforms: linux/amd64
+  #         push: true
+  #         tags: |
+  #           ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/acapy-bc:${{ env.version }}
+  #           ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/acapy-bc:latest
+  #         cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/acapy-bc:latest
+  #         cache-to: type=inline
+  #         context: ./env/.docker/aries-agent-test-harness/aries-backchannels
+  #         file: ./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy-main
 
-      - uses: docker/build-push-action@v2
-        with:
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/aath:${{ env.version }}
-            ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/aath:latest
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/aath:latest
-          cache-to: type=inline
-          context: ./env/.docker/aries-agent-test-harness/aries-test-harness
-          file: ./env/.docker/aries-agent-test-harness/aries-test-harness/Dockerfile.harness
+  #     - uses: docker/build-push-action@v3
+  #       with:
+  #         platforms: linux/amd64
+  #         push: true
+  #         tags: |
+  #           ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/javascript-bc:${{ env.version }}
+  #           ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/javascript-bc:latest
+  #         cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/javascript-bc:latest
+  #         cache-to: type=inline
+  #         context: ./env/.docker/aries-agent-test-harness/aries-backchannels
+  #         file: ./env/.docker/aries-agent-test-harness/aries-backchannels/javascript/Dockerfile.javascript
 
-  merge:
-    needs: push-images
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-        with:
-          ref: master
-      - name: merge
-        run: |
-          git fetch --tags origin
-          git merge $GITHUB_REF
-          git push origin master
+  #     - uses: docker/build-push-action@v3
+  #       with:
+  #         platforms: linux/amd64,linux/arm64
+  #         push: true
+  #         tags: |
+  #           ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/aath:${{ env.version }}
+  #           ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/aath:latest
+  #         cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/findy-agent-backchannel/aath:latest
+  #         cache-to: type=inline
+  #         context: ./env/.docker/aries-agent-test-harness/aries-test-harness
+  #         file: ./env/.docker/aries-agent-test-harness/aries-test-harness/Dockerfile.harness
+
+  # merge:
+  #   needs: push-images
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         ref: master
+  #     - name: merge
+  #       run: |
+  #         git fetch --tags origin
+  #         git merge $GITHUB_REF
+  #         git push origin master

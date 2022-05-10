@@ -20,6 +20,10 @@ inputs:
   TOKEN:
     description: "Github token"
     required: true
+  SKIP_TEST:
+    description: "True if test should be skipped"
+    required: false
+    default: "false"
 runs:
   using: "composite"
   steps:
@@ -60,14 +64,27 @@ runs:
         file: ${{inputs.FILE}}
 
     - name: test
+      if: ${{ INPUTS.SKIP_TEST == 'false' }}
       run: |
+        # tag the image
         docker tag ${{env.IMAGE_TAG}}:test ${{inputs.AGENT_NAME}}-agent-backchannel:latest
+
+        # build von-network for testing
         cd ./env/.docker/aries-agent-test-harness
         ./manage service start von-network
         cd services/von-network/.build/von-network
         ./manage build
+
+        # start agents
         cd ../../../..
         ./manage start -d ${{inputs.AGENT_NAME}}
+
+        # test that all agents are running
+        docker logs -n 1 acme_agent
+        docker logs -n 1 bob_agent
+        docker logs -n 1 faber_agent
+        docker logs -n 1 mallory_agent
+
       shell: bash
       env:
         NO_TTY: "1"

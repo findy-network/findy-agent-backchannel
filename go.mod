@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/findy-network/findy-agent-auth v0.1.27
-	github.com/findy-network/findy-common-go v0.1.34
+	github.com/findy-network/findy-common-go v0.1.36
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/lainio/err2 v0.8.6
@@ -27,7 +27,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/envoyproxy/go-control-plane v0.10.2-0.20220325020618-49ff273808a1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.6.1 // indirect
-	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
+	github.com/form3tech-oss/jwt-go v3.2.5+incompatible // indirect
 	github.com/fullstorydev/grpcurl v1.8.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.4.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -90,7 +90,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210510173355-fb37daa5cd7a // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect

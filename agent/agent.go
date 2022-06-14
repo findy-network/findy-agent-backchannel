@@ -49,7 +49,7 @@ var authnCmd = authn.Cmd{
 	Key:      "15308490f1e4026284594dd08d31291bc8ef2aeac730d0daf6ff87bb92d4336c",
 	Counter:  0,
 	Token:    "",
-	Origin:   "localhost:8888",
+	Origin:   "http://localhost:8888",
 }
 
 func Init() *Agent {

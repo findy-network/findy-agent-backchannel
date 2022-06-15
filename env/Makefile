@@ -1,4 +1,4 @@
-AATH_VERSION:=3f08633a3937909a40666e90806dee6bfaea00ab
+AATH_VERSION:=7bdf6b37809f7be696600fe0486a7d13e28d8e3b
 EXPECTED_RESULT:="3 features passed"
 INCLUDE_TAGS?=@AcceptanceTest
 AGENT_DEFAULT?=acapy-main
@@ -87,8 +87,6 @@ von-up:
 
 tails-up:
 	-cd .docker/aries-agent-test-harness && ./manage service start indy-tails
-	cd .docker/aries-agent-test-harness/services/indy-tails/.build/indy-tails-server/docker && ./manage build
-	cd .docker/aries-agent-test-harness && ./manage service start indy-tails
 
 resolver-up:
 	-cd .docker/aries-agent-test-harness && ./manage service start uniresolver

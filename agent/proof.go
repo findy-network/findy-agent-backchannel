@@ -97,8 +97,7 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 					verifier:    verifier,
 					actualState: StateProofDone,
 				}
-				err = s.addProofData(protocolID.ID, data)
-				try.To(err)
+				try.To(s.addProofData(protocolID.ID, data))
 			}
 		}
 
@@ -111,8 +110,7 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 			verifier:    false,
 			actualState: StateProofRequest,
 		}
-		err = s.addProofData(notification.ProtocolID, data)
-		try.To(err)
+		try.To(s.addProofData(notification.ProtocolID, data))
 	}
 	return nil
 }
@@ -132,8 +130,7 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 		proof := question.GetProofVerify()
 		log.Printf("Proof presented %v\n", proof)
 
-		err := s.addProofData(data.id, data)
-		try.To(err)
+		try.To(s.addProofData(data.id, data))
 	} else if question.TypeID == agency.Question_PROOF_PROPOSE_WAITS {
 		data := &proofData{
 			id:          question.Status.Notification.ProtocolID,
@@ -146,8 +143,7 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 		proof := question.GetProofVerify()
 		log.Printf("Proof proposal %v\n", proof)
 
-		err := s.addProofData(data.id, data)
-		try.To(err)
+		try.To(s.addProofData(data.id, data))
 
 		// just accept proof propose directly
 		log.Printf("Accept proof proposal with the thread id %s, question id %s", question.Status.ClientID.ID, question.Status.Notification.ID)

@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/lainio/err2"
+	"github.com/lainio/err2/try"
 )
 
 // TODO: thread-safe
@@ -49,7 +49,7 @@ func generateRandomString(n int) (string, error) {
 
 func registerDID() string {
 	const seedLength = 32
-	seed := err2.String.Try(generateRandomString(seedLength))
+	seed := try.To1(generateRandomString(seedLength))
 	go registerDIDToLedger(seed)
 	return seed
 }
@@ -57,7 +57,7 @@ func registerDID() string {
 func registerDIDToLedger(seed string) {
 	payload := []byte(fmt.Sprintf(`{"seed":%q}`, seed))
 	path := fmt.Sprintf("%s/register", os.Getenv("LEDGER_URL"))
-	res := err2.Bytes.Try(doHTTPPostRequest(path, payload))
+	res := try.To1(doHTTPPostRequest(path, payload))
 	var registerRes registerResponse
 	if err := json.Unmarshal(res, &registerRes); err == nil {
 		fmt.Println("Registered public DID", registerRes.Did, "and verkey", registerRes.Verkey)

@@ -10,6 +10,7 @@ import (
 
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/lainio/err2"
+	"github.com/lainio/err2/try"
 )
 
 type SchemaStore struct {
@@ -44,7 +45,7 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 			Attributes: attributes,
 		},
 	)
-	err2.Check(err)
+	try.To(err)
 
 	_, err = s.GetSchema(res.ID)
 	var totalWaitTime time.Duration
@@ -55,13 +56,12 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 		time.Sleep(WaitTime)
 		_, err = s.GetSchema(res.ID)
 	}
-	err2.Check(err)
+	try.To(err)
 
 	id = res.ID
 	log.Printf("CreateSchema: %s", id)
 
-	_, err = s.AddStoredSchema(storeID, id)
-	err2.Check(err)
+	try.To1(s.AddStoredSchema(storeID, id))
 
 	return id, nil
 }
@@ -75,7 +75,7 @@ func (s *SchemaStore) GetSchema(schemaID string) (schemaJSON string, err error) 
 			ID: schemaID,
 		},
 	)
-	err2.Check(err)
+	try.To(err)
 
 	schemaJSON = res.Data
 	log.Printf("GetSchema: %v", schemaJSON)

@@ -11,6 +11,7 @@ import (
 	"github.com/findy-network/findy-common-go/agency/client/async"
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/lainio/err2"
+	"github.com/lainio/err2/try"
 )
 
 type ConnectionStatus = agency.ProtocolStatus_DIDExchangeStatus
@@ -47,13 +48,13 @@ func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Noti
 				TypeID: notification.ProtocolType,
 			}
 			status, err := s.agent.ProtocolClient.Status(context.TODO(), protocolID)
-			err2.Check(err)
+			try.To(err)
 
 			log.Printf("Connection status %v\n", status)
 			if status.State.State == agency.ProtocolState_OK {
 				log.Printf("New connection %v\n", status.GetDIDExchange())
 				_, err = s.AddConnection(status.GetDIDExchange().ID, status.GetDIDExchange())
-				err2.Check(err)
+				try.To(err)
 			} else {
 				log.Printf("Connection status NOK %v\n", status)
 			}
@@ -70,7 +71,7 @@ func (s *ConnectionStore) CreateInvitation() (invitation string, err error) {
 		context.TODO(),
 		&agency.InvitationBase{Label: s.User},
 	)
-	err2.Check(err)
+	try.To(err)
 
 	invitation = res.JSON
 	log.Printf("Created invitation\n %s\n", invitation)
@@ -83,7 +84,7 @@ func (s *ConnectionStore) RequestConnection(id string) (invitationID string, err
 
 	var invitationJSON string
 	invitationJSON, err = s.GetConnectionInvitation(id)
-	err2.Check(err)
+	try.To(err)
 
 	invitationID = id
 
@@ -91,7 +92,7 @@ func (s *ConnectionStore) RequestConnection(id string) (invitationID string, err
 	pw.Label = authnCmd.UserName
 
 	_, err = pw.Connection(context.TODO(), invitationJSON)
-	err2.Check(err)
+	try.To(err)
 
 	return invitationID, nil
 }
@@ -109,11 +110,11 @@ func (s *ConnectionStore) TrustPing(connectionID string) (res string, err error)
 		time.Sleep(WaitTime)
 		_, err = s.GetConnection(connectionID)
 	}
-	err2.Check(err)
+	try.To(err)
 
 	pw := async.NewPairwise(s.agent.Conn, connectionID)
 	_, err = pw.Ping(context.TODO())
-	err2.Check(err)
+	try.To(err)
 
 	return connectionID, nil
 }

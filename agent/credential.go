@@ -86,9 +86,7 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 				TypeID: notification.ProtocolType,
 			}
 
-			var status *agency.ProtocolStatus
-			status, err = s.agent.ProtocolClient.Status(context.TODO(), protocolID)
-			try.To(err)
+			status := try.To1(s.agent.ProtocolClient.Status(context.TODO(), protocolID))
 
 			if status.State.State == agency.ProtocolState_OK {
 				cred := status.GetIssueCredential()
@@ -171,8 +169,7 @@ func (s *CredentialStore) ProposeCredential(
 			},
 		},
 	}
-	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
-	try.To(err)
+	res := try.To1(s.agent.Conn.DoStart(context.TODO(), protocol))
 
 	return res.ID, nil
 }
@@ -200,8 +197,7 @@ func (s *CredentialStore) OfferCredential(
 			},
 		},
 	}
-	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
-	try.To(err)
+	res := try.To1(s.agent.Conn.DoStart(context.TODO(), protocol))
 
 	err = s.addCredData(res.GetID(), &credData{
 		id:          res.GetID(),

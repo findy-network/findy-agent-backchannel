@@ -7,20 +7,19 @@ import (
 
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/lainio/err2"
+	"github.com/lainio/err2/try"
 )
 
 func (a *Agent) CreateCredDef(schemaID, tag string) (id string, err error) {
 	defer err2.Return(&err)
 
-	var res *agency.CredDef
-	res, err = a.Client.AgentClient.CreateCredDef(
+	res := try.To1(a.Client.AgentClient.CreateCredDef(
 		context.TODO(),
 		&agency.CredDefCreate{
 			SchemaID: schemaID,
 			Tag:      tag,
 		},
-	)
-	err2.Check(err)
+	))
 
 	_, err = a.GetCredDef(res.ID)
 	var totalWaitTime time.Duration
@@ -31,7 +30,7 @@ func (a *Agent) CreateCredDef(schemaID, tag string) (id string, err error) {
 		time.Sleep(WaitTime)
 		_, err = a.GetCredDef(res.ID)
 	}
-	err2.Check(err)
+	try.To(err)
 
 	id = res.ID
 	log.Printf("CreateCredDef: %s", id)
@@ -42,13 +41,11 @@ func (a *Agent) CreateCredDef(schemaID, tag string) (id string, err error) {
 func (a *Agent) GetCredDef(credDefID string) (credDefJSON string, err error) {
 	defer err2.Return(&err)
 
-	var res *agency.CredDefData
-	res, err = a.Client.AgentClient.GetCredDef(
+	res := try.To1(a.Client.AgentClient.GetCredDef(
 		context.TODO(), &agency.CredDef{
 			ID: credDefID,
 		},
-	)
-	err2.Check(err)
+	))
 
 	credDefJSON = res.Data
 	log.Printf("GetCredDef: %v", credDefJSON)

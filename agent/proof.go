@@ -9,6 +9,7 @@ import (
 
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/lainio/err2"
+	"github.com/lainio/err2/try"
 )
 
 type ProofStatus = agency.ProtocolStatus_PresentProofStatus
@@ -78,26 +79,21 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 				TypeID: notification.ProtocolType,
 			}
 
-			var status *agency.ProtocolStatus
-			status, err = s.agent.ProtocolClient.Status(context.TODO(), protocolID)
-			err2.Check(err)
+			status := try.To1(s.agent.ProtocolClient.Status(context.TODO(), protocolID))
 
 			if status.State.State == agency.ProtocolState_OK {
 				proof := status.GetPresentProof()
 				log.Printf("Proof ready %v\n", proof)
 
 				// TODO: role in notification should indicate if we are holder or not
-				var verifier bool
-				verifier, _, err = s.GetProof(notification.ProtocolID)
-				err2.Check(err)
+				verifier, _ := try.To2(s.GetProof(notification.ProtocolID))
 
 				data := &proofData{
 					id:          protocolID.ID,
 					verifier:    verifier,
 					actualState: StateProofDone,
 				}
-				err = s.addProofData(protocolID.ID, data)
-				err2.Check(err)
+				try.To(s.addProofData(protocolID.ID, data))
 			}
 		}
 
@@ -110,8 +106,7 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 			verifier:    false,
 			actualState: StateProofRequest,
 		}
-		err = s.addProofData(notification.ProtocolID, data)
-		err2.Check(err)
+		try.To(s.addProofData(notification.ProtocolID, data))
 	}
 	return nil
 }
@@ -131,8 +126,7 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 		proof := question.GetProofVerify()
 		log.Printf("Proof presented %v\n", proof)
 
-		err := s.addProofData(data.id, data)
-		err2.Check(err)
+		try.To(s.addProofData(data.id, data))
 	} else if question.TypeID == agency.Question_PROOF_PROPOSE_WAITS {
 		data := &proofData{
 			id:          question.Status.Notification.ProtocolID,
@@ -145,17 +139,15 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 		proof := question.GetProofVerify()
 		log.Printf("Proof proposal %v\n", proof)
 
-		err := s.addProofData(data.id, data)
-		err2.Check(err)
+		try.To(s.addProofData(data.id, data))
 
 		// just accept proof propose directly
 		log.Printf("Accept proof proposal with the thread id %s, question id %s", question.Status.ClientID.ID, question.Status.Notification.ID)
-		_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
+		try.To1(s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
 			ID:       question.Status.Notification.ID,
 			ClientID: &agency.ClientID{ID: question.Status.ClientID.ID},
 			Ack:      true,
-		})
-		err2.Check(err)
+		}))
 	}
 
 	return nil
@@ -164,8 +156,7 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 func (s *ProofStore) SendProofPresentation(id string) (threadID string, err error) {
 	defer err2.Return(&err)
 
-	_, _, err = s.GetProof(id)
-	err2.Check(err)
+	try.To2(s.GetProof(id))
 
 	state := &agency.ProtocolState{
 		ProtocolID: &agency.ProtocolID{
@@ -176,18 +167,16 @@ func (s *ProofStore) SendProofPresentation(id string) (threadID string, err erro
 		State: agency.ProtocolState_ACK,
 	}
 
-	_, err = s.agent.ProtocolClient.Resume(
+	try.To1(s.agent.ProtocolClient.Resume(
 		context.TODO(),
 		state,
-	)
-	err2.Check(err)
+	))
 
-	err = s.addProofData(id, &proofData{
+	try.To(s.addProofData(id, &proofData{
 		id:          id,
 		verifier:    false,
 		actualState: StateProofPresentation,
-	})
-	err2.Check(err)
+	}))
 
 	return threadID, nil
 }
@@ -211,8 +200,7 @@ func (s *ProofStore) ProposeProof(connectionID string, attributes []*ProofAttrib
 			},
 		},
 	}
-	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
-	err2.Check(err)
+	res := try.To1(s.agent.Conn.DoStart(context.TODO(), protocol))
 
 	return res.ID, nil
 }
@@ -245,8 +233,7 @@ func (s *ProofStore) RequestProof(
 			},
 		},
 	}
-	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
-	err2.Check(err)
+	res := try.To1(s.agent.Conn.DoStart(context.TODO(), protocol))
 
 	return res.ID, nil
 }
@@ -264,22 +251,20 @@ func (s *ProofStore) VerifyPresentation(id string) (err error) {
 		time.Sleep(WaitTime)
 		question, err = s.getProofQuestion(id)
 	}
-	err2.Check(err)
+	try.To(err)
 
 	log.Printf("Accept proof values with the thread id %s, question id %s", question.clientID, question.questionID)
-	_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
+	try.To1(s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
 		ID:       question.questionID,
 		ClientID: &agency.ClientID{ID: question.clientID},
 		Ack:      true,
-	})
-	err2.Check(err)
+	}))
 
-	err = s.addProofData(id, &proofData{
+	try.To(s.addProofData(id, &proofData{
 		id:          id,
 		actualState: StateProofDone,
 		verifier:    true,
-	})
-	err2.Check(err)
+	}))
 
 	return err
 }

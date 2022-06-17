@@ -10,6 +10,7 @@ import (
 
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/lainio/err2"
+	"github.com/lainio/err2/try"
 )
 
 type SchemaStore struct {
@@ -35,16 +36,14 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 		return schemaID, nil
 	}
 
-	var res *agency.Schema
-	res, err = s.agent.AgentClient.CreateSchema(
+	res := try.To1(s.agent.AgentClient.CreateSchema(
 		context.TODO(),
 		&agency.SchemaCreate{
 			Name:       name,
 			Version:    version,
 			Attributes: attributes,
 		},
-	)
-	err2.Check(err)
+	))
 
 	_, err = s.GetSchema(res.ID)
 	var totalWaitTime time.Duration
@@ -55,13 +54,12 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 		time.Sleep(WaitTime)
 		_, err = s.GetSchema(res.ID)
 	}
-	err2.Check(err)
+	try.To(err)
 
 	id = res.ID
 	log.Printf("CreateSchema: %s", id)
 
-	_, err = s.AddStoredSchema(storeID, id)
-	err2.Check(err)
+	try.To1(s.AddStoredSchema(storeID, id))
 
 	return id, nil
 }
@@ -69,13 +67,11 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 func (s *SchemaStore) GetSchema(schemaID string) (schemaJSON string, err error) {
 	defer err2.Return(&err)
 
-	var res *agency.SchemaData
-	res, err = s.agent.AgentClient.GetSchema(
+	res := try.To1(s.agent.AgentClient.GetSchema(
 		context.TODO(), &agency.Schema{
 			ID: schemaID,
 		},
-	)
-	err2.Check(err)
+	))
 
 	schemaJSON = res.Data
 	log.Printf("GetSchema: %v", schemaJSON)

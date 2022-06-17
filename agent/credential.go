@@ -9,6 +9,7 @@ import (
 
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/lainio/err2"
+	"github.com/lainio/err2/try"
 )
 
 type CredentialStatus = agency.ProtocolStatus_IssueCredentialStatus
@@ -85,18 +86,14 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 				TypeID: notification.ProtocolType,
 			}
 
-			var status *agency.ProtocolStatus
-			status, err = s.agent.ProtocolClient.Status(context.TODO(), protocolID)
-			err2.Check(err)
+			status := try.To1(s.agent.ProtocolClient.Status(context.TODO(), protocolID))
 
 			if status.State.State == agency.ProtocolState_OK {
 				cred := status.GetIssueCredential()
 				log.Printf("New credential %v\n", cred)
 
 				// TODO: role in notification should indicate if we are holder or not
-				var issuer bool
-				issuer, _, err = s.GetCredential(notification.ProtocolID)
-				err2.Check(err)
+				issuer, _ := try.To2(s.GetCredential(notification.ProtocolID))
 
 				state := CREDENTIAL
 				if issuer {
@@ -110,10 +107,10 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 					credDefID:   cred.CredDefID,
 					schemaID:    cred.SchemaID,
 				}
-				err2.Check(s.addCredData(protocolID.ID, data))
+				try.To(s.addCredData(protocolID.ID, data))
 			} else if status.State.State == agency.ProtocolState_ERR {
 				log.Printf("Credential status ERR! %v\n", status.State)
-				err2.Check(s.addCredData(protocolID.ID, &credData{
+				try.To(s.addCredData(protocolID.ID, &credData{
 					id:          protocolID.ID,
 					actualState: FAILURE,
 				}))
@@ -129,8 +126,7 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 			issuer:      false,
 			actualState: OFFER,
 		}
-		err = s.addCredData(notification.ProtocolID, data)
-		err2.Check(err)
+		try.To(s.addCredData(notification.ProtocolID, data))
 	}
 	return nil
 }
@@ -145,8 +141,7 @@ func (s *CredentialStore) HandleCredentialQuestion(question *agency.Question) (e
 			issuer:      true,
 			actualState: REQUEST,
 		}
-		err := s.addCredData(data.id, data)
-		err2.Check(err)
+		try.To(s.addCredData(data.id, data))
 	}
 	return nil
 }
@@ -174,8 +169,7 @@ func (s *CredentialStore) ProposeCredential(
 			},
 		},
 	}
-	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
-	err2.Check(err)
+	res := try.To1(s.agent.Conn.DoStart(context.TODO(), protocol))
 
 	return res.ID, nil
 }
@@ -203,15 +197,13 @@ func (s *CredentialStore) OfferCredential(
 			},
 		},
 	}
-	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
-	err2.Check(err)
+	res := try.To1(s.agent.Conn.DoStart(context.TODO(), protocol))
 
-	err = s.addCredData(res.GetID(), &credData{
+	try.To(s.addCredData(res.GetID(), &credData{
 		id:          res.GetID(),
 		actualState: REQUEST,
 		issuer:      true,
-	})
-	err2.Check(err)
+	}))
 
 	return res.ID, nil
 }
@@ -219,8 +211,7 @@ func (s *CredentialStore) OfferCredential(
 func (s *CredentialStore) RequestCredential(id string) (threadID string, err error) {
 	defer err2.Return(&err)
 
-	_, _, err = s.GetCredential(id)
-	err2.Check(err)
+	try.To2(s.GetCredential(id))
 
 	state := &agency.ProtocolState{
 		ProtocolID: &agency.ProtocolID{
@@ -231,11 +222,10 @@ func (s *CredentialStore) RequestCredential(id string) (threadID string, err err
 		State: agency.ProtocolState_ACK,
 	}
 
-	_, err = s.agent.ProtocolClient.Resume(
+	try.To1(s.agent.ProtocolClient.Resume(
 		context.TODO(),
 		state,
-	)
-	err2.Check(err)
+	))
 
 	return threadID, nil
 }
@@ -253,22 +243,20 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 		time.Sleep(WaitTime)
 		header, err = s.getCredentialQuestion(id)
 	}
-	err2.Check(err)
+	try.To(err)
 
 	log.Printf("Accept credential proposal with the thread id %s, question id %s", id, header.questionID)
-	_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
+	try.To1(s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
 		ID:       header.questionID,
 		ClientID: &agency.ClientID{ID: header.clientID},
 		Ack:      true,
-	})
-	err2.Check(err)
+	}))
 
-	err = s.addCredData(id, &credData{
+	try.To(s.addCredData(id, &credData{
 		id:          id,
 		actualState: REQUEST,
 		issuer:      true,
-	})
-	err2.Check(err)
+	}))
 
 	return id, nil
 }
@@ -276,20 +264,16 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 func (s *CredentialStore) IssueCredential(id string) (err error) {
 	defer err2.Return(&err)
 
-	var state IssueCredentialState
-	_, state, err = s.GetCredential(id)
-	err2.Check(err)
+	_, state := try.To2(s.GetCredential(id))
 
 	if state == REQUEST {
-		err = s.addCredData(id, &credData{
+		try.To(s.addCredData(id, &credData{
 			id:          id,
 			actualState: CREDENTIAL,
 			issuer:      false,
-		})
-		err2.Check(err)
+		}))
 	} else {
-		err = fmt.Errorf("unable to issue credential %s with state %s", id, state)
-		err2.Check(err)
+		try.To(fmt.Errorf("unable to issue credential %s with state %s", id, state))
 	}
 
 	return err
@@ -308,18 +292,16 @@ func (s *CredentialStore) ReceiveCredential(id string) (err error) {
 		time.Sleep(WaitTime)
 		_, state, err = s.GetCredential(id)
 	}
-	err2.Check(err)
+	try.To(err)
 	if state != CREDENTIAL {
-		err = fmt.Errorf("Credential %s not received", id)
-		err2.Check(err)
+		try.To(fmt.Errorf("Credential %s not received", id))
 	}
 
-	err = s.addCredData(id, &credData{
+	try.To(s.addCredData(id, &credData{
 		id:          id,
 		actualState: DONE,
 		issuer:      false,
-	})
-	err2.Check(err)
+	}))
 
 	return err
 }

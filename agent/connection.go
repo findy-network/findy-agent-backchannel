@@ -11,6 +11,7 @@ import (
 	"github.com/findy-network/findy-common-go/agency/client/async"
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/lainio/err2"
+	"github.com/lainio/err2/try"
 )
 
 type ConnectionStatus = agency.ProtocolStatus_DIDExchangeStatus
@@ -46,14 +47,12 @@ func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Noti
 				ID:     notification.ProtocolID,
 				TypeID: notification.ProtocolType,
 			}
-			status, err := s.agent.ProtocolClient.Status(context.TODO(), protocolID)
-			err2.Check(err)
+			status := try.To1(s.agent.ProtocolClient.Status(context.TODO(), protocolID))
 
 			log.Printf("Connection status %v\n", status)
 			if status.State.State == agency.ProtocolState_OK {
 				log.Printf("New connection %v\n", status.GetDIDExchange())
-				_, err = s.AddConnection(status.GetDIDExchange().ID, status.GetDIDExchange())
-				err2.Check(err)
+				try.To1(s.AddConnection(status.GetDIDExchange().ID, status.GetDIDExchange()))
 			} else {
 				log.Printf("Connection status NOK %v\n", status)
 			}
@@ -65,12 +64,10 @@ func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Noti
 func (s *ConnectionStore) CreateInvitation() (invitation string, err error) {
 	defer err2.Return(&err)
 
-	var res *agency.Invitation
-	res, err = s.agent.AgentClient.CreateInvitation(
+	res := try.To1(s.agent.AgentClient.CreateInvitation(
 		context.TODO(),
 		&agency.InvitationBase{Label: s.User},
-	)
-	err2.Check(err)
+	))
 
 	invitation = res.JSON
 	log.Printf("Created invitation\n %s\n", invitation)
@@ -81,17 +78,14 @@ func (s *ConnectionStore) CreateInvitation() (invitation string, err error) {
 func (s *ConnectionStore) RequestConnection(id string) (invitationID string, err error) {
 	defer err2.Return(&err)
 
-	var invitationJSON string
-	invitationJSON, err = s.GetConnectionInvitation(id)
-	err2.Check(err)
+	invitationJSON := try.To1(s.GetConnectionInvitation(id))
 
 	invitationID = id
 
 	pw := async.NewPairwise(s.agent.Conn, "")
 	pw.Label = authnCmd.UserName
 
-	_, err = pw.Connection(context.TODO(), invitationJSON)
-	err2.Check(err)
+	try.To1(pw.Connection(context.TODO(), invitationJSON))
 
 	return invitationID, nil
 }
@@ -109,11 +103,10 @@ func (s *ConnectionStore) TrustPing(connectionID string) (res string, err error)
 		time.Sleep(WaitTime)
 		_, err = s.GetConnection(connectionID)
 	}
-	err2.Check(err)
+	try.To(err)
 
 	pw := async.NewPairwise(s.agent.Conn, connectionID)
-	_, err = pw.Ping(context.TODO())
-	err2.Check(err)
+	try.To1(pw.Ping(context.TODO()))
 
 	return connectionID, nil
 }

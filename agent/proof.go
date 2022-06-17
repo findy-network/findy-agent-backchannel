@@ -79,9 +79,7 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 				TypeID: notification.ProtocolType,
 			}
 
-			var status *agency.ProtocolStatus
-			status, err = s.agent.ProtocolClient.Status(context.TODO(), protocolID)
-			try.To(err)
+			status := try.To1(s.agent.ProtocolClient.Status(context.TODO(), protocolID))
 
 			if status.State.State == agency.ProtocolState_OK {
 				proof := status.GetPresentProof()
@@ -205,8 +203,7 @@ func (s *ProofStore) ProposeProof(connectionID string, attributes []*ProofAttrib
 			},
 		},
 	}
-	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
-	try.To(err)
+	res := try.To1(s.agent.Conn.DoStart(context.TODO(), protocol))
 
 	return res.ID, nil
 }
@@ -239,8 +236,7 @@ func (s *ProofStore) RequestProof(
 			},
 		},
 	}
-	res, err := s.agent.Conn.DoStart(context.TODO(), protocol)
-	try.To(err)
+	res := try.To1(s.agent.Conn.DoStart(context.TODO(), protocol))
 
 	return res.ID, nil
 }

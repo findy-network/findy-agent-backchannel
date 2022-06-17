@@ -222,11 +222,10 @@ func (s *CredentialStore) RequestCredential(id string) (threadID string, err err
 		State: agency.ProtocolState_ACK,
 	}
 
-	_, err = s.agent.ProtocolClient.Resume(
+	try.To1(s.agent.ProtocolClient.Resume(
 		context.TODO(),
 		state,
-	)
-	try.To(err)
+	))
 
 	return threadID, nil
 }
@@ -247,12 +246,11 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 	try.To(err)
 
 	log.Printf("Accept credential proposal with the thread id %s, question id %s", id, header.questionID)
-	_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
+	try.To1(s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
 		ID:       header.questionID,
 		ClientID: &agency.ClientID{ID: header.clientID},
 		Ack:      true,
-	})
-	try.To(err)
+	}))
 
 	try.To(s.addCredData(id, &credData{
 		id:          id,

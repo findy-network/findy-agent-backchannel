@@ -36,16 +36,14 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 		return schemaID, nil
 	}
 
-	var res *agency.Schema
-	res, err = s.agent.AgentClient.CreateSchema(
+	res := try.To1(s.agent.AgentClient.CreateSchema(
 		context.TODO(),
 		&agency.SchemaCreate{
 			Name:       name,
 			Version:    version,
 			Attributes: attributes,
 		},
-	)
-	try.To(err)
+	))
 
 	_, err = s.GetSchema(res.ID)
 	var totalWaitTime time.Duration
@@ -69,13 +67,11 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 func (s *SchemaStore) GetSchema(schemaID string) (schemaJSON string, err error) {
 	defer err2.Return(&err)
 
-	var res *agency.SchemaData
-	res, err = s.agent.AgentClient.GetSchema(
+	res := try.To1(s.agent.AgentClient.GetSchema(
 		context.TODO(), &agency.Schema{
 			ID: schemaID,
 		},
-	)
-	try.To(err)
+	))
 
 	schemaJSON = res.Data
 	log.Printf("GetSchema: %v", schemaJSON)

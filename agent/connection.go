@@ -64,12 +64,10 @@ func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Noti
 func (s *ConnectionStore) CreateInvitation() (invitation string, err error) {
 	defer err2.Return(&err)
 
-	var res *agency.Invitation
-	res, err = s.agent.AgentClient.CreateInvitation(
+	res := try.To1(s.agent.AgentClient.CreateInvitation(
 		context.TODO(),
 		&agency.InvitationBase{Label: s.User},
-	)
-	try.To(err)
+	))
 
 	invitation = res.JSON
 	log.Printf("Created invitation\n %s\n", invitation)

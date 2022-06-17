@@ -69,8 +69,7 @@ func Init() *Agent {
 	myCmd.SubCmd = "register"
 
 	try.To(myCmd.Validate())
-	_, err := myCmd.Exec(os.Stdout)
-	try.To(err)
+	try.To1(myCmd.Exec(os.Stdout))
 
 	return &Agent{
 		User:       authnCmd.UserName,
@@ -83,8 +82,7 @@ func (a *Agent) Login() {
 	myCmd.SubCmd = "login"
 
 	try.To(myCmd.Validate())
-	r, err := myCmd.Exec(os.Stdout)
-	try.To(err)
+	r := try.To1(myCmd.Exec(os.Stdout))
 
 	a.JWT = r.Token
 
@@ -106,8 +104,7 @@ func (a *Agent) Login() {
 	a.ProofStore = InitProofs(a.Client)
 	a.SchemaStore = InitSchemas(a.Client)
 
-	ch, err := a.Client.Conn.ListenStatus(context.TODO(), &agency.ClientID{ID: uuid.New().String()})
-	try.To(err)
+	ch := try.To1(a.Client.Conn.ListenStatus(context.TODO(), &agency.ClientID{ID: uuid.New().String()}))
 
 	go func() {
 		for {
@@ -124,8 +121,7 @@ func (a *Agent) Login() {
 		}
 	}()
 
-	questionCh, err := a.Client.Conn.Wait(context.TODO(), &agency.ClientID{ID: uuid.New().String()})
-	try.To(err)
+	questionCh := try.To1(a.Client.Conn.Wait(context.TODO(), &agency.ClientID{ID: uuid.New().String()}))
 
 	go func() {
 		for {

@@ -174,12 +174,11 @@ func (s *ProofStore) SendProofPresentation(id string) (threadID string, err erro
 	)
 	try.To(err)
 
-	err = s.addProofData(id, &proofData{
+	try.To(s.addProofData(id, &proofData{
 		id:          id,
 		verifier:    false,
 		actualState: StateProofPresentation,
-	})
-	try.To(err)
+	}))
 
 	return threadID, nil
 }
@@ -264,12 +263,11 @@ func (s *ProofStore) VerifyPresentation(id string) (err error) {
 	})
 	try.To(err)
 
-	err = s.addProofData(id, &proofData{
+	try.To(s.addProofData(id, &proofData{
 		id:          id,
 		actualState: StateProofDone,
 		verifier:    true,
-	})
-	try.To(err)
+	}))
 
 	return err
 }

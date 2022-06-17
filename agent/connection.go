@@ -47,14 +47,12 @@ func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Noti
 				ID:     notification.ProtocolID,
 				TypeID: notification.ProtocolType,
 			}
-			status, err := s.agent.ProtocolClient.Status(context.TODO(), protocolID)
-			try.To(err)
+			status := try.To1(s.agent.ProtocolClient.Status(context.TODO(), protocolID))
 
 			log.Printf("Connection status %v\n", status)
 			if status.State.State == agency.ProtocolState_OK {
 				log.Printf("New connection %v\n", status.GetDIDExchange())
-				_, err = s.AddConnection(status.GetDIDExchange().ID, status.GetDIDExchange())
-				try.To(err)
+				try.To1(s.AddConnection(status.GetDIDExchange().ID, status.GetDIDExchange()))
 			} else {
 				log.Printf("Connection status NOK %v\n", status)
 			}
@@ -82,17 +80,14 @@ func (s *ConnectionStore) CreateInvitation() (invitation string, err error) {
 func (s *ConnectionStore) RequestConnection(id string) (invitationID string, err error) {
 	defer err2.Return(&err)
 
-	var invitationJSON string
-	invitationJSON, err = s.GetConnectionInvitation(id)
-	try.To(err)
+	invitationJSON := try.To1(s.GetConnectionInvitation(id))
 
 	invitationID = id
 
 	pw := async.NewPairwise(s.agent.Conn, "")
 	pw.Label = authnCmd.UserName
 
-	_, err = pw.Connection(context.TODO(), invitationJSON)
-	try.To(err)
+	try.To1(pw.Connection(context.TODO(), invitationJSON))
 
 	return invitationID, nil
 }
@@ -113,8 +108,7 @@ func (s *ConnectionStore) TrustPing(connectionID string) (res string, err error)
 	try.To(err)
 
 	pw := async.NewPairwise(s.agent.Conn, connectionID)
-	_, err = pw.Ping(context.TODO())
-	try.To(err)
+	try.To1(pw.Ping(context.TODO()))
 
 	return connectionID, nil
 }

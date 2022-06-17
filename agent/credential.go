@@ -95,9 +95,7 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 				log.Printf("New credential %v\n", cred)
 
 				// TODO: role in notification should indicate if we are holder or not
-				var issuer bool
-				issuer, _, err = s.GetCredential(notification.ProtocolID)
-				try.To(err)
+				issuer, _ := try.To2(s.GetCredential(notification.ProtocolID))
 
 				state := CREDENTIAL
 				if issuer {
@@ -218,8 +216,7 @@ func (s *CredentialStore) OfferCredential(
 func (s *CredentialStore) RequestCredential(id string) (threadID string, err error) {
 	defer err2.Return(&err)
 
-	_, _, err = s.GetCredential(id)
-	try.To(err)
+	try.To2(s.GetCredential(id))
 
 	state := &agency.ProtocolState{
 		ProtocolID: &agency.ProtocolID{
@@ -275,9 +272,7 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 func (s *CredentialStore) IssueCredential(id string) (err error) {
 	defer err2.Return(&err)
 
-	var state IssueCredentialState
-	_, state, err = s.GetCredential(id)
-	try.To(err)
+	_, state := try.To2(s.GetCredential(id))
 
 	if state == REQUEST {
 		err = s.addCredData(id, &credData{

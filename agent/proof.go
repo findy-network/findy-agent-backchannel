@@ -88,9 +88,7 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 				log.Printf("Proof ready %v\n", proof)
 
 				// TODO: role in notification should indicate if we are holder or not
-				var verifier bool
-				verifier, _, err = s.GetProof(notification.ProtocolID)
-				try.To(err)
+				verifier, _ := try.To2(s.GetProof(notification.ProtocolID))
 
 				data := &proofData{
 					id:          protocolID.ID,
@@ -161,8 +159,7 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 func (s *ProofStore) SendProofPresentation(id string) (threadID string, err error) {
 	defer err2.Return(&err)
 
-	_, _, err = s.GetProof(id)
-	try.To(err)
+	try.To2(s.GetProof(id))
 
 	state := &agency.ProtocolState{
 		ProtocolID: &agency.ProtocolID{

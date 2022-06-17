@@ -11,7 +11,7 @@ import (
 	"github.com/findy-network/findy-common-go/agency/client"
 	agency "github.com/findy-network/findy-common-go/grpc/agency/v1"
 	"github.com/google/uuid"
-	"github.com/lainio/err2"
+	"github.com/lainio/err2/try"
 	"google.golang.org/grpc"
 )
 
@@ -68,9 +68,9 @@ func Init() *Agent {
 	myCmd := authnCmd
 	myCmd.SubCmd = "register"
 
-	err2.Check(myCmd.Validate())
+	try.To(myCmd.Validate())
 	_, err := myCmd.Exec(os.Stdout)
-	err2.Check(err)
+	try.To(err)
 
 	return &Agent{
 		User:       authnCmd.UserName,
@@ -82,9 +82,9 @@ func (a *Agent) Login() {
 	myCmd := authnCmd
 	myCmd.SubCmd = "login"
 
-	err2.Check(myCmd.Validate())
+	try.To(myCmd.Validate())
 	r, err := myCmd.Exec(os.Stdout)
-	err2.Check(err)
+	try.To(err)
 
 	a.JWT = r.Token
 
@@ -107,7 +107,7 @@ func (a *Agent) Login() {
 	a.SchemaStore = InitSchemas(a.Client)
 
 	ch, err := a.Client.Conn.ListenStatus(context.TODO(), &agency.ClientID{ID: uuid.New().String()})
-	err2.Check(err)
+	try.To(err)
 
 	go func() {
 		for {
@@ -125,7 +125,7 @@ func (a *Agent) Login() {
 	}()
 
 	questionCh, err := a.Client.Conn.Wait(context.TODO(), &agency.ClientID{ID: uuid.New().String()})
-	err2.Check(err)
+	try.To(err)
 
 	go func() {
 		for {

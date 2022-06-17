@@ -61,8 +61,7 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 	id = res.ID
 	log.Printf("CreateSchema: %s", id)
 
-	_, err = s.AddStoredSchema(storeID, id)
-	try.To(err)
+	try.To1(s.AddStoredSchema(storeID, id))
 
 	return id, nil
 }

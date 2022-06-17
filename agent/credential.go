@@ -130,8 +130,7 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 			issuer:      false,
 			actualState: OFFER,
 		}
-		err = s.addCredData(notification.ProtocolID, data)
-		try.To(err)
+		try.To(s.addCredData(notification.ProtocolID, data))
 	}
 	return nil
 }
@@ -146,8 +145,7 @@ func (s *CredentialStore) HandleCredentialQuestion(question *agency.Question) (e
 			issuer:      true,
 			actualState: REQUEST,
 		}
-		err := s.addCredData(data.id, data)
-		try.To(err)
+		try.To(s.addCredData(data.id, data))
 	}
 	return nil
 }
@@ -289,8 +287,7 @@ func (s *CredentialStore) IssueCredential(id string) (err error) {
 		})
 		try.To(err)
 	} else {
-		err = fmt.Errorf("unable to issue credential %s with state %s", id, state)
-		try.To(err)
+		try.To(fmt.Errorf("unable to issue credential %s with state %s", id, state))
 	}
 
 	return err
@@ -311,8 +308,7 @@ func (s *CredentialStore) ReceiveCredential(id string) (err error) {
 	}
 	try.To(err)
 	if state != CREDENTIAL {
-		err = fmt.Errorf("Credential %s not received", id)
-		try.To(err)
+		try.To(fmt.Errorf("Credential %s not received", id))
 	}
 
 	err = s.addCredData(id, &credData{

@@ -199,12 +199,11 @@ func (s *CredentialStore) OfferCredential(
 	}
 	res := try.To1(s.agent.Conn.DoStart(context.TODO(), protocol))
 
-	err = s.addCredData(res.GetID(), &credData{
+	try.To(s.addCredData(res.GetID(), &credData{
 		id:          res.GetID(),
 		actualState: REQUEST,
 		issuer:      true,
-	})
-	try.To(err)
+	}))
 
 	return res.ID, nil
 }
@@ -255,12 +254,11 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 	})
 	try.To(err)
 
-	err = s.addCredData(id, &credData{
+	try.To(s.addCredData(id, &credData{
 		id:          id,
 		actualState: REQUEST,
 		issuer:      true,
-	})
-	try.To(err)
+	}))
 
 	return id, nil
 }
@@ -271,12 +269,11 @@ func (s *CredentialStore) IssueCredential(id string) (err error) {
 	_, state := try.To2(s.GetCredential(id))
 
 	if state == REQUEST {
-		err = s.addCredData(id, &credData{
+		try.To(s.addCredData(id, &credData{
 			id:          id,
 			actualState: CREDENTIAL,
 			issuer:      false,
-		})
-		try.To(err)
+		}))
 	} else {
 		try.To(fmt.Errorf("unable to issue credential %s with state %s", id, state))
 	}
@@ -302,12 +299,11 @@ func (s *CredentialStore) ReceiveCredential(id string) (err error) {
 		try.To(fmt.Errorf("Credential %s not received", id))
 	}
 
-	err = s.addCredData(id, &credData{
+	try.To(s.addCredData(id, &credData{
 		id:          id,
 		actualState: DONE,
 		issuer:      false,
-	})
-	try.To(err)
+	}))
 
 	return err
 }

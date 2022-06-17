@@ -143,12 +143,11 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 
 		// just accept proof propose directly
 		log.Printf("Accept proof proposal with the thread id %s, question id %s", question.Status.ClientID.ID, question.Status.Notification.ID)
-		_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
+		try.To1(s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
 			ID:       question.Status.Notification.ID,
 			ClientID: &agency.ClientID{ID: question.Status.ClientID.ID},
 			Ack:      true,
-		})
-		try.To(err)
+		}))
 	}
 
 	return nil
@@ -168,11 +167,10 @@ func (s *ProofStore) SendProofPresentation(id string) (threadID string, err erro
 		State: agency.ProtocolState_ACK,
 	}
 
-	_, err = s.agent.ProtocolClient.Resume(
+	try.To1(s.agent.ProtocolClient.Resume(
 		context.TODO(),
 		state,
-	)
-	try.To(err)
+	))
 
 	try.To(s.addProofData(id, &proofData{
 		id:          id,
@@ -256,12 +254,11 @@ func (s *ProofStore) VerifyPresentation(id string) (err error) {
 	try.To(err)
 
 	log.Printf("Accept proof values with the thread id %s, question id %s", question.clientID, question.questionID)
-	_, err = s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
+	try.To1(s.agent.AgentClient.Give(context.TODO(), &agency.Answer{
 		ID:       question.questionID,
 		ClientID: &agency.ClientID{ID: question.clientID},
 		Ack:      true,
-	})
-	try.To(err)
+	}))
 
 	try.To(s.addProofData(id, &proofData{
 		id:          id,

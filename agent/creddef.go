@@ -13,15 +13,13 @@ import (
 func (a *Agent) CreateCredDef(schemaID, tag string) (id string, err error) {
 	defer err2.Return(&err)
 
-	var res *agency.CredDef
-	res, err = a.Client.AgentClient.CreateCredDef(
+	res := try.To1(a.Client.AgentClient.CreateCredDef(
 		context.TODO(),
 		&agency.CredDefCreate{
 			SchemaID: schemaID,
 			Tag:      tag,
 		},
-	)
-	try.To(err)
+	))
 
 	_, err = a.GetCredDef(res.ID)
 	var totalWaitTime time.Duration
@@ -43,13 +41,11 @@ func (a *Agent) CreateCredDef(schemaID, tag string) (id string, err error) {
 func (a *Agent) GetCredDef(credDefID string) (credDefJSON string, err error) {
 	defer err2.Return(&err)
 
-	var res *agency.CredDefData
-	res, err = a.Client.AgentClient.GetCredDef(
+	res := try.To1(a.Client.AgentClient.GetCredDef(
 		context.TODO(), &agency.CredDef{
 			ID: credDefID,
 		},
-	)
-	try.To(err)
+	))
 
 	credDefJSON = res.Data
 	log.Printf("GetCredDef: %v", credDefJSON)

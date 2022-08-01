@@ -25,6 +25,10 @@ inputs:
     description: "True if test should be skipped"
     required: false
     default: "false"
+  SKIP_CACHE:
+    description: "True if cache use should be skipped"
+    required: false
+    default: "false"
 runs:
   using: "composite"
   steps:

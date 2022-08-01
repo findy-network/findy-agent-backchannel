@@ -1,7 +1,7 @@
 AATH_VERSION:=f4e0a51d468c1dd157626ebec39d379e7d015423
 EXPECTED_RESULT:="3 features passed"
 INCLUDE_TAGS?=@AcceptanceTest
-AGENT_DEFAULT?=acapy-main
+AGENT_DEFAULT?=acapy
 AGENT_BOB?=findy
 
 aath-up: generate clone rm up aath
@@ -23,7 +23,7 @@ aath-check: image aath-build aath-test-check
 
 aath-build: 
 	cd .docker/aries-agent-test-harness && \
-		./manage build -a acapy-main
+		./manage build -a acapy
 
 gen-findy:
 	cd .docker/aries-agent-test-harness && \

@@ -3,63 +3,61 @@ on:
   push:
     tags:
       - "*"
-    branches:
-      - "skip-cache-for-js-build"
 
 jobs:
-  # full-iop:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v2
-  #     - name: test findy as Bob
-  #       run: |
-  #         cd ./env
-  #         make aath-up-check \
-  #           AGENT_DEFAULT=acapy-main \
-  #           AGENT_BOB=findy
-  #       env:
-  #         NO_TTY: "1"
-  #     - name: test findy as Acme
-  #       run: |
-  #         cd ./env
-  #         make aath-test-check \
-  #           AGENT_DEFAULT=findy \
-  #           AGENT_BOB=acapy-main
-  #       env:
-  #         NO_TTY: "1"
-  #     - name: test findy as default
-  #       run: |
-  #         cd ./env
-  #         make aath-test-check \
-  #           AGENT_DEFAULT=findy \
-  #           AGENT_BOB=findy
-  #       env:
-  #         NO_TTY: "1"
+  full-iop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: test findy as Bob
+        run: |
+          cd ./env
+          make aath-up-check \
+            AGENT_DEFAULT=acapy \
+            AGENT_BOB=findy
+        env:
+          NO_TTY: "1"
+      - name: test findy as Acme
+        run: |
+          cd ./env
+          make aath-test-check \
+            AGENT_DEFAULT=findy \
+            AGENT_BOB=acapy
+        env:
+          NO_TTY: "1"
+      - name: test findy as default
+        run: |
+          cd ./env
+          make aath-test-check \
+            AGENT_DEFAULT=findy \
+            AGENT_BOB=findy
+        env:
+          NO_TTY: "1"
 
-  # push-bc:
-  #   needs: full-iop
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     packages: write
-  #     contents: read
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: ./.github/actions/bc-image-push
-  #       with:
-  #         IMAGE_NAME: "findy-bc"
-  #         AGENT_NAME: "findy"
-  #         FILE: "./Dockerfile"
-  #         CONTEXT: "./"
-  #         PLATFORMS: "linux/amd64,linux/arm64"
-  #         TOKEN:
-  #           ${{ secrets.GITHUB_TOKEN }}
-  #           # internal findy agency test image contains
-  #           # no agency so cannot be used for testing as "bundle"
-  #         SKIP_TEST: "true"
+  push-bc:
+    needs: full-iop
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/bc-image-push
+        with:
+          IMAGE_NAME: "findy-bc"
+          AGENT_NAME: "findy"
+          FILE: "./Dockerfile"
+          CONTEXT: "./"
+          PLATFORMS: "linux/amd64,linux/arm64"
+          TOKEN:
+            ${{ secrets.GITHUB_TOKEN }}
+            # internal findy agency test image contains
+            # no agency so cannot be used for testing as "bundle"
+          SKIP_TEST: "true"
 
   push-acapy-bc:
-    #    needs: full-iop
+    needs: full-iop
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -70,13 +68,13 @@ jobs:
         with:
           IMAGE_NAME: "acapy-bc"
           AGENT_NAME: "acapy"
-          FILE: "./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy-main"
+          FILE: "./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy"
           CONTEXT: "./env/.docker/aries-agent-test-harness/aries-backchannels"
           PLATFORMS: "linux/amd64"
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   push-javascript-bc:
-    #    needs: full-iop
+    needs: full-iop
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -93,34 +91,33 @@ jobs:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKIP_CACHE: "true" # ensure latest codes are fetched
 
+  push-aath:
+    needs: full-iop
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/bc-image-push
+        with:
+          IMAGE_NAME: "aath"
+          FILE: "./env/.docker/aries-agent-test-harness/aries-test-harness/Dockerfile.harness"
+          CONTEXT: "./env/.docker/aries-agent-test-harness/aries-test-harness"
+          PLATFORMS: "linux/amd64,linux/arm64"
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKIP_TEST: "true"
 
-  # push-aath:
-  #   needs: full-iop
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     packages: write
-  #     contents: read
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: ./.github/actions/bc-image-push
-  #       with:
-  #         IMAGE_NAME: "aath"
-  #         FILE: "./env/.docker/aries-agent-test-harness/aries-test-harness/Dockerfile.harness"
-  #         CONTEXT: "./env/.docker/aries-agent-test-harness/aries-test-harness"
-  #         PLATFORMS: "linux/amd64,linux/arm64"
-  #         TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         SKIP_TEST: "true"
-
-  # merge:
-  #   needs: [push-bc, push-acapy-bc, push-javascript-bc, push-aath]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v2
-  #       with:
-  #         ref: master
-  #     - name: merge
-  #       run: |
-  #         git fetch --tags origin
-  #         git merge $GITHUB_REF
-  #         git push origin master
+  merge:
+    needs: [push-bc, push-acapy-bc, push-javascript-bc, push-aath]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          ref: master
+      - name: merge
+        run: |
+          git fetch --tags origin
+          git merge $GITHUB_REF
+          git push origin master

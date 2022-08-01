@@ -14,7 +14,7 @@ jobs:
         run: |
           cd ./env
           make aath-up-check \
-            AGENT_DEFAULT=acapy-main \
+            AGENT_DEFAULT=acapy \
             AGENT_BOB=findy
         env:
           NO_TTY: "1"
@@ -23,7 +23,7 @@ jobs:
           cd ./env
           make aath-test-check \
             AGENT_DEFAULT=findy \
-            AGENT_BOB=acapy-main
+            AGENT_BOB=acapy
         env:
           NO_TTY: "1"
       - name: test findy as default
@@ -68,7 +68,7 @@ jobs:
         with:
           IMAGE_NAME: "acapy-bc"
           AGENT_NAME: "acapy"
-          FILE: "./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy-main"
+          FILE: "./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy"
           CONTEXT: "./env/.docker/aries-agent-test-harness/aries-backchannels"
           PLATFORMS: "linux/amd64"
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -89,6 +89,7 @@ jobs:
           CONTEXT: "./env/.docker/aries-agent-test-harness/aries-backchannels"
           PLATFORMS: "linux/amd64"
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKIP_CACHE: "true" # ensure latest codes are fetched
 
   push-aath:
     needs: full-iop

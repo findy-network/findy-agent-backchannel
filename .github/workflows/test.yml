@@ -32,7 +32,7 @@ jobs:
         run: |
           cd ./env
           make aath-up-check \
-            AGENT_DEFAULT=acapy-main \
+            AGENT_DEFAULT=acapy \
             AGENT_BOB=findy \
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
         env:
@@ -42,7 +42,7 @@ jobs:
           cd ./env
           make aath-test-check \
             AGENT_DEFAULT=findy \
-            AGENT_BOB=acapy-main \
+            AGENT_BOB=acapy \
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
         env:
           NO_TTY: "1"

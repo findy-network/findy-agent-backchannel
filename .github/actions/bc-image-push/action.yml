@@ -25,6 +25,10 @@ inputs:
     description: "True if test should be skipped"
     required: false
     default: "false"
+  SKIP_CACHE:
+    description: "True if cache use should be skipped"
+    required: false
+    default: "false"
 runs:
   using: "composite"
   steps:
@@ -56,11 +60,21 @@ runs:
 
     # build and tag image for testing
     - uses: docker/build-push-action@v3
+      if: ${{ INPUTS.SKIP_CACHE != 'true' }}
       with:
         load: true
         tags: |
           ${{env.IMAGE_TAG}}:test
         cache-from: type=registry,ref=${{env.IMAGE_TAG}}:latest
+        context: ${{inputs.CONTEXT}}
+        file: ${{inputs.FILE}}
+
+    - uses: docker/build-push-action@v3
+      if: ${{ INPUTS.SKIP_CACHE == 'true' }}
+      with:
+        load: true
+        tags: |
+          ${{env.IMAGE_TAG}}:test
         context: ${{inputs.CONTEXT}}
         file: ${{inputs.FILE}}
 
@@ -85,6 +99,7 @@ runs:
 
     # build for rest of the platforms
     - uses: docker/build-push-action@v3
+      if: ${{ INPUTS.SKIP_CACHE != 'true' }}
       with:
         platforms: ${{inputs.PLATFORMS}}
         push: true
@@ -92,6 +107,18 @@ runs:
           ${{env.IMAGE_TAG}}:${{ env.version }}
           ${{env.IMAGE_TAG}}:latest
         cache-from: type=registry,ref=${{env.IMAGE_TAG}}:latest
+        cache-to: type=inline
+        context: ${{inputs.CONTEXT}}
+        file: ${{inputs.FILE}}
+
+    - uses: docker/build-push-action@v3
+      if: ${{ INPUTS.SKIP_CACHE == 'true' }}
+      with:
+        platforms: ${{inputs.PLATFORMS}}
+        push: true
+        tags: |
+          ${{env.IMAGE_TAG}}:${{ env.version }}
+          ${{env.IMAGE_TAG}}:latest
         cache-to: type=inline
         context: ${{inputs.CONTEXT}}
         file: ${{inputs.FILE}}

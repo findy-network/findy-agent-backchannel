@@ -3,8 +3,8 @@ module github.com/findy-network/findy-agent-backchannel
 go 1.18
 
 require (
-	github.com/findy-network/findy-agent-auth v0.1.30
-	github.com/findy-network/findy-common-go v0.1.39
+	github.com/findy-network/findy-agent-auth v0.1.33
+	github.com/findy-network/findy-common-go v0.1.41
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/lainio/err2 v0.8.8
@@ -108,7 +108,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220505152158-f39f71e6c8f3 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

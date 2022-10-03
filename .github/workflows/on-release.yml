@@ -70,7 +70,7 @@ jobs:
           AGENT_NAME: "acapy"
           FILE: "./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy"
           CONTEXT: "./env/.docker/aries-agent-test-harness/aries-backchannels"
-          PLATFORMS: "linux/amd64"
+          PLATFORMS: "linux/amd64,linux/arm64"
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   push-javascript-bc:
@@ -87,7 +87,7 @@ jobs:
           AGENT_NAME: "javascript"
           FILE: "./env/.docker/aries-agent-test-harness/aries-backchannels/javascript/Dockerfile.javascript"
           CONTEXT: "./env/.docker/aries-agent-test-harness/aries-backchannels"
-          PLATFORMS: "linux/amd64"
+          PLATFORMS: "linux/amd64,linux/arm64"
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKIP_CACHE: "true" # ensure latest codes are fetched
 

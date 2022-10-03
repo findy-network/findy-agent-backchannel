@@ -15,8 +15,11 @@ generate:
 
 clone:
 	mkdir -p .docker
-	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
-	cd .docker/aries-agent-test-harness && git reset --hard $(AATH_VERSION)
+	-git clone https://github.com/lauravuo/aries-agent-test-harness .docker/aries-agent-test-harness
+	cd .docker/aries-agent-test-harness && git checkout arm-support
+# TODO: take main fork in use once arm compatible
+#	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
+#	cd .docker/aries-agent-test-harness && git reset --hard $(AATH_VERSION)
 
 aath: clone image aath-build aath-test
 aath-check: image aath-build aath-test-check

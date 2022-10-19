@@ -85,7 +85,7 @@ func (s *ConnectionApiService) ConnectionReceiveInvitation(ctx context.Context, 
 	if err != nil {
 		return Response(http.StatusBadRequest, nil), err
 	}
-	id := "TODO" //connectionReceiveInvitationRequest.Data["@id"].(string)
+	id := connectionReceiveInvitationRequest.Data.InvitationId
 	id, err = s.a.AddConnectionInvitation(id, string(invitationBytes))
 	if err == nil {
 		return Response(200, ConnectionReceiveInvitation200Response{ConnectionId: id, State: INVITATION}), nil

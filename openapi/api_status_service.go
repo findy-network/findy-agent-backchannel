@@ -30,7 +30,7 @@ func NewStatusApiService() StatusApiServicer {
 
 // StatusGet - Get agent/backchannel status
 func (s *StatusApiService) StatusGet(ctx context.Context) (ImplResponse, error) {
-	return Response(200, map[string]interface{}{"status": ACTIVE}), nil
+	return Response(200, StatusGet200Response{Status: string(ACTIVE)}), nil
 }
 
 // VersionGet - Get agent/backchannel version

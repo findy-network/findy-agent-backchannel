@@ -17,3 +17,30 @@ type IssueCredentialOperationResponse struct {
 
 	CredentialId string `json:"credential_id,omitempty"`
 }
+
+// AssertIssueCredentialOperationResponseRequired checks if the required fields are not zero-ed
+func AssertIssueCredentialOperationResponseRequired(obj IssueCredentialOperationResponse) error {
+	elements := map[string]interface{}{
+		"state": obj.State,
+		"thread_id": obj.ThreadId,
+	}
+	for name, el := range elements {
+		if isZero := IsZeroValue(el); isZero {
+			return &RequiredError{Field: name}
+		}
+	}
+
+	return nil
+}
+
+// AssertRecurseIssueCredentialOperationResponseRequired recursively checks if required fields are not zero-ed in a nested slice.
+// Accepts only nested slice of IssueCredentialOperationResponse (e.g. [][]IssueCredentialOperationResponse), otherwise ErrTypeAssertionError is thrown.
+func AssertRecurseIssueCredentialOperationResponseRequired(objSlice interface{}) error {
+	return AssertRecurseInterfaceRequired(objSlice, func(obj interface{}) error {
+		aIssueCredentialOperationResponse, ok := obj.(IssueCredentialOperationResponse)
+		if !ok {
+			return ErrTypeAssertionError
+		}
+		return AssertIssueCredentialOperationResponseRequired(aIssueCredentialOperationResponse)
+	})
+}

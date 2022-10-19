@@ -15,3 +15,30 @@ type PresentProofOperationResponse struct {
 
 	ThreadId string `json:"thread_id"`
 }
+
+// AssertPresentProofOperationResponseRequired checks if the required fields are not zero-ed
+func AssertPresentProofOperationResponseRequired(obj PresentProofOperationResponse) error {
+	elements := map[string]interface{}{
+		"state": obj.State,
+		"thread_id": obj.ThreadId,
+	}
+	for name, el := range elements {
+		if isZero := IsZeroValue(el); isZero {
+			return &RequiredError{Field: name}
+		}
+	}
+
+	return nil
+}
+
+// AssertRecursePresentProofOperationResponseRequired recursively checks if required fields are not zero-ed in a nested slice.
+// Accepts only nested slice of PresentProofOperationResponse (e.g. [][]PresentProofOperationResponse), otherwise ErrTypeAssertionError is thrown.
+func AssertRecursePresentProofOperationResponseRequired(objSlice interface{}) error {
+	return AssertRecurseInterfaceRequired(objSlice, func(obj interface{}) error {
+		aPresentProofOperationResponse, ok := obj.(PresentProofOperationResponse)
+		if !ok {
+			return ErrTypeAssertionError
+		}
+		return AssertPresentProofOperationResponseRequired(aPresentProofOperationResponse)
+	})
+}

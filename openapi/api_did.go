@@ -14,23 +14,43 @@ import (
 	"strings"
 )
 
-// A DIDApiController binds http requests to an api service and writes the service results to the http response
+// DIDApiController binds http requests to an api service and writes the service results to the http response
 type DIDApiController struct {
-	service DIDApiServicer
+	service      DIDApiServicer
+	errorHandler ErrorHandler
+}
+
+// DIDApiOption for how the controller is set up.
+type DIDApiOption func(*DIDApiController)
+
+// WithDIDApiErrorHandler inject ErrorHandler into controller
+func WithDIDApiErrorHandler(h ErrorHandler) DIDApiOption {
+	return func(c *DIDApiController) {
+		c.errorHandler = h
+	}
 }
 
 // NewDIDApiController creates a default api controller
-func NewDIDApiController(s DIDApiServicer) Router {
-	return &DIDApiController{service: s}
+func NewDIDApiController(s DIDApiServicer, opts ...DIDApiOption) Router {
+	controller := &DIDApiController{
+		service:      s,
+		errorHandler: DefaultErrorHandler,
+	}
+
+	for _, opt := range opts {
+		opt(controller)
+	}
+
+	return controller
 }
 
-// Routes returns all of the api route for the DIDApiController
+// Routes returns all the api routes for the DIDApiController
 func (c *DIDApiController) Routes() Routes {
 	return Routes{
 		{
 			"DIDGetPublic",
 			strings.ToUpper("Get"),
-			"/agent/command/{did:did\\/?}",
+			"/agent/command/did",
 			c.DIDGetPublic,
 		},
 	}
@@ -41,7 +61,7 @@ func (c *DIDApiController) DIDGetPublic(w http.ResponseWriter, r *http.Request) 
 	result, err := c.service.DIDGetPublic(r.Context())
 	// If an error occurred, encode the error with the status code
 	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
+		c.errorHandler(w, r, err, &result)
 		return
 	}
 	// If no error, encode the body and the result code

@@ -17,3 +17,30 @@ type ConnectionResponse struct {
 
 	Connection map[string]interface{} `json:"connection,omitempty"`
 }
+
+// AssertConnectionResponseRequired checks if the required fields are not zero-ed
+func AssertConnectionResponseRequired(obj ConnectionResponse) error {
+	elements := map[string]interface{}{
+		"connection_id": obj.ConnectionId,
+		"state": obj.State,
+	}
+	for name, el := range elements {
+		if isZero := IsZeroValue(el); isZero {
+			return &RequiredError{Field: name}
+		}
+	}
+
+	return nil
+}
+
+// AssertRecurseConnectionResponseRequired recursively checks if required fields are not zero-ed in a nested slice.
+// Accepts only nested slice of ConnectionResponse (e.g. [][]ConnectionResponse), otherwise ErrTypeAssertionError is thrown.
+func AssertRecurseConnectionResponseRequired(objSlice interface{}) error {
+	return AssertRecurseInterfaceRequired(objSlice, func(obj interface{}) error {
+		aConnectionResponse, ok := obj.(ConnectionResponse)
+		if !ok {
+			return ErrTypeAssertionError
+		}
+		return AssertConnectionResponseRequired(aConnectionResponse)
+	})
+}

@@ -1,3 +1,5 @@
+export GIT_USER_ID="findy-network"
+export GIT_REPO_ID="findy-agent-backchannel"
 
 build:
 	go build ./...
@@ -48,3 +50,15 @@ bundle_test:
 		-e DOCKERHOST="192.168.65.3" \
 		-p 9020-9021:9020-9021 \
 		findy-aath-bundle -p 9020
+
+# brew install openapi-generator
+generate:
+	rm -rf ./openapi
+	openapi-generator generate -i ./api/openapi.yaml -g go-server -o ./openapi
+	-rm ./openapi/go.mod
+	-rm ./openapi/Dockerfile
+	mv ./openapi/main.go ./
+	mv ./openapi/go/* ./openapi/
+	rmdir ./openapi/go
+	rm -rf ./openapi/api
+

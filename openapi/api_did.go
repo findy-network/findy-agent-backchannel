@@ -50,7 +50,7 @@ func (c *DIDApiController) Routes() Routes {
 		{
 			"DIDGetPublic",
 			strings.ToUpper("Get"),
-			"/agent/command/did",
+			"/agent/command/{did:did\\/?}",
 			c.DIDGetPublic,
 		},
 	}

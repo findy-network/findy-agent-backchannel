@@ -87,5 +87,10 @@ func main() {
 
 	router := openapi.NewRouter(AgentApiController, ConnectionApiController, CoordinateMediationApiController, CredentialApiController, CredentialDefinitionApiController, DIDApiController, DIDExchangeApiController, IssueCredentialApiController, IssueCredentialV2ApiController, IssueCredentialV3ApiController, OutOfBandApiController, OutOfBandV2ApiController, PresentProofApiController, PresentProofV2ApiController, PresentProofV3ApiController, RevocationApiController, SchemaApiController, StatusApiController)
 
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.Method + " " + r.URL.String())
+		router.ServeHTTP(w, r)
+	})
+
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }

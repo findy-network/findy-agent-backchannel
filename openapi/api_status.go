@@ -50,13 +50,13 @@ func (c *StatusApiController) Routes() Routes {
 		{
 			"StatusGet",
 			strings.ToUpper("Get"),
-			"/agent/command/status",
+			"/agent/command/{status:status\\/?}",
 			c.StatusGet,
 		},
 		{
 			"VersionGet",
 			strings.ToUpper("Get"),
-			"/agent/command/version",
+			"/agent/command/{version:version\\/?}",
 			c.VersionGet,
 		},
 	}

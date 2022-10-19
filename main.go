@@ -12,35 +12,47 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
+	"github.com/findy-network/findy-agent-backchannel/agent"
 	openapi "github.com/findy-network/findy-agent-backchannel/openapi"
 )
 
 func main() {
-	log.Printf("Server started")
+	port := "9999"
+	if strings.HasPrefix(os.Args[2], "9") {
+		port = os.Args[2]
+	}
 
+	log.Printf("Starting server at port %s", port)
+
+	a := agent.Init()
+	a.Login()
+
+	log.Printf("Agent login succeeded")
 	AgentApiService := openapi.NewAgentApiService()
 	AgentApiController := openapi.NewAgentApiController(AgentApiService)
 
-	ConnectionApiService := openapi.NewConnectionApiService()
+	ConnectionApiService := openapi.NewConnectionApiService(a)
 	ConnectionApiController := openapi.NewConnectionApiController(ConnectionApiService)
 
 	CoordinateMediationApiService := openapi.NewCoordinateMediationApiService()
 	CoordinateMediationApiController := openapi.NewCoordinateMediationApiController(CoordinateMediationApiService)
 
-	CredentialApiService := openapi.NewCredentialApiService()
+	CredentialApiService := openapi.NewCredentialApiService(a)
 	CredentialApiController := openapi.NewCredentialApiController(CredentialApiService)
 
-	CredentialDefinitionApiService := openapi.NewCredentialDefinitionApiService()
+	CredentialDefinitionApiService := openapi.NewCredentialDefinitionApiService(a)
 	CredentialDefinitionApiController := openapi.NewCredentialDefinitionApiController(CredentialDefinitionApiService)
 
-	DIDApiService := openapi.NewDIDApiService()
+	DIDApiService := openapi.NewDIDApiService(a)
 	DIDApiController := openapi.NewDIDApiController(DIDApiService)
 
 	DIDExchangeApiService := openapi.NewDIDExchangeApiService()
 	DIDExchangeApiController := openapi.NewDIDExchangeApiController(DIDExchangeApiService)
 
-	IssueCredentialApiService := openapi.NewIssueCredentialApiService()
+	IssueCredentialApiService := openapi.NewIssueCredentialApiService(a)
 	IssueCredentialApiController := openapi.NewIssueCredentialApiController(IssueCredentialApiService)
 
 	IssueCredentialV2ApiService := openapi.NewIssueCredentialV2ApiService()
@@ -55,7 +67,7 @@ func main() {
 	OutOfBandV2ApiService := openapi.NewOutOfBandV2ApiService()
 	OutOfBandV2ApiController := openapi.NewOutOfBandV2ApiController(OutOfBandV2ApiService)
 
-	PresentProofApiService := openapi.NewPresentProofApiService()
+	PresentProofApiService := openapi.NewPresentProofApiService(a)
 	PresentProofApiController := openapi.NewPresentProofApiController(PresentProofApiService)
 
 	PresentProofV2ApiService := openapi.NewPresentProofV2ApiService()
@@ -67,7 +79,7 @@ func main() {
 	RevocationApiService := openapi.NewRevocationApiService()
 	RevocationApiController := openapi.NewRevocationApiController(RevocationApiService)
 
-	SchemaApiService := openapi.NewSchemaApiService()
+	SchemaApiService := openapi.NewSchemaApiService(a)
 	SchemaApiController := openapi.NewSchemaApiController(SchemaApiService)
 
 	StatusApiService := openapi.NewStatusApiService()
@@ -75,5 +87,5 @@ func main() {
 
 	router := openapi.NewRouter(AgentApiController, ConnectionApiController, CoordinateMediationApiController, CredentialApiController, CredentialDefinitionApiController, DIDApiController, DIDExchangeApiController, IssueCredentialApiController, IssueCredentialV2ApiController, IssueCredentialV3ApiController, OutOfBandApiController, OutOfBandV2ApiController, PresentProofApiController, PresentProofV2ApiController, PresentProofV3ApiController, RevocationApiController, SchemaApiController, StatusApiController)
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }

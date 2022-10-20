@@ -22,7 +22,7 @@ type PresentationPreview struct {
 // AssertPresentationPreviewRequired checks if the required fields are not zero-ed
 func AssertPresentationPreviewRequired(obj PresentationPreview) error {
 	elements := map[string]interface{}{
-		"@type":      obj.Type,
+		//"@type":      obj.Type,
 		"attributes": obj.Attributes,
 		"predicates": obj.Predicates,
 	}

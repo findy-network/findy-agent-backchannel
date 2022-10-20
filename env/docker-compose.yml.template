@@ -1,8 +1,7 @@
 version: '3.9'
 services:
   core:
-#    image: ghcr.io/findy-network/findy-agent:latest
-    image: findy-agent
+    image: ghcr.io/findy-network/findy-agent:latest
     volumes:
       - ./conf/genesis.txt:/genesis.txt
       - ./cert:/grpc

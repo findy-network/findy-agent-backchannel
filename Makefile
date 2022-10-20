@@ -52,6 +52,8 @@ bundle_test:
 		findy-aath-bundle -p 9020
 
 # brew install openapi-generator
+# TODO:
+# following will do hard reset -> add modified files to ignore list
 generate:
 	rm -rf ./openapi
 	openapi-generator generate -i ./api/openapi.yaml -g go-server -o ./openapi

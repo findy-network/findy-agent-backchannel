@@ -18,7 +18,7 @@ import (
 	"github.com/findy-network/findy-agent-backchannel/agent"
 )
 
-// ConnectionApiService is a service that implents the logic for the ConnectionApiServicer
+// ConnectionApiService is a service that implements the logic for the ConnectionApiServicer
 // This service should implement the business logic for every endpoint for the ConnectionApi API.
 // Include any external packages or services that will be required by this service.
 type ConnectionApiService struct {
@@ -27,33 +27,31 @@ type ConnectionApiService struct {
 
 // NewConnectionApiService creates a default api service
 func NewConnectionApiService(a *agent.Agent) ConnectionApiServicer {
-	return &ConnectionApiService{
-		a: a,
-	}
+	return &ConnectionApiService{a: a}
 }
 
 // ConnectionAcceptInvitation - Accept an invitation
-func (s *ConnectionApiService) ConnectionAcceptInvitation(ctx context.Context, inlineObject1 InlineObject1) (ImplResponse, error) {
-	id, err := s.a.RequestConnection(inlineObject1.Id)
+func (s *ConnectionApiService) ConnectionAcceptInvitation(ctx context.Context, connectionAcceptInvitationRequest ConnectionAcceptInvitationRequest) (ImplResponse, error) {
+	id, err := s.a.RequestConnection(connectionAcceptInvitationRequest.Id)
 	if err == nil {
-		return Response(200, InlineResponse2001{ConnectionId: id, State: REQUEST}), nil
+		return Response(200, ConnectionAcceptInvitation200Response{ConnectionId: id, State: REQUEST}), nil
 	}
 	return Response(http.StatusInternalServerError, nil), err
 }
 
 // ConnectionAcceptRequest - Accept a connection request
-func (s *ConnectionApiService) ConnectionAcceptRequest(ctx context.Context, inlineObject2 InlineObject2) (ImplResponse, error) {
+func (s *ConnectionApiService) ConnectionAcceptRequest(ctx context.Context, connectionAcceptInvitationRequest ConnectionAcceptInvitationRequest) (ImplResponse, error) {
 	// Findy Agency does not have accept connection step at the moment
-	return Response(200, InlineResponse2002{inlineObject2.Id, RESPONSE}), nil
+	return Response(200, ConnectionAcceptRequest200Response{connectionAcceptInvitationRequest.Id, RESPONSE}), nil
 }
 
 // ConnectionCreateInvitation - Create a new connection invitation
-func (s *ConnectionApiService) ConnectionCreateInvitation(ctx context.Context) (ImplResponse, error) {
+func (s *ConnectionApiService) ConnectionCreateInvitation(ctx context.Context, _ ConnectionCreateInvitationRequest) (ImplResponse, error) {
 	invitationJSON, err := s.a.CreateInvitation()
 	if err == nil {
 		var invitationMap map[string]interface{}
 		if err = json.Unmarshal([]byte(invitationJSON), &invitationMap); err == nil {
-			return Response(200, map[string]interface{}{"connection_id": invitationMap["@id"], "invitation": invitationMap}), nil
+			return Response(200, ConnectionCreateInvitation200Response{ConnectionId: invitationMap["@id"].(string), Invitation: invitationMap}), nil
 		}
 	}
 	return Response(http.StatusInternalServerError, nil), err
@@ -82,24 +80,24 @@ func (s *ConnectionApiService) ConnectionGetById(ctx context.Context, connection
 }
 
 // ConnectionReceiveInvitation - Receive an invitation
-func (s *ConnectionApiService) ConnectionReceiveInvitation(ctx context.Context, inlineObject InlineObject) (ImplResponse, error) {
-	invitationBytes, err := json.Marshal(inlineObject.Data)
+func (s *ConnectionApiService) ConnectionReceiveInvitation(ctx context.Context, connectionReceiveInvitationRequest ConnectionReceiveInvitationRequest) (ImplResponse, error) {
+	invitationBytes, err := json.Marshal(connectionReceiveInvitationRequest.Data)
 	if err != nil {
 		return Response(http.StatusBadRequest, nil), err
 	}
-	id := inlineObject.Data["@id"].(string)
+	id := connectionReceiveInvitationRequest.Data.InvitationId
 	id, err = s.a.AddConnectionInvitation(id, string(invitationBytes))
 	if err == nil {
-		return Response(200, InlineResponse200{ConnectionId: id, State: INVITATION}), nil
+		return Response(200, ConnectionReceiveInvitation200Response{ConnectionId: id, State: INVITATION}), nil
 	}
 	return Response(http.StatusInternalServerError, nil), err
 }
 
 // ConnectionSendPing - Send trust ping
-func (s *ConnectionApiService) ConnectionSendPing(ctx context.Context, inlineObject3 InlineObject3) (ImplResponse, error) {
-	id, err := s.a.TrustPing(inlineObject3.Id)
+func (s *ConnectionApiService) ConnectionSendPing(ctx context.Context, connectionSendPingRequest ConnectionSendPingRequest) (ImplResponse, error) {
+	id, err := s.a.TrustPing(connectionSendPingRequest.Id)
 	if err == nil {
-		return Response(200, InlineResponse2002{ConnectionId: id, State: ACTIVE}), nil
+		return Response(200, ConnectionAcceptRequest200Response{ConnectionId: id, State: ACTIVE}), nil
 	}
 	return Response(http.StatusNotFound, nil), err
 }

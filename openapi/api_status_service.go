@@ -11,15 +11,13 @@ package openapi
 
 import (
 	"context"
-	"errors"
-	"net/http"
 )
 
 var (
 	Version = "dev"
 )
 
-// StatusApiService is a service that implents the logic for the StatusApiServicer
+// StatusApiService is a service that implements the logic for the StatusApiServicer
 // This service should implement the business logic for every endpoint for the StatusApi API.
 // Include any external packages or services that will be required by this service.
 type StatusApiService struct {
@@ -32,30 +30,10 @@ func NewStatusApiService() StatusApiServicer {
 
 // StatusGet - Get agent/backchannel status
 func (s *StatusApiService) StatusGet(ctx context.Context) (ImplResponse, error) {
-	// TODO - update StatusGet with the required logic for this service method.
-	// Add api_status_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, map[string]interface{}{}) or use other options such as http.Ok ...
-	return Response(200, map[string]interface{}{"status": ACTIVE}), nil
-
-	//TODO: Uncomment the next line to return response Response(418, map[string]interface{}{}) or use other options such as http.Ok ...
-	//return Response(418, map[string]interface{}{}), nil
-
-	//return Response(http.StatusNotImplemented, nil), errors.New("StatusGet method not implemented")
+	return Response(200, StatusGet200Response{Status: string(ACTIVE)}), nil
 }
 
-// StatusGet_0 - Get agent/backchannel version
-func (s *StatusApiService) StatusGet_0(ctx context.Context) (ImplResponse, error) {
-	// TODO - update StatusGet_1 with the required logic for this service method.
-	// Add api_status_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, string{}) or use other options such as http.Ok ...
-	//return Response(200, string{}), nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("StatusGet_1 method not implemented")
-}
-
-// StatusGet_1 - Get agent/backchannel version
-func (s *StatusApiService) StatusGet_1(ctx context.Context) (ImplResponse, error) {
+// VersionGet - Get agent/backchannel version
+func (s *StatusApiService) VersionGet(ctx context.Context) (ImplResponse, error) {
 	return Response(200, Version), nil
 }

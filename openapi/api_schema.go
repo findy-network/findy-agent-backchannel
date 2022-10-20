@@ -17,17 +17,37 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// A SchemaApiController binds http requests to an api service and writes the service results to the http response
+// SchemaApiController binds http requests to an api service and writes the service results to the http response
 type SchemaApiController struct {
-	service SchemaApiServicer
+	service      SchemaApiServicer
+	errorHandler ErrorHandler
+}
+
+// SchemaApiOption for how the controller is set up.
+type SchemaApiOption func(*SchemaApiController)
+
+// WithSchemaApiErrorHandler inject ErrorHandler into controller
+func WithSchemaApiErrorHandler(h ErrorHandler) SchemaApiOption {
+	return func(c *SchemaApiController) {
+		c.errorHandler = h
+	}
 }
 
 // NewSchemaApiController creates a default api controller
-func NewSchemaApiController(s SchemaApiServicer) Router {
-	return &SchemaApiController{service: s}
+func NewSchemaApiController(s SchemaApiServicer, opts ...SchemaApiOption) Router {
+	controller := &SchemaApiController{
+		service:      s,
+		errorHandler: DefaultErrorHandler,
+	}
+
+	for _, opt := range opts {
+		opt(controller)
+	}
+
+	return controller
 }
 
-// Routes returns all of the api route for the SchemaApiController
+// Routes returns all the api routes for the SchemaApiController
 func (c *SchemaApiController) Routes() Routes {
 	return Routes{
 		{
@@ -47,15 +67,21 @@ func (c *SchemaApiController) Routes() Routes {
 
 // SchemaCreate - Create a new schema
 func (c *SchemaApiController) SchemaCreate(w http.ResponseWriter, r *http.Request) {
-	inlineObject4 := &InlineObject4{}
-	if err := json.NewDecoder(r.Body).Decode(&inlineObject4); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	schemaCreateRequestParam := SchemaCreateRequest{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&schemaCreateRequestParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	result, err := c.service.SchemaCreate(r.Context(), *inlineObject4)
+	if err := AssertSchemaCreateRequestRequired(schemaCreateRequestParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.SchemaCreate(r.Context(), schemaCreateRequestParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
+		c.errorHandler(w, r, err, &result)
 		return
 	}
 	// If no error, encode the body and the result code
@@ -66,12 +92,12 @@ func (c *SchemaApiController) SchemaCreate(w http.ResponseWriter, r *http.Reques
 // SchemaGetById - Get schema by id
 func (c *SchemaApiController) SchemaGetById(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	schemaId := params["schemaId"]
+	schemaIdParam := params["schemaId"]
 
-	result, err := c.service.SchemaGetById(r.Context(), schemaId)
+	result, err := c.service.SchemaGetById(r.Context(), schemaIdParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
+		c.errorHandler(w, r, err, &result)
 		return
 	}
 	// If no error, encode the body and the result code

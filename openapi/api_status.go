@@ -14,17 +14,37 @@ import (
 	"strings"
 )
 
-// A StatusApiController binds http requests to an api service and writes the service results to the http response
+// StatusApiController binds http requests to an api service and writes the service results to the http response
 type StatusApiController struct {
-	service StatusApiServicer
+	service      StatusApiServicer
+	errorHandler ErrorHandler
+}
+
+// StatusApiOption for how the controller is set up.
+type StatusApiOption func(*StatusApiController)
+
+// WithStatusApiErrorHandler inject ErrorHandler into controller
+func WithStatusApiErrorHandler(h ErrorHandler) StatusApiOption {
+	return func(c *StatusApiController) {
+		c.errorHandler = h
+	}
 }
 
 // NewStatusApiController creates a default api controller
-func NewStatusApiController(s StatusApiServicer) Router {
-	return &StatusApiController{service: s}
+func NewStatusApiController(s StatusApiServicer, opts ...StatusApiOption) Router {
+	controller := &StatusApiController{
+		service:      s,
+		errorHandler: DefaultErrorHandler,
+	}
+
+	for _, opt := range opts {
+		opt(controller)
+	}
+
+	return controller
 }
 
-// Routes returns all of the api route for the StatusApiController
+// Routes returns all the api routes for the StatusApiController
 func (c *StatusApiController) Routes() Routes {
 	return Routes{
 		{
@@ -34,10 +54,10 @@ func (c *StatusApiController) Routes() Routes {
 			c.StatusGet,
 		},
 		{
-			"StatusGet_1",
+			"VersionGet",
 			strings.ToUpper("Get"),
 			"/agent/command/{version:version\\/?}",
-			c.StatusGet_1,
+			c.VersionGet,
 		},
 	}
 }
@@ -47,7 +67,7 @@ func (c *StatusApiController) StatusGet(w http.ResponseWriter, r *http.Request) 
 	result, err := c.service.StatusGet(r.Context())
 	// If an error occurred, encode the error with the status code
 	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
+		c.errorHandler(w, r, err, &result)
 		return
 	}
 	// If no error, encode the body and the result code
@@ -55,12 +75,12 @@ func (c *StatusApiController) StatusGet(w http.ResponseWriter, r *http.Request) 
 
 }
 
-// StatusGet_1 - Get agent/backchannel version
-func (c *StatusApiController) StatusGet_1(w http.ResponseWriter, r *http.Request) {
-	result, err := c.service.StatusGet_1(r.Context())
+// VersionGet - Get agent/backchannel version
+func (c *StatusApiController) VersionGet(w http.ResponseWriter, r *http.Request) {
+	result, err := c.service.VersionGet(r.Context())
 	// If an error occurred, encode the error with the status code
 	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
+		c.errorHandler(w, r, err, &result)
 		return
 	}
 	// If no error, encode the body and the result code

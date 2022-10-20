@@ -17,7 +17,7 @@ import (
 	"github.com/findy-network/findy-agent-backchannel/agent"
 )
 
-// SchemaApiService is a service that implents the logic for the SchemaApiServicer
+// SchemaApiService is a service that implements the logic for the SchemaApiServicer
 // This service should implement the business logic for every endpoint for the SchemaApi API.
 // Include any external packages or services that will be required by this service.
 type SchemaApiService struct {
@@ -32,16 +32,16 @@ func NewSchemaApiService(a *agent.Agent) SchemaApiServicer {
 }
 
 // SchemaCreate - Create a new schema
-func (s *SchemaApiService) SchemaCreate(ctx context.Context, inlineObject4 InlineObject4) (ImplResponse, error) {
-	res, err := s.a.CreateSchema(inlineObject4.Data.SchemaName, inlineObject4.Data.SchemaVersion, inlineObject4.Data.Attributes)
+func (s *SchemaApiService) SchemaCreate(ctx context.Context, schemaCreateRequest SchemaCreateRequest) (ImplResponse, error) {
+	res, err := s.a.CreateSchema(schemaCreateRequest.Data.SchemaName, schemaCreateRequest.Data.SchemaVersion, schemaCreateRequest.Data.Attributes)
 	if err == nil {
 		schema := make(map[string]interface{})
 		schema["id"] = res
-		schema["ver"] = inlineObject4.Data.SchemaVersion
-		schema["name"] = inlineObject4.Data.SchemaName
-		schema["attrNames"] = inlineObject4.Data.Attributes
+		schema["ver"] = schemaCreateRequest.Data.SchemaVersion
+		schema["name"] = schemaCreateRequest.Data.SchemaName
+		schema["attrNames"] = schemaCreateRequest.Data.Attributes
 		schema["seqNo"] = "" // ?
-		return Response(200, InlineResponse2004{SchemaId: res, Schema: schema}), nil
+		return Response(200, SchemaCreate200Response{SchemaId: res, Schema: schema}), nil
 	}
 
 	return Response(http.StatusInternalServerError, nil), err

@@ -18,30 +18,30 @@ import (
 )
 
 func getProofStatus(verifier bool, state agent.PresentProofState) PresentProofState {
-	res := PROOF_DONE
+	res := PRESENT_PROOF_DONE
 	switch state {
 	case agent.StateProofProposal:
-		res = PROOF_PROPOSAL_RECEIVED
+		res = PRESENT_PROOF_PROPOSAL_RECEIVED
 		if !verifier {
-			res = PROOF_PROPOSAL_SENT
+			res = PRESENT_PROOF_PROPOSAL_SENT
 		}
 	case agent.StateProofRequest:
-		res = PROOF_REQUEST_SENT
+		res = PRESENT_PROOF_REQUEST_SENT
 		if !verifier {
-			res = PROOF_REQUEST_RECEIVED
+			res = PRESENT_PROOF_REQUEST_RECEIVED
 		}
 	case agent.StateProofPresentation:
-		res = PROOF_PRESENTATION_RECEIVED
+		res = PRESENT_PROOF_PRESENTATION_RECEIVED
 		if !verifier {
-			res = PROOF_PRESENTATION_SENT
+			res = PRESENT_PROOF_PRESENTATION_SENT
 		}
 	case agent.StateProofDone:
-		res = PROOF_DONE
+		res = PRESENT_PROOF_DONE
 	}
 	return res
 }
 
-// PresentProofApiService is a service that implents the logic for the PresentProofApiServicer
+// PresentProofApiService is a service that implements the logic for the PresentProofApiServicer
 // This service should implement the business logic for every endpoint for the PresentProofApi API.
 // Include any external packages or services that will be required by this service.
 type PresentProofApiService struct {
@@ -50,9 +50,7 @@ type PresentProofApiService struct {
 
 // NewPresentProofApiService creates a default api service
 func NewPresentProofApiService(a *agent.Agent) PresentProofApiServicer {
-	return &PresentProofApiService{
-		a: a,
-	}
+	return &PresentProofApiService{a: a}
 }
 
 // PresentProofGetByThreadId - Get presentation exchange record by thread id
@@ -73,19 +71,20 @@ func (s *PresentProofApiService) PresentProofGetByThreadId(ctx context.Context, 
 }
 
 // PresentProofSendPresentation - Send presentation
-func (s *PresentProofApiService) PresentProofSendPresentation(ctx context.Context, inlineObject9 InlineObject9) (ImplResponse, error) {
-	threadId, err := s.a.SendProofPresentation(inlineObject9.Id)
+func (s *PresentProofApiService) PresentProofSendPresentation(ctx context.Context, presentProofSendPresentationRequest PresentProofSendPresentationRequest) (ImplResponse, error) {
+
+	threadId, err := s.a.SendProofPresentation(presentProofSendPresentationRequest.Id)
 	if err == nil {
-		return Response(200, PresentProofOperationResponse{State: PROOF_PRESENTATION_SENT, ThreadId: threadId}), nil
+		return Response(200, PresentProofOperationResponse{State: PRESENT_PROOF_PRESENTATION_SENT, ThreadId: threadId}), nil
 	}
 
 	return Response(http.StatusInternalServerError, nil), err
 }
 
 // PresentProofSendProposal - Send presentation proposal
-func (s *PresentProofApiService) PresentProofSendProposal(ctx context.Context, inlineObject7 InlineObject7) (ImplResponse, error) {
-	connectionID := inlineObject7.Data.ConnectionId
-	proposalAttributes := inlineObject7.Data.PresentationProposal.Attributes
+func (s *PresentProofApiService) PresentProofSendProposal(ctx context.Context, presentProofSendProposalRequest PresentProofSendProposalRequest) (ImplResponse, error) {
+	connectionID := presentProofSendProposalRequest.Data.ConnectionId
+	proposalAttributes := presentProofSendProposalRequest.Data.PresentationProposal.Attributes
 	attributes := make([]*agent.ProofAttribute, 0)
 	for _, attr := range proposalAttributes {
 		attributes = append(attributes, &agent.ProofAttribute{
@@ -96,16 +95,16 @@ func (s *PresentProofApiService) PresentProofSendProposal(ctx context.Context, i
 
 	threadId, err := s.a.ProposeProof(connectionID, attributes)
 	if err == nil {
-		return Response(200, PresentProofOperationResponse{State: PROOF_PROPOSAL_SENT, ThreadId: threadId}), nil
+		return Response(200, PresentProofOperationResponse{State: PRESENT_PROOF_PROPOSAL_SENT, ThreadId: threadId}), nil
 	}
 
 	return Response(http.StatusInternalServerError, nil), err
 }
 
 // PresentProofSendRequest - Send presentation request
-func (s *PresentProofApiService) PresentProofSendRequest(ctx context.Context, inlineObject8 InlineObject8) (ImplResponse, error) {
-	connectionID := inlineObject8.Data.ConnectionId
-	proposalAttributes := inlineObject8.Data.PresentationRequest.ProofRequest.Data.RequestedAttributes
+func (s *PresentProofApiService) PresentProofSendRequest(ctx context.Context, presentProofSendRequestRequest PresentProofSendRequestRequest) (r ImplResponse, err error) {
+	connectionID := presentProofSendRequestRequest.Data.ConnectionId
+	proposalAttributes := presentProofSendRequestRequest.Data.PresentationRequest.ProofRequest.Data.RequestedAttributes
 	attributes := make([]*agent.ProofAttribute, 0)
 	for key, value := range proposalAttributes {
 		if value.Name != "" {
@@ -123,7 +122,7 @@ func (s *PresentProofApiService) PresentProofSendRequest(ctx context.Context, in
 		}
 	}
 
-	proposalPredicates := inlineObject8.Data.PresentationRequest.ProofRequest.Data.RequestedPredicates
+	proposalPredicates := presentProofSendRequestRequest.Data.PresentationRequest.ProofRequest.Data.RequestedPredicates
 	predicates := make([]*agent.ProofPredicate, 0)
 	for key, value := range proposalPredicates {
 		valueMap := value.(map[string]interface{})
@@ -137,29 +136,30 @@ func (s *PresentProofApiService) PresentProofSendRequest(ctx context.Context, in
 
 	threadId, err := s.a.RequestProof(connectionID, attributes, predicates)
 	if err == nil {
-		return Response(200, PresentProofOperationResponse{State: PROOF_REQUEST_SENT, ThreadId: threadId}), nil
+		return Response(200, PresentProofOperationResponse{State: PRESENT_PROOF_REQUEST_SENT, ThreadId: threadId}), nil
 	}
 
 	return Response(http.StatusInternalServerError, nil), err
 }
 
 // PresentProofVerifyPresentation - Verify presentation
-func (s *PresentProofApiService) PresentProofVerifyPresentation(ctx context.Context, inlineObject10 InlineObject10) (ImplResponse, error) {
-	err := s.a.VerifyPresentation(inlineObject10.Id)
+func (s *PresentProofApiService) PresentProofVerifyPresentation(ctx context.Context, presentProofVerifyPresentationRequest PresentProofVerifyPresentationRequest) (ImplResponse, error) {
+
+	err := s.a.VerifyPresentation(presentProofVerifyPresentationRequest.Id)
 	if err != nil {
 		return Response(http.StatusInternalServerError, nil), err
 	}
 
-	verifier, state, err := s.a.GetProof(inlineObject10.Id)
+	verifier, state, err := s.a.GetProof(presentProofVerifyPresentationRequest.Id)
 	if err != nil {
 		return Response(http.StatusNotFound, nil), err
 	}
 
 	res := getProofStatus(verifier, state)
-	log.Println("PresentProofVerifyPresentation Proof status ", res, inlineObject10.Id)
+	log.Println("PresentProofVerifyPresentation Proof status ", res, presentProofVerifyPresentationRequest.Id)
 
 	return Response(200, PresentProofOperationResponse{
 		State:    res,
-		ThreadId: inlineObject10.Id,
+		ThreadId: presentProofVerifyPresentationRequest.Id,
 	}), nil
 }

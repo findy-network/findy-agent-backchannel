@@ -17,7 +17,7 @@ import (
 	"github.com/findy-network/findy-agent-backchannel/agent"
 )
 
-// CredentialDefinitionApiService is a service that implents the logic for the CredentialDefinitionApiServicer
+// CredentialDefinitionApiService is a service that implements the logic for the CredentialDefinitionApiServicer
 // This service should implement the business logic for every endpoint for the CredentialDefinitionApi API.
 // Include any external packages or services that will be required by this service.
 type CredentialDefinitionApiService struct {
@@ -26,14 +26,12 @@ type CredentialDefinitionApiService struct {
 
 // NewCredentialDefinitionApiService creates a default api service
 func NewCredentialDefinitionApiService(a *agent.Agent) CredentialDefinitionApiServicer {
-	return &CredentialDefinitionApiService{
-		a: a,
-	}
+	return &CredentialDefinitionApiService{a: a}
 }
 
 // CredentialDefinitionCreate - Create a new credential definition
-func (s *CredentialDefinitionApiService) CredentialDefinitionCreate(ctx context.Context, inlineObject5 InlineObject5) (ImplResponse, error) {
-	res, err := s.a.CreateCredDef(inlineObject5.Data.SchemaId, inlineObject5.Data.Tag)
+func (s *CredentialDefinitionApiService) CredentialDefinitionCreate(ctx context.Context, credentialDefinitionCreateRequest CredentialDefinitionCreateRequest) (ImplResponse, error) {
+	res, err := s.a.CreateCredDef(credentialDefinitionCreateRequest.Data.SchemaId, credentialDefinitionCreateRequest.Data.Tag)
 	if err == nil {
 		return Response(200, map[string]interface{}{"credential_definition_id": res}), nil
 	}

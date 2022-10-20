@@ -15,7 +15,7 @@ import (
 	"github.com/findy-network/findy-agent-backchannel/agent"
 )
 
-// DIDApiService is a service that implents the logic for the DIDApiServicer
+// DIDApiService is a service that implements the logic for the DIDApiServicer
 // This service should implement the business logic for every endpoint for the DIDApi API.
 // Include any external packages or services that will be required by this service.
 type DIDApiService struct {
@@ -24,14 +24,12 @@ type DIDApiService struct {
 
 // NewDIDApiService creates a default api service
 func NewDIDApiService(a *agent.Agent) DIDApiServicer {
-	return &DIDApiService{
-		a: a,
-	}
+	return &DIDApiService{a: a}
 }
 
 // DIDGetPublic - Get public DID
 func (s *DIDApiService) DIDGetPublic(ctx context.Context) (ImplResponse, error) {
-	return Response(200, InlineResponse2003{
+	return Response(200, DidGetPublic200Response{
 		Did:    agent.PublicDID(),
 		Verkey: agent.PublicVerkey(),
 	}), nil

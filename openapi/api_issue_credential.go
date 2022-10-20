@@ -17,45 +17,45 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type SendIssueCredentialRequest struct {
-	Id string `json:"id"`
-}
-
-type IssueCredentialStoreRequest struct {
-	Id string `json:"id"`
-}
-
-type IssueCredentialOfferRequest struct {
-	Id string `json:"id"`
-
-	Data struct {
-		CredentialProposal CredentialPreview `json:"credential_preview,omitempty"`
-
-		CredDefId string `json:"cred_def_id,omitempty"`
-
-		ConnectionId string `json:"connection_id"`
-	} `json:"data"`
-}
-
-type IssueCredentialIssueRequest struct {
-	Id string `json:"id"`
-}
-
-type UNKNOWN_BASE_TYPE struct{}
-
-// A IssueCredentialApiController binds http requests to an api service and writes the service results to the http response
+// IssueCredentialApiController binds http requests to an api service and writes the service results to the http response
 type IssueCredentialApiController struct {
-	service IssueCredentialApiServicer
+	service      IssueCredentialApiServicer
+	errorHandler ErrorHandler
+}
+
+// IssueCredentialApiOption for how the controller is set up.
+type IssueCredentialApiOption func(*IssueCredentialApiController)
+
+// WithIssueCredentialApiErrorHandler inject ErrorHandler into controller
+func WithIssueCredentialApiErrorHandler(h ErrorHandler) IssueCredentialApiOption {
+	return func(c *IssueCredentialApiController) {
+		c.errorHandler = h
+	}
 }
 
 // NewIssueCredentialApiController creates a default api controller
-func NewIssueCredentialApiController(s IssueCredentialApiServicer) Router {
-	return &IssueCredentialApiController{service: s}
+func NewIssueCredentialApiController(s IssueCredentialApiServicer, opts ...IssueCredentialApiOption) Router {
+	controller := &IssueCredentialApiController{
+		service:      s,
+		errorHandler: DefaultErrorHandler,
+	}
+
+	for _, opt := range opts {
+		opt(controller)
+	}
+
+	return controller
 }
 
-// Routes returns all of the api route for the IssueCredentialApiController
+// Routes returns all the api routes for the IssueCredentialApiController
 func (c *IssueCredentialApiController) Routes() Routes {
 	return Routes{
+		{
+			"IssueCredentialCreateOffer",
+			strings.ToUpper("Post"),
+			"/agent/command/issue-credential/create-offer",
+			c.IssueCredentialCreateOffer,
+		},
 		{
 			"IssueCredentialGetByThreadId",
 			strings.ToUpper("Get"),
@@ -95,15 +95,39 @@ func (c *IssueCredentialApiController) Routes() Routes {
 	}
 }
 
+// IssueCredentialCreateOffer - Create credential offer.
+func (c *IssueCredentialApiController) IssueCredentialCreateOffer(w http.ResponseWriter, r *http.Request) {
+	issueCredentialCreateOfferRequestParam := IssueCredentialCreateOfferRequest{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&issueCredentialCreateOfferRequestParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertIssueCredentialCreateOfferRequestRequired(issueCredentialCreateOfferRequestParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.IssueCredentialCreateOffer(r.Context(), issueCredentialCreateOfferRequestParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
 // IssueCredentialGetByThreadId - Get credential exchange record by thread id
 func (c *IssueCredentialApiController) IssueCredentialGetByThreadId(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	credentialExchangeThreadId := params["credentialExchangeThreadId"]
+	credentialExchangeThreadIdParam := params["credentialExchangeThreadId"]
 
-	result, err := c.service.IssueCredentialGetByThreadId(r.Context(), credentialExchangeThreadId)
+	result, err := c.service.IssueCredentialGetByThreadId(r.Context(), credentialExchangeThreadIdParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
+		c.errorHandler(w, r, err, &result)
 		return
 	}
 	// If no error, encode the body and the result code
@@ -113,15 +137,21 @@ func (c *IssueCredentialApiController) IssueCredentialGetByThreadId(w http.Respo
 
 // IssueCredentialIssue - Issue Credential
 func (c *IssueCredentialApiController) IssueCredentialIssue(w http.ResponseWriter, r *http.Request) {
-	uNKNOWNBASETYPE := &IssueCredentialIssueRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&uNKNOWNBASETYPE); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	issueCredentialIssueRequestParam := IssueCredentialIssueRequest{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&issueCredentialIssueRequestParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	result, err := c.service.IssueCredentialIssue(r.Context(), *uNKNOWNBASETYPE)
+	if err := AssertIssueCredentialIssueRequestRequired(issueCredentialIssueRequestParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.IssueCredentialIssue(r.Context(), issueCredentialIssueRequestParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
+		c.errorHandler(w, r, err, &result)
 		return
 	}
 	// If no error, encode the body and the result code
@@ -131,15 +161,21 @@ func (c *IssueCredentialApiController) IssueCredentialIssue(w http.ResponseWrite
 
 // IssueCredentialSendOffer - Send credential offer
 func (c *IssueCredentialApiController) IssueCredentialSendOffer(w http.ResponseWriter, r *http.Request) {
-	uNKNOWNBASETYPE := &IssueCredentialOfferRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&uNKNOWNBASETYPE); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	issueCredentialSendOfferRequestParam := IssueCredentialSendOfferRequest{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&issueCredentialSendOfferRequestParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	result, err := c.service.IssueCredentialSendOffer(r.Context(), *uNKNOWNBASETYPE)
+	if err := AssertIssueCredentialSendOfferRequestRequired(issueCredentialSendOfferRequestParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.IssueCredentialSendOffer(r.Context(), issueCredentialSendOfferRequestParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
+		c.errorHandler(w, r, err, &result)
 		return
 	}
 	// If no error, encode the body and the result code
@@ -149,15 +185,21 @@ func (c *IssueCredentialApiController) IssueCredentialSendOffer(w http.ResponseW
 
 // IssueCredentialSendProposal - Send credential proposal
 func (c *IssueCredentialApiController) IssueCredentialSendProposal(w http.ResponseWriter, r *http.Request) {
-	inlineObject6 := &InlineObject6{}
-	if err := json.NewDecoder(r.Body).Decode(&inlineObject6); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	issueCredentialSendProposalRequestParam := IssueCredentialSendProposalRequest{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&issueCredentialSendProposalRequestParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	result, err := c.service.IssueCredentialSendProposal(r.Context(), *inlineObject6)
+	if err := AssertIssueCredentialSendProposalRequestRequired(issueCredentialSendProposalRequestParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.IssueCredentialSendProposal(r.Context(), issueCredentialSendProposalRequestParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
+		c.errorHandler(w, r, err, &result)
 		return
 	}
 	// If no error, encode the body and the result code
@@ -167,15 +209,21 @@ func (c *IssueCredentialApiController) IssueCredentialSendProposal(w http.Respon
 
 // IssueCredentialSendRequest - Send credential request
 func (c *IssueCredentialApiController) IssueCredentialSendRequest(w http.ResponseWriter, r *http.Request) {
-	uNKNOWNBASETYPE := &SendIssueCredentialRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&uNKNOWNBASETYPE); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	issueCredentialSendRequestRequestParam := IssueCredentialSendRequestRequest{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&issueCredentialSendRequestRequestParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	result, err := c.service.IssueCredentialSendRequest(r.Context(), *uNKNOWNBASETYPE)
+	if err := AssertIssueCredentialSendRequestRequestRequired(issueCredentialSendRequestRequestParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.IssueCredentialSendRequest(r.Context(), issueCredentialSendRequestRequestParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
+		c.errorHandler(w, r, err, &result)
 		return
 	}
 	// If no error, encode the body and the result code
@@ -185,15 +233,21 @@ func (c *IssueCredentialApiController) IssueCredentialSendRequest(w http.Respons
 
 // IssueCredentialStore - Store Credential
 func (c *IssueCredentialApiController) IssueCredentialStore(w http.ResponseWriter, r *http.Request) {
-	uNKNOWNBASETYPE := &IssueCredentialStoreRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&uNKNOWNBASETYPE); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	issueCredentialStoreRequestParam := IssueCredentialStoreRequest{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&issueCredentialStoreRequestParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	result, err := c.service.IssueCredentialStore(r.Context(), *uNKNOWNBASETYPE)
+	if err := AssertIssueCredentialStoreRequestRequired(issueCredentialStoreRequestParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.IssueCredentialStore(r.Context(), issueCredentialStoreRequestParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
-		EncodeJSONResponse(err.Error(), &result.Code, w)
+		c.errorHandler(w, r, err, &result)
 		return
 	}
 	// If no error, encode the body and the result code

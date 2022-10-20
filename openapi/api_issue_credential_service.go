@@ -11,6 +11,7 @@ package openapi
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 
@@ -18,35 +19,35 @@ import (
 )
 
 func getCredStatus(issuer bool, state agent.IssueCredentialState) IssueCredentialState {
-	res := CREDENTIAL_RECEIVED
+	res := ISSUE_CREDENTIAL_CREDENTIAL_RECEIVED
 	switch state {
 	case agent.PROPOSAL:
-		res = PROPOSAL_RECEIVED
+		res = ISSUE_CREDENTIAL_PROPOSAL_RECEIVED
 		if !issuer {
-			res = PROPOSAL_SENT
+			res = ISSUE_CREDENTIAL_PROPOSAL_SENT
 		}
 	case agent.OFFER:
-		res = OFFER_SENT
+		res = ISSUE_CREDENTIAL_OFFER_SENT
 		if !issuer {
-			res = OFFER_RECEIVED
+			res = ISSUE_CREDENTIAL_OFFER_RECEIVED
 		}
 	case agent.REQUEST:
-		res = REQUEST_RECEIVED
+		res = ISSUE_CREDENTIAL_REQUEST_RECEIVED
 		if !issuer {
-			res = REQUEST_SENT
+			res = ISSUE_CREDENTIAL_REQUEST_SENT
 		}
 	case agent.CREDENTIAL:
-		res = CREDENTIAL_ISSUED
+		res = ISSUE_CREDENTIAL_CREDENTIAL_ISSUED
 		if !issuer {
-			res = CREDENTIAL_RECEIVED
+			res = ISSUE_CREDENTIAL_CREDENTIAL_RECEIVED
 		}
 	case agent.DONE:
-		res = DONE
+		res = ISSUE_CREDENTIAL_DONE
 	}
 	return res
 }
 
-// IssueCredentialApiService is a service that implents the logic for the IssueCredentialApiServicer
+// IssueCredentialApiService is a service that implements the logic for the IssueCredentialApiServicer
 // This service should implement the business logic for every endpoint for the IssueCredentialApi API.
 // Include any external packages or services that will be required by this service.
 type IssueCredentialApiService struct {
@@ -55,14 +56,22 @@ type IssueCredentialApiService struct {
 
 // NewIssueCredentialApiService creates a default api service
 func NewIssueCredentialApiService(a *agent.Agent) IssueCredentialApiServicer {
-	return &IssueCredentialApiService{
-		a: a,
-	}
+	return &IssueCredentialApiService{a: a}
+}
+
+// IssueCredentialCreateOffer - Create credential offer.
+func (s *IssueCredentialApiService) IssueCredentialCreateOffer(ctx context.Context, issueCredentialCreateOfferRequest IssueCredentialCreateOfferRequest) (ImplResponse, error) {
+	// TODO - update IssueCredentialCreateOffer with the required logic for this service method.
+	// Add api_issue_credential_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, IssueCredentialCreateOffer200Response{}) or use other options such as http.Ok ...
+	//return Response(200, IssueCredentialCreateOffer200Response{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("IssueCredentialCreateOffer method not implemented")
 }
 
 // IssueCredentialGetByThreadId - Get credential exchange record by thread id
 func (s *IssueCredentialApiService) IssueCredentialGetByThreadId(ctx context.Context, credentialExchangeThreadId string) (ImplResponse, error) {
-
 	issuer, state, err := s.a.GetCredential(credentialExchangeThreadId)
 	if err != nil {
 		return Response(http.StatusNotFound, nil), err
@@ -75,36 +84,35 @@ func (s *IssueCredentialApiService) IssueCredentialGetByThreadId(ctx context.Con
 		State:    res,
 		ThreadId: credentialExchangeThreadId,
 	}), nil
-
 }
 
 // IssueCredentialIssue - Issue Credential
-func (s *IssueCredentialApiService) IssueCredentialIssue(ctx context.Context, req IssueCredentialIssueRequest) (ImplResponse, error) {
-	err := s.a.IssueCredential(req.Id)
+func (s *IssueCredentialApiService) IssueCredentialIssue(ctx context.Context, issueCredentialIssueRequest IssueCredentialIssueRequest) (ImplResponse, error) {
+	err := s.a.IssueCredential(issueCredentialIssueRequest.Id)
 	if err != nil {
 		return Response(http.StatusInternalServerError, nil), err
 	}
 
-	issuer, state, err := s.a.GetCredential(req.Id)
+	issuer, state, err := s.a.GetCredential(issueCredentialIssueRequest.Id)
 	if err != nil {
 		return Response(http.StatusNotFound, nil), err
 	}
 
 	res := getCredStatus(issuer, state)
-	log.Println("IssueCredentialIssue Credential status ", res, req.Id)
+	log.Println("IssueCredentialIssue Credential status ", res, issueCredentialIssueRequest.Id)
 
 	return Response(200, IssueCredentialOperationResponse{
 		State:    res,
-		ThreadId: req.Id,
+		ThreadId: issueCredentialIssueRequest.Id,
 	}), nil
 }
 
 // IssueCredentialSendOffer - Send credential offer
-func (s *IssueCredentialApiService) IssueCredentialSendOffer(ctx context.Context, req IssueCredentialOfferRequest) (r ImplResponse, err error) {
-	if req.Id == "" {
-		connectionID := req.Data.ConnectionId
-		credDefID := req.Data.CredDefId
-		previewAttributes := req.Data.CredentialProposal.Attributes
+func (s *IssueCredentialApiService) IssueCredentialSendOffer(ctx context.Context, issueCredentialSendOfferRequest IssueCredentialSendOfferRequest) (r ImplResponse, err error) {
+	if issueCredentialSendOfferRequest.Id == "" {
+		connectionID := issueCredentialSendOfferRequest.Data.ConnectionId
+		credDefID := issueCredentialSendOfferRequest.Data.CredDefId
+		previewAttributes := issueCredentialSendOfferRequest.Data.CredentialPreview.Attributes
 		attributes := make([]*agent.CredentialAttribute, 0)
 		for _, attr := range previewAttributes {
 			attributes = append(attributes, &agent.CredentialAttribute{
@@ -115,22 +123,22 @@ func (s *IssueCredentialApiService) IssueCredentialSendOffer(ctx context.Context
 		var threadId string
 		threadId, err = s.a.OfferCredential(connectionID, credDefID, attributes)
 		if err == nil {
-			return Response(200, IssueCredentialOperationResponse{State: OFFER_SENT, ThreadId: threadId}), nil
+			return Response(200, IssueCredentialOperationResponse{State: ISSUE_CREDENTIAL_OFFER_SENT, ThreadId: threadId}), nil
 		}
 	} else { // offer to proposal
-		_, err = s.a.AcceptCredentialProposal(req.Id)
+		_, err = s.a.AcceptCredentialProposal(issueCredentialSendOfferRequest.Id)
 		if err == nil {
-			return Response(200, IssueCredentialOperationResponse{ThreadId: req.Id, State: OFFER_SENT}), nil
+			return Response(200, IssueCredentialOperationResponse{ThreadId: issueCredentialSendOfferRequest.Id, State: ISSUE_CREDENTIAL_OFFER_SENT}), nil
 		}
 	}
 	return Response(http.StatusInternalServerError, nil), err
 }
 
 // IssueCredentialSendProposal - Send credential proposal
-func (s *IssueCredentialApiService) IssueCredentialSendProposal(ctx context.Context, inlineObject6 InlineObject6) (ImplResponse, error) {
-	connectionID := inlineObject6.Data.ConnectionId
-	credDefID := inlineObject6.Data.CredDefId
-	previewAttributes := inlineObject6.Data.CredentialProposal.Attributes
+func (s *IssueCredentialApiService) IssueCredentialSendProposal(ctx context.Context, issueCredentialSendProposalRequest IssueCredentialSendProposalRequest) (ImplResponse, error) {
+	connectionID := issueCredentialSendProposalRequest.Data.ConnectionId
+	credDefID := issueCredentialSendProposalRequest.Data.CredDefId
+	previewAttributes := issueCredentialSendProposalRequest.Data.CredentialProposal.Attributes
 	attributes := make([]*agent.CredentialAttribute, 0)
 	for _, attr := range previewAttributes {
 		attributes = append(attributes, &agent.CredentialAttribute{
@@ -141,42 +149,41 @@ func (s *IssueCredentialApiService) IssueCredentialSendProposal(ctx context.Cont
 
 	threadId, err := s.a.ProposeCredential(connectionID, credDefID, attributes)
 	if err == nil {
-		return Response(200, IssueCredentialOperationResponse{State: PROPOSAL_SENT, ThreadId: threadId}), nil
+		return Response(200, IssueCredentialOperationResponse{State: ISSUE_CREDENTIAL_PROPOSAL_SENT, ThreadId: threadId}), nil
 	}
 
 	return Response(http.StatusInternalServerError, nil), err
 }
 
 // IssueCredentialSendRequest - Send credential request
-func (s *IssueCredentialApiService) IssueCredentialSendRequest(ctx context.Context, req SendIssueCredentialRequest) (ImplResponse, error) {
-	threadId, err := s.a.RequestCredential(req.Id)
+func (s *IssueCredentialApiService) IssueCredentialSendRequest(ctx context.Context, issueCredentialSendRequestRequest IssueCredentialSendRequestRequest) (ImplResponse, error) {
+	threadId, err := s.a.RequestCredential(issueCredentialSendRequestRequest.Id)
 	if err == nil {
-		return Response(200, IssueCredentialOperationResponse{State: REQUEST_SENT, ThreadId: threadId}), nil
+		return Response(200, IssueCredentialOperationResponse{State: ISSUE_CREDENTIAL_REQUEST_SENT, ThreadId: threadId}), nil
 	}
 
 	return Response(http.StatusInternalServerError, nil), err
 }
 
 // IssueCredentialStore - Store Credential
-func (s *IssueCredentialApiService) IssueCredentialStore(ctx context.Context, req IssueCredentialStoreRequest) (ImplResponse, error) {
-
-	err := s.a.ReceiveCredential(req.Id)
+func (s *IssueCredentialApiService) IssueCredentialStore(ctx context.Context, issueCredentialStoreRequest IssueCredentialStoreRequest) (ImplResponse, error) {
+	err := s.a.ReceiveCredential(issueCredentialStoreRequest.Id)
 	if err != nil {
 		return Response(http.StatusNotFound, nil), err
 	}
 
-	issuer, state, err := s.a.GetCredential(req.Id)
+	issuer, state, err := s.a.GetCredential(issueCredentialStoreRequest.Id)
 	if err != nil {
 		return Response(http.StatusNotFound, nil), err
 	}
 
 	res := getCredStatus(issuer, state)
 
-	log.Println("IssueCredentialStore Credential status ", res, req.Id)
+	log.Println("IssueCredentialStore Credential status ", res, issueCredentialStoreRequest.Id)
 
-	return Response(200, IssueCredentialOperationResponse{
+	return Response(200, IssueCredentialStore200Response{
 		State:        res,
-		ThreadId:     req.Id,
-		CredentialId: req.Id,
+		ThreadId:     issueCredentialStoreRequest.Id,
+		CredentialId: issueCredentialStoreRequest.Id,
 	}), nil
 }

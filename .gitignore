@@ -32,3 +32,5 @@ env/cert/**/*.conf
 env/cert/**/*.crt
 env/cert/**/*.key
 env/docker-compose.yml
+
+.DS_Store

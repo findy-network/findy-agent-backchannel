@@ -15,8 +15,8 @@ import (
 	"errors"
 )
 
-// IssueCredentialV2ApiService is a service that implents the logic for the IssueCredentialV2ApiServicer
-// This service should implement the business logic for every endpoint for the IssueCredentialV2Api API. 
+// IssueCredentialV2ApiService is a service that implements the logic for the IssueCredentialV2ApiServicer
+// This service should implement the business logic for every endpoint for the IssueCredentialV2Api API.
 // Include any external packages or services that will be required by this service.
 type IssueCredentialV2ApiService struct {
 }
@@ -26,14 +26,93 @@ func NewIssueCredentialV2ApiService() IssueCredentialV2ApiServicer {
 	return &IssueCredentialV2ApiService{}
 }
 
+// IssueCredentialV2CreateOffer - Create credential offer
+func (s *IssueCredentialV2ApiService) IssueCredentialV2CreateOffer(ctx context.Context, createOfferToStartCredentialIssuanceFlow1 CreateOfferToStartCredentialIssuanceFlow1) (ImplResponse, error) {
+	// TODO - update IssueCredentialV2CreateOffer with the required logic for this service method.
+	// Add api_issue_credential_v2_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, IssueCredentialV2CreateOffer200Response{}) or use other options such as http.Ok ...
+	//return Response(200, IssueCredentialV2CreateOffer200Response{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("IssueCredentialV2CreateOffer method not implemented")
+}
+
+// IssueCredentialV2GetByThreadId - Get credential exchange v2 record by thread id
+func (s *IssueCredentialV2ApiService) IssueCredentialV2GetByThreadId(ctx context.Context, credentialExchangeThreadId string) (ImplResponse, error) {
+	// TODO - update IssueCredentialV2GetByThreadId with the required logic for this service method.
+	// Add api_issue_credential_v2_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, IssueCredentialOperationResponse{}) or use other options such as http.Ok ...
+	//return Response(200, IssueCredentialOperationResponse{}), nil
+
+	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	//return Response(404, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("IssueCredentialV2GetByThreadId method not implemented")
+}
+
+// IssueCredentialV2Issue - Issue Credential
+func (s *IssueCredentialV2ApiService) IssueCredentialV2Issue(ctx context.Context, issueCredentialIssueRequest IssueCredentialIssueRequest) (ImplResponse, error) {
+	// TODO - update IssueCredentialV2Issue with the required logic for this service method.
+	// Add api_issue_credential_v2_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, IssueCredentialIssue200Response{}) or use other options such as http.Ok ...
+	//return Response(200, IssueCredentialIssue200Response{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("IssueCredentialV2Issue method not implemented")
+}
+
 // IssueCredentialV2PrepareJsonLD - Prepare for issuing a JSON-LD credential (RFC0593)
-func (s *IssueCredentialV2ApiService) IssueCredentialV2PrepareJsonLD(ctx context.Context, uNKNOWNBASETYPE UNKNOWN_BASE_TYPE) (ImplResponse, error) {
+func (s *IssueCredentialV2ApiService) IssueCredentialV2PrepareJsonLD(ctx context.Context, issueCredentialV2PrepareJsonLdRequest IssueCredentialV2PrepareJsonLdRequest) (ImplResponse, error) {
 	// TODO - update IssueCredentialV2PrepareJsonLD with the required logic for this service method.
 	// Add api_issue_credential_v2_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(200, map[string]interface{}{}) or use other options such as http.Ok ...
-	//return Response(200, map[string]interface{}{}), nil
+	//TODO: Uncomment the next line to return response Response(200, IssueCredentialV2PrepareJsonLd200Response{}) or use other options such as http.Ok ...
+	//return Response(200, IssueCredentialV2PrepareJsonLd200Response{}), nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("IssueCredentialV2PrepareJsonLD method not implemented")
 }
 
+// IssueCredentialV2SendOffer - Send credential offer
+func (s *IssueCredentialV2ApiService) IssueCredentialV2SendOffer(ctx context.Context, issueCredentialV2SendOfferRequest IssueCredentialV2SendOfferRequest) (ImplResponse, error) {
+	// TODO - update IssueCredentialV2SendOffer with the required logic for this service method.
+	// Add api_issue_credential_v2_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, IssueCredentialCreateOffer200ResponseRecord{}) or use other options such as http.Ok ...
+	//return Response(200, IssueCredentialCreateOffer200ResponseRecord{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("IssueCredentialV2SendOffer method not implemented")
+}
+
+// IssueCredentialV2SendProposal - Send credential proposal
+func (s *IssueCredentialV2ApiService) IssueCredentialV2SendProposal(ctx context.Context, issueCredentialV2SendProposalRequest IssueCredentialV2SendProposalRequest) (ImplResponse, error) {
+	// TODO - update IssueCredentialV2SendProposal with the required logic for this service method.
+	// Add api_issue_credential_v2_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, IssueCredentialSendProposal200Response{}) or use other options such as http.Ok ...
+	//return Response(200, IssueCredentialSendProposal200Response{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("IssueCredentialV2SendProposal method not implemented")
+}
+
+// IssueCredentialV2SendRequest - Send credential request
+func (s *IssueCredentialV2ApiService) IssueCredentialV2SendRequest(ctx context.Context, issueCredentialV2SendRequestRequest IssueCredentialV2SendRequestRequest) (ImplResponse, error) {
+	// TODO - update IssueCredentialV2SendRequest with the required logic for this service method.
+	// Add api_issue_credential_v2_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, IssueCredentialSendRequest200Response{}) or use other options such as http.Ok ...
+	//return Response(200, IssueCredentialSendRequest200Response{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("IssueCredentialV2SendRequest method not implemented")
+}
+
+// IssueCredentialV2Store - Store Credential
+func (s *IssueCredentialV2ApiService) IssueCredentialV2Store(ctx context.Context, issueCredentialStoreRequest IssueCredentialStoreRequest) (ImplResponse, error) {
+	// TODO - update IssueCredentialV2Store with the required logic for this service method.
+	// Add api_issue_credential_v2_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, IssueCredentialV2Store200Response{}) or use other options such as http.Ok ...
+	//return Response(200, IssueCredentialV2Store200Response{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("IssueCredentialV2Store method not implemented")
+}

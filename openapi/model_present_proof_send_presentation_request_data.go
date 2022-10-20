@@ -14,6 +14,8 @@ type PresentProofSendPresentationRequestAttribute struct {
 	Value        string        `json:"value,omitempty"`
 	Names        []string      `json:"names,omitempty"`
 	Restrictions []interface{} `json:"restrictions,omitempty"`
+	Revealed     bool          `json:"revealed,omitempty"`
+	CredID       string        `json:"cred_id,omitempty"`
 }
 
 type PresentProofSendPresentationRequestData struct {

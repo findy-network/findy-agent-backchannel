@@ -118,13 +118,16 @@ func main() {
 
 	router := createRouter(a)
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		bodyBytes, _ := io.ReadAll(r.Body)
-		err2.Try(r.Body.Close())
-		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-		log.Println(r.Method + " " + r.URL.String() + " " + string(bodyBytes))
-		router.ServeHTTP(w, r)
-	})
+	var handler http.Handler = router
+	if os.Getenv("FAB_LOG_INCOMING_REQUESTS") == "true" {
+		handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			bodyBytes, _ := io.ReadAll(r.Body)
+			err2.Try(r.Body.Close())
+			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			log.Println(r.Method + " " + r.URL.String() + " " + string(bodyBytes))
+			router.ServeHTTP(w, r)
+		})
+	}
 
 	server := &http.Server{
 		Addr:              ":" + port,

@@ -72,6 +72,7 @@ func (s *PresentProofApiService) PresentProofGetByThreadId(ctx context.Context, 
 
 // PresentProofSendPresentation - Send presentation
 func (s *PresentProofApiService) PresentProofSendPresentation(ctx context.Context, presentProofSendPresentationRequest PresentProofSendPresentationRequest) (ImplResponse, error) {
+
 	threadId, err := s.a.SendProofPresentation(presentProofSendPresentationRequest.Id)
 	if err == nil {
 		return Response(200, PresentProofOperationResponse{State: PRESENT_PROOF_PRESENTATION_SENT, ThreadId: threadId}), nil

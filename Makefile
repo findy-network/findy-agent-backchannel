@@ -1,6 +1,3 @@
-export GIT_USER_ID="findy-network"
-export GIT_REPO_ID="findy-agent-backchannel"
-
 build:
 	go build ./...
 

@@ -103,7 +103,7 @@ func (s *PresentProofApiService) PresentProofSendProposal(ctx context.Context, p
 
 // PresentProofSendRequest - Send presentation request
 func (s *PresentProofApiService) PresentProofSendRequest(ctx context.Context, presentProofSendRequestRequest PresentProofSendRequestRequest) (r ImplResponse, err error) {
-	/*connectionID := presentProofSendRequestRequest.Data.ConnectionId
+	connectionID := presentProofSendRequestRequest.Data.ConnectionId
 	proposalAttributes := presentProofSendRequestRequest.Data.PresentationRequest.ProofRequest.Data.RequestedAttributes
 	attributes := make([]*agent.ProofAttribute, 0)
 	for key, value := range proposalAttributes {
@@ -137,7 +137,7 @@ func (s *PresentProofApiService) PresentProofSendRequest(ctx context.Context, pr
 	threadId, err := s.a.RequestProof(connectionID, attributes, predicates)
 	if err == nil {
 		return Response(200, PresentProofOperationResponse{State: PRESENT_PROOF_REQUEST_SENT, ThreadId: threadId}), nil
-	}*/
+	}
 
 	return Response(http.StatusInternalServerError, nil), err
 }

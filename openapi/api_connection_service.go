@@ -46,7 +46,7 @@ func (s *ConnectionApiService) ConnectionAcceptRequest(ctx context.Context, conn
 }
 
 // ConnectionCreateInvitation - Create a new connection invitation
-func (s *ConnectionApiService) ConnectionCreateInvitation(ctx context.Context, connectionCreateInvitationRequest ConnectionCreateInvitationRequest) (ImplResponse, error) {
+func (s *ConnectionApiService) ConnectionCreateInvitation(ctx context.Context, _ ConnectionCreateInvitationRequest) (ImplResponse, error) {
 	invitationJSON, err := s.a.CreateInvitation()
 	if err == nil {
 		var invitationMap map[string]interface{}

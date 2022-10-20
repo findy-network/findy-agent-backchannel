@@ -9,6 +9,7 @@
 
 package openapi
 
+
 type PresentProofPresentationRequestProofRequest struct {
 	Data PresentProofSendPresentationRequestData `json:"data"`
 }

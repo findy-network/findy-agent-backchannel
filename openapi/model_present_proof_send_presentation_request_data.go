@@ -21,6 +21,8 @@ type PresentProofSendPresentationRequestData struct {
 	RequestedPredicates    map[string]interface{}                                  `json:"requested_predicates,omitempty"`
 	SelfAttestedAttributes map[string]interface{}                                  `json:"self_attested_attributes,omitempty"`
 	Comment                string                                                  `json:"comment,omitempty"`
+	Name                   string                                                  `json:"name,omitempty"`
+	Version                string                                                  `json:"version,omitempty"`
 }
 
 // AssertPresentProofSendPresentationRequestDataRequired checks if the required fields are not zero-ed

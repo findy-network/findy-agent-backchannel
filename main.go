@@ -10,6 +10,8 @@
 package main
 
 import (
+	"bytes"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +19,7 @@ import (
 
 	"github.com/findy-network/findy-agent-backchannel/agent"
 	openapi "github.com/findy-network/findy-agent-backchannel/openapi"
+	"github.com/lainio/err2"
 )
 
 func main() {
@@ -85,10 +88,32 @@ func main() {
 	StatusApiService := openapi.NewStatusApiService()
 	StatusApiController := openapi.NewStatusApiController(StatusApiService)
 
-	router := openapi.NewRouter(AgentApiController, ConnectionApiController, CoordinateMediationApiController, CredentialApiController, CredentialDefinitionApiController, DIDApiController, DIDExchangeApiController, IssueCredentialApiController, IssueCredentialV2ApiController, IssueCredentialV3ApiController, OutOfBandApiController, OutOfBandV2ApiController, PresentProofApiController, PresentProofV2ApiController, PresentProofV3ApiController, RevocationApiController, SchemaApiController, StatusApiController)
+	router := openapi.NewRouter(
+		AgentApiController,
+		ConnectionApiController,
+		CoordinateMediationApiController,
+		CredentialApiController,
+		CredentialDefinitionApiController,
+		DIDApiController,
+		DIDExchangeApiController,
+		IssueCredentialApiController,
+		IssueCredentialV2ApiController,
+		IssueCredentialV3ApiController,
+		OutOfBandApiController,
+		OutOfBandV2ApiController,
+		PresentProofApiController,
+		PresentProofV2ApiController,
+		PresentProofV3ApiController,
+		RevocationApiController,
+		SchemaApiController,
+		StatusApiController,
+	)
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.Method + " " + r.URL.String())
+		bodyBytes, _ := io.ReadAll(r.Body)
+		err2.Try(r.Body.Close())
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		log.Println(r.Method + " " + r.URL.String() + " " + string(bodyBytes))
 		router.ServeHTTP(w, r)
 	})
 

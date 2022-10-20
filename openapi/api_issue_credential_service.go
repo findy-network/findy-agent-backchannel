@@ -181,10 +181,9 @@ func (s *IssueCredentialApiService) IssueCredentialStore(ctx context.Context, is
 
 	log.Println("IssueCredentialStore Credential status ", res, issueCredentialStoreRequest.Id)
 
-	return Response(200, IssueCredentialOperationResponse{
+	return Response(200, IssueCredentialStore200Response{
 		State:        res,
 		ThreadId:     issueCredentialStoreRequest.Id,
 		CredentialId: issueCredentialStoreRequest.Id,
 	}), nil
-
 }

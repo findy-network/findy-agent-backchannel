@@ -14,14 +14,15 @@ type DidExchangeState string
 
 // List of DidExchangeState
 const (
-	DID_EXCHANGE_START             DidExchangeState = "start"
-	DID_EXCHANGE_INVITATION_SENT   DidExchangeState = "invitation-sent"
-	DID_EXCHANGE_REQUEST_SENT      DidExchangeState = "request-sent"
-	DID_EXCHANGE_REQUEST_RECEIVED  DidExchangeState = "request-received"
-	DID_EXCHANGE_RESPONSE_SENT     DidExchangeState = "response-sent"
-	DID_EXCHANGE_RESPONSE_RECEIVED DidExchangeState = "response-received"
-	DID_EXCHANGE_ABANDONED         DidExchangeState = "abandoned"
-	DID_EXCHANGE_COMPLETED         DidExchangeState = "completed"
+	DID_EXCHANGE_START               DidExchangeState = "start"
+	DID_EXCHANGE_INVITATION_SENT     DidExchangeState = "invitation-sent"
+	DID_EXCHANGE_INVITATION_RECEIVED DidExchangeState = "invitation-received"
+	DID_EXCHANGE_REQUEST_SENT        DidExchangeState = "request-sent"
+	DID_EXCHANGE_REQUEST_RECEIVED    DidExchangeState = "request-received"
+	DID_EXCHANGE_RESPONSE_SENT       DidExchangeState = "response-sent"
+	DID_EXCHANGE_RESPONSE_RECEIVED   DidExchangeState = "response-received"
+	DID_EXCHANGE_ABANDONED           DidExchangeState = "abandoned"
+	DID_EXCHANGE_COMPLETED           DidExchangeState = "completed"
 )
 
 // AssertDidExchangeStateRequired checks if the required fields are not zero-ed

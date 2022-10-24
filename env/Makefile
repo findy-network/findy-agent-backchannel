@@ -52,7 +52,15 @@ aath-test: gen-findy info
 			-t ~@revocation \
 			-t ~@wip \
 			-t ~@RFC0025
-	
+
+aath-test-de: gen-findy info
+	cd .docker/aries-agent-test-harness && \
+		./manage run \
+			-d $(AGENT_DEFAULT) \
+			-b $(AGENT_BOB) \
+			-t $(INCLUDE_TAGS) \
+			-t @T001-RFC0023
+
 aath-test-check:  gen-findy info
 	cd .docker/aries-agent-test-harness && \
 		./manage run \

@@ -51,7 +51,16 @@ func (s *DIDExchangeApiService) DidExchangeGetById(ctx context.Context, connecti
 	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
 	//return Response(404, nil),nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("DidExchangeGetById method not implemented")
+	//return Response(http.StatusNotImplemented, nil), errors.New("DidExchangeGetById method not implemented")
+
+	if _, err := s.a.GetConnection(connectionId); err == nil {
+		return Response(200, DidExchangeGetById200Response{ConnectionId: connectionId, State: DID_EXCHANGE_COMPLETED}), nil
+	}
+	if _, err := s.a.GetConnectionInvitation(connectionId); err == nil {
+		return Response(200, DidExchangeGetById200Response{ConnectionId: connectionId, State: DID_EXCHANGE_INVITATION_SENT}), nil
+	}
+	return Response(http.StatusNotFound, nil), nil
+
 }
 
 // DidExchangeGetByInvitationId - Get did exchange connection by invitation id. Can be used to determine the connection id based of an invitation id.

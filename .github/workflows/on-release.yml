@@ -126,7 +126,7 @@ jobs:
           SKIP_TEST: "true"
 
   merge:
-    needs: [push-bc, push-acapy-bc, push-javascript-bc, push-aath]
+    needs: [push-bc, push-acapy-bc, push-acapy-main-bc, push-javascript-bc, push-aath]
     runs-on: ubuntu-latest
     steps:
       - name: checkout

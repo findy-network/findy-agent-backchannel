@@ -55,7 +55,7 @@ jobs:
           cd ./env
           make aath-test-check-aip20 \
             AGENT_DEFAULT=findy \
-            AGENT_BOB=acapy
+            AGENT_BOB=acapy-main
       - name: test AIP2.0 findy as Acme, javascript as Bob
         run: |
           cd ./env

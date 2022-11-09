@@ -5,9 +5,11 @@ INCLUDE_TAGS?=@AcceptanceTest
 INCLUDE_TAGS_AIP20?=@T001-RFC0023
 AGENT_DEFAULT?=acapy-main
 AGENT_BOB?=findy
+DATE:=$(shell date +%s)
 
 aath-up: generate clone rm up aath
 aath-up-check: generate clone rm up aath-check
+aath-up-check-aip20: generate clone rm up aath-check-aip20
 
 generate:
 	$(eval DOCKERHOST=$(shell ./dockerhost.sh))
@@ -25,6 +27,7 @@ clone:
 
 aath: clone image pull-images aath-test
 aath-check: image pull-images aath-test-check
+aath-check-aip20: image pull-images aath-check-test-aip20
 
 pull-images:
 	docker pull ghcr.io/findy-network/findy-agent-backchannel/acapy-bc:latest
@@ -67,9 +70,20 @@ aath-test-aip20: gen-findy info
 			-d $(AGENT_DEFAULT) \
 			-b $(AGENT_BOB) \
 			-t $(INCLUDE_TAGS_AIP20)
-	
-aath-test-check:  gen-findy info
+
+store_logs:
+	-cp .docker/aries-agent-test-harness/output_aip10.log ../tests_output/output_aip10_$(DATE).log
+	-cp .docker/aries-agent-test-harness/output_aip20.log ../tests_output/output_aip20_$(DATE).log
+
+record-logs:
 	mkdir -p ../tests_output
+	nohup ./record_logs.sh acme_agent &
+	nohup ./record_logs.sh bob_agent &
+	nohup ./record_logs.sh faber_agent &
+	nohup ./record_logs.sh mallory_agent &
+
+
+aath-start-test-aip10:
 	cd .docker/aries-agent-test-harness && \
 		./manage start \
 			-d $(AGENT_DEFAULT) \
@@ -82,21 +96,32 @@ aath-test-check:  gen-findy info
 			-t ~@revocation \
 			-t ~@wip \
 			-t ~@RFC0025 \
-			2>&1 | tee output.log && \
-		docker logs acme_agent > ../../../tests_output/acme_agent_$(AGENT_DEFAULT)_$(AGENT_BOB).log && \
-		docker logs bob_agent > ../../../tests_output/bob_agent_$(AGENT_DEFAULT)_$(AGENT_BOB).log && \
-		docker logs faber_agent > ../../../tests_output/faber_agent_$(AGENT_DEFAULT)_$(AGENT_BOB).log && \
-		cat output.log | grep $(EXPECTED_RESULT) && \
-		./manage stop 
+			2>&1 | tee output_aip10.log
 
-aath-test-check-aip20:  gen-findy info
+aath-check-test-aip10:
 	cd .docker/aries-agent-test-harness && \
-		./manage run \
+		./manage stop && \
+		cat output_aip10.log | grep $(EXPECTED_RESULT)
+
+aath-test-check:  gen-findy info record_logs aath-start-test-aip10 store_logs aath-check-test-aip10
+
+aath-start-test-aip20:
+	cd .docker/aries-agent-test-harness && \
+		./manage start \
+			-d $(AGENT_DEFAULT) \
+			-b $(AGENT_BOB) && \
+		./manage test \
 			-d $(AGENT_DEFAULT) \
 			-b $(AGENT_BOB) \
 			-t $(INCLUDE_TAGS_AIP20) \
-			2>&1 | tee output_aip20.log && \
+			2>&1 | tee output_aip20.log
+
+aath-check-test-aip20:
+	cd .docker/aries-agent-test-harness && \
+		./manage stop && \
 		cat output_aip20.log | grep $(EXPECTED_RESULT_AIP20)
+
+aath-test-check-aip20: gen-findy info record_logs aath-start-test-aip20 store_logs aath-check-test-aip20
 
 image:
 	cd .. && docker build --build-arg FAB_LOG_INCOMING_REQUESTS=true -t findy-agent-backchannel .

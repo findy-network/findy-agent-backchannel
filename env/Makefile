@@ -69,8 +69,12 @@ aath-test-aip20: gen-findy info
 			-t $(INCLUDE_TAGS_AIP20)
 	
 aath-test-check:  gen-findy info
+	mkdir -p ../tests_output
 	cd .docker/aries-agent-test-harness && \
-		./manage run \
+		./manage start \
+			-d $(AGENT_DEFAULT) \
+			-b $(AGENT_BOB) && \
+		./manage test \
 			-d $(AGENT_DEFAULT) \
 			-b $(AGENT_BOB) \
 			-t $(INCLUDE_TAGS) \
@@ -79,7 +83,11 @@ aath-test-check:  gen-findy info
 			-t ~@wip \
 			-t ~@RFC0025 \
 			2>&1 | tee output.log && \
-		cat output.log | grep $(EXPECTED_RESULT)
+		docker logs acme_agent > ../../../tests_output/acme_agent_$(AGENT_DEFAULT)_$(AGENT_BOB).log && \
+		docker logs bob_agent > ../../../tests_output/bob_agent_$(AGENT_DEFAULT)_$(AGENT_BOB).log && \
+		docker logs faber_agent > ../../../tests_output/faber_agent_$(AGENT_DEFAULT)_$(AGENT_BOB).log && \
+		cat output.log | grep $(EXPECTED_RESULT) && \
+		./manage stop 
 
 aath-test-check-aip20:  gen-findy info
 	cd .docker/aries-agent-test-harness && \

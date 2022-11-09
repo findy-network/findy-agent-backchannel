@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: test findy as Bob
         run: |
           cd ./env
@@ -42,7 +42,7 @@ jobs:
       packages: write
       contents: read
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/bc-image-push
         with:
           IMAGE_NAME: "findy-bc"
@@ -63,7 +63,7 @@ jobs:
       packages: write
       contents: read
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/bc-image-push
         with:
           IMAGE_NAME: "acapy-bc"
@@ -80,7 +80,7 @@ jobs:
       packages: write
       contents: read
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/bc-image-push
         with:
           IMAGE_NAME: "acapy-main-bc"
@@ -97,7 +97,7 @@ jobs:
       packages: write
       contents: read
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/bc-image-push
         with:
           IMAGE_NAME: "javascript-bc"
@@ -115,7 +115,7 @@ jobs:
       packages: write
       contents: read
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/bc-image-push
         with:
           IMAGE_NAME: "aath"
@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: master
       - name: merge

@@ -77,7 +77,6 @@ aath-test-check:  gen-findy info
 			-t ~@wip \
 			-t ~@RFC0025 \
 			2>&1 | tee output.log && \
-		cat output.log && \
 		cat output.log | grep $(EXPECTED_RESULT)
 
 aath-test-check-aip20:  gen-findy info
@@ -87,7 +86,6 @@ aath-test-check-aip20:  gen-findy info
 			-b $(AGENT_BOB) \
 			-t $(INCLUDE_TAGS_AIP20) \
 			2>&1 | tee output_aip20.log && \
-		cat output_aip20.log && \
 		cat output_aip20.log | grep $(EXPECTED_RESULT_AIP20)
 
 image:

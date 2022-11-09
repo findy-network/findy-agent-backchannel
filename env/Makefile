@@ -23,16 +23,18 @@ clone:
 #	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
 #	cd .docker/aries-agent-test-harness && git reset --hard $(AATH_VERSION)
 
-aath: clone image bc-images aath-test
-aath-check: image bc-images aath-test-check
+aath: clone image pull-images aath-test
+aath-check: image pull-images aath-test-check
 
-bc-images:
+pull-images:
 	docker pull ghcr.io/findy-network/findy-agent-backchannel/acapy-bc:latest
 	docker tag ghcr.io/findy-network/findy-agent-backchannel/acapy-bc:latest acapy-agent-backchannel:latest
 	docker pull ghcr.io/findy-network/findy-agent-backchannel/acapy-main-bc:latest
 	docker tag ghcr.io/findy-network/findy-agent-backchannel/acapy-main-bc:latest acapy-main-agent-backchannel:latest
 	docker pull ghcr.io/findy-network/findy-agent-backchannel/javascript-bc:latest
 	docker tag ghcr.io/findy-network/findy-agent-backchannel/javascript-bc:latest javascript-agent-backchannel:latest
+	docker pull ghcr.io/findy-network/findy-agent-backchannel/aath:latest
+	docker tag ghcr.io/findy-network/findy-agent-backchannel/aath:latest aries-test-harness:latest
 
 gen-findy:
 	cd .docker/aries-agent-test-harness && \

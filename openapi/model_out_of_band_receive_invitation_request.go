@@ -9,6 +9,7 @@
 
 package openapi
 
+
 type OutOfBandReceiveInvitationRequest struct {
 
 	Data OutOfBandReceiveInvitationRequestData `json:"data"`

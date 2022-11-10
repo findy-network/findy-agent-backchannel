@@ -44,7 +44,7 @@ func createRouter(a *agent.Agent) *mux.Router {
 	DIDApiService := openapi.NewDIDApiService(a)
 	DIDApiController := openapi.NewDIDApiController(DIDApiService)
 
-	DIDExchangeApiService := openapi.NewDIDExchangeApiService()
+	DIDExchangeApiService := openapi.NewDIDExchangeApiService(a)
 	DIDExchangeApiController := openapi.NewDIDExchangeApiController(DIDExchangeApiService)
 
 	IssueCredentialApiService := openapi.NewIssueCredentialApiService(a)
@@ -56,7 +56,7 @@ func createRouter(a *agent.Agent) *mux.Router {
 	IssueCredentialV3ApiService := openapi.NewIssueCredentialV3ApiService()
 	IssueCredentialV3ApiController := openapi.NewIssueCredentialV3ApiController(IssueCredentialV3ApiService)
 
-	OutOfBandApiService := openapi.NewOutOfBandApiService()
+	OutOfBandApiService := openapi.NewOutOfBandApiService(a)
 	OutOfBandApiController := openapi.NewOutOfBandApiController(OutOfBandApiService)
 
 	OutOfBandV2ApiService := openapi.NewOutOfBandV2ApiService()

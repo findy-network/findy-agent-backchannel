@@ -57,7 +57,7 @@ func (c *OutOfBandApiController) Routes() Routes {
 		{
 			"OutOfBandReceiveInvitation",
 			strings.ToUpper("Post"),
-			"/agent/command/out-of-band/receive-invitation",
+			"/agent/command/out-of-band/{receive-invitation:receive-invitation\\/?}",
 			c.OutOfBandReceiveInvitation,
 		},
 	}

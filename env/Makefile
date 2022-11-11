@@ -27,7 +27,7 @@ clone:
 
 aath: clone image pull-images aath-test
 aath-check: image pull-images aath-test-check
-aath-check-aip20: image pull-images aath-check-test-aip20
+aath-check-aip20: image pull-images aath-test-check-aip20
 
 pull-images:
 	docker pull ghcr.io/findy-network/findy-agent-backchannel/acapy-bc:latest

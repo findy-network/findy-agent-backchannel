@@ -34,3 +34,4 @@ env/cert/**/*.key
 env/docker-compose.yml
 
 .DS_Store
+/tests_output

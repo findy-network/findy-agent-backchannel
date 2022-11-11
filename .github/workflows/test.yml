@@ -5,29 +5,37 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+      - uses: actions/checkout@v3
+      - name: setup
+        uses: actions/setup-go@v3
         with:
-          version: v1.45
+          go-version: 1.18.x
+      - name: build
+        run: make build
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.50
   test:
     runs-on: ubuntu-latest
     steps:
       - name: setup
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18.x
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: test
         run: go test ./...
       - name: scan
         run: make scan
   iop:
     runs-on: ubuntu-latest
+    env:
+      NO_TTY: "1"
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: test findy as Bob
         run: |
           cd ./env
@@ -35,8 +43,6 @@ jobs:
             AGENT_DEFAULT=acapy \
             AGENT_BOB=findy \
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
-        env:
-          NO_TTY: "1"
       - name: test findy as Acme
         run: |
           cd ./env
@@ -44,8 +50,18 @@ jobs:
             AGENT_DEFAULT=findy \
             AGENT_BOB=acapy \
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
-        env:
-          NO_TTY: "1"
+      # - name: test AIP2.0 findy as Acme 
+      #   run: |
+      #     cd ./env
+      #     make aath-test-check-aip20 \
+      #       AGENT_DEFAULT=findy \
+      #       AGENT_BOB=acapy-main
+      # - name: test AIP2.0 findy as Acme, javascript as Bob
+      #   run: |
+      #     cd ./env
+      #     make aath-test-check-aip20 \
+      #       AGENT_DEFAULT=findy \
+      #       AGENT_BOB=javascript
       - name: test findy as default
         run: |
           cd ./env
@@ -53,8 +69,6 @@ jobs:
             AGENT_DEFAULT=findy \
             AGENT_BOB=findy \
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
-        env:
-          NO_TTY: "1"
       - name: Collect docker logs
         if: ${{ failure() }}
         uses: jwalton/gh-docker-logs@v2.0.2
@@ -62,7 +76,7 @@ jobs:
           dest: "./tests_output/docker-logs"
       - name: archive logs
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: iop-logs
           path: tests_output

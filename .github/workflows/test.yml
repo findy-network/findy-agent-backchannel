@@ -50,12 +50,12 @@ jobs:
             AGENT_DEFAULT=findy \
             AGENT_BOB=acapy \
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
-      # - name: test AIP2.0 findy as Acme 
-      #   run: |
-      #     cd ./env
-      #     make aath-test-check-aip20 \
-      #       AGENT_DEFAULT=findy \
-      #       AGENT_BOB=acapy-main
+      - name: test AIP2.0 findy as Acme 
+        run: |
+          cd ./env
+          make aath-test-check-aip20 \
+            AGENT_DEFAULT=findy \
+            AGENT_BOB=acapy-main
       # - name: test AIP2.0 findy as Acme, javascript as Bob
       #   run: |
       #     cd ./env

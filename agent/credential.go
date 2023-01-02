@@ -76,7 +76,7 @@ func InitCredentials(a *AgencyClient) *CredentialStore {
 }
 
 func (s *CredentialStore) HandleCredentialNotification(notification *agency.Notification) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	// Cred issued
 	if notification.GetTypeID() == agency.Notification_STATUS_UPDATE {
@@ -132,7 +132,7 @@ func (s *CredentialStore) HandleCredentialNotification(notification *agency.Noti
 }
 
 func (s *CredentialStore) HandleCredentialQuestion(question *agency.Question) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 	if question.TypeID == agency.Question_ISSUE_PROPOSE_WAITS {
 		data := &credData{
 			id:          question.Status.Notification.ProtocolID,
@@ -150,7 +150,7 @@ func (s *CredentialStore) ProposeCredential(
 	connectionID, credDefID string,
 	attributes []*CredentialAttribute,
 ) (threadID string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	log.Printf("Propose credential, conn id: %s, credDefID: %s, attrs: %v", connectionID, credDefID, attributes)
 
@@ -178,7 +178,7 @@ func (s *CredentialStore) OfferCredential(
 	connectionID, credDefID string,
 	attributes []*CredentialAttribute,
 ) (threadID string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	log.Printf("Offer credential, conn id: %s, credDefID: %s, attrs: %v", connectionID, credDefID, attributes)
 
@@ -209,7 +209,7 @@ func (s *CredentialStore) OfferCredential(
 }
 
 func (s *CredentialStore) RequestCredential(id string) (threadID string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	try.To2(s.GetCredential(id))
 
@@ -231,7 +231,7 @@ func (s *CredentialStore) RequestCredential(id string) (threadID string, err err
 }
 
 func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	var header *QuestionHeader
 	header, err = s.getCredentialQuestion(id)
@@ -262,7 +262,7 @@ func (s *CredentialStore) AcceptCredentialProposal(id string) (threadID string, 
 }
 
 func (s *CredentialStore) IssueCredential(id string) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	_, state := try.To2(s.GetCredential(id))
 
@@ -280,7 +280,7 @@ func (s *CredentialStore) IssueCredential(id string) (err error) {
 }
 
 func (s *CredentialStore) ReceiveCredential(id string) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	var state IssueCredentialState
 	_, state, err = s.GetCredential(id)

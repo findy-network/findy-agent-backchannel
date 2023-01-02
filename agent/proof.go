@@ -69,7 +69,7 @@ func InitProofs(a *AgencyClient) *ProofStore {
 }
 
 func (s *ProofStore) HandleProofNotification(notification *agency.Notification) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	// Proof success
 	if notification.GetTypeID() == agency.Notification_STATUS_UPDATE {
@@ -112,7 +112,7 @@ func (s *ProofStore) HandleProofNotification(notification *agency.Notification) 
 }
 
 func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	if question.TypeID == agency.Question_PROOF_VERIFY_WAITS {
 		data := &proofData{
@@ -154,7 +154,7 @@ func (s *ProofStore) HandleProofQuestion(question *agency.Question) (err error) 
 }
 
 func (s *ProofStore) SendProofPresentation(id string) (threadID string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	try.To2(s.GetProof(id))
 
@@ -182,7 +182,7 @@ func (s *ProofStore) SendProofPresentation(id string) (threadID string, err erro
 }
 
 func (s *ProofStore) ProposeProof(connectionID string, attributes []*ProofAttribute) (threadID string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	log.Printf("Propose proof, conn id: %s, attrs: %v", connectionID, attributes)
 
@@ -210,7 +210,7 @@ func (s *ProofStore) RequestProof(
 	attributes []*ProofAttribute,
 	predicates []*ProofPredicate,
 ) (threadID string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	log.Printf("Request proof, conn id: %s, attrs: %v", connectionID, attributes)
 
@@ -239,7 +239,7 @@ func (s *ProofStore) RequestProof(
 }
 
 func (s *ProofStore) VerifyPresentation(id string) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	var question *QuestionHeader
 	question, err = s.getProofQuestion(id)

@@ -27,7 +27,7 @@ func InitSchemas(a *AgencyClient) *SchemaStore {
 }
 
 func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (id string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	storeID := name + version
 
@@ -65,7 +65,7 @@ func (s *SchemaStore) CreateSchema(name, version string, attributes []string) (i
 }
 
 func (s *SchemaStore) GetSchema(schemaID string) (schemaJSON string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	res := try.To1(s.agent.AgentClient.GetSchema(
 		context.TODO(), &agency.Schema{

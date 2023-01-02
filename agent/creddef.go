@@ -11,7 +11,7 @@ import (
 )
 
 func (a *Agent) CreateCredDef(schemaID, tag string) (id string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	res := try.To1(a.Client.AgentClient.CreateCredDef(
 		context.TODO(),
@@ -39,7 +39,7 @@ func (a *Agent) CreateCredDef(schemaID, tag string) (id string, err error) {
 }
 
 func (a *Agent) GetCredDef(credDefID string) (credDefJSON string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	res := try.To1(a.Client.AgentClient.GetCredDef(
 		context.TODO(), &agency.CredDef{

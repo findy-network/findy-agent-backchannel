@@ -38,7 +38,7 @@ func InitConnections(a *AgencyClient, userName string) *ConnectionStore {
 }
 
 func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Notification) (err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	// Conn established
 	if notification.GetTypeID() == agency.Notification_STATUS_UPDATE {
@@ -62,7 +62,7 @@ func (s *ConnectionStore) HandleConnectionNotification(notification *agency.Noti
 }
 
 func (s *ConnectionStore) CreateInvitation() (invitation string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	res := try.To1(s.agent.AgentClient.CreateInvitation(
 		context.TODO(),
@@ -76,7 +76,7 @@ func (s *ConnectionStore) CreateInvitation() (invitation string, err error) {
 }
 
 func (s *ConnectionStore) RequestConnection(id string) (invitationID string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	invitationJSON := try.To1(s.GetConnectionInvitation(id))
 
@@ -91,7 +91,7 @@ func (s *ConnectionStore) RequestConnection(id string) (invitationID string, err
 }
 
 func (s *ConnectionStore) TrustPing(connectionID string) (res string, err error) {
-	defer err2.Return(&err)
+	defer err2.Handle(&err)
 
 	_, err = s.GetConnection(connectionID)
 

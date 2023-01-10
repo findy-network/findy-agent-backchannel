@@ -61,3 +61,7 @@ generate:
 	rmdir ./openapi/go
 	rm -rf ./openapi/api
 
+
+release:
+	gh workflow run do-release.yml
+

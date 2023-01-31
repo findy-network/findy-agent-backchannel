@@ -1,4 +1,5 @@
 AATH_VERSION:=7f2e69cc9c9b4b88b3b0e389941232add6d18771
+VON_NETWORK_VERSION:=3826aca3b69b31365b73222ad056fa748c2e0532
 EXPECTED_RESULT:="3 features passed"
 EXPECTED_RESULT_AIP20:="1 feature passed"
 INCLUDE_TAGS?=@AcceptanceTest
@@ -36,8 +37,6 @@ pull-images:
 	docker tag ghcr.io/findy-network/findy-agent-backchannel/acapy-main-bc:latest acapy-main-agent-backchannel:latest
 	docker pull ghcr.io/findy-network/findy-agent-backchannel/javascript-bc:latest
 	docker tag ghcr.io/findy-network/findy-agent-backchannel/javascript-bc:latest javascript-agent-backchannel:latest
-	docker pull ghcr.io/findy-network/findy-agent-backchannel/aath:latest
-	docker tag ghcr.io/findy-network/findy-agent-backchannel/aath:latest aries-test-harness:latest
 
 gen-findy:
 	cd .docker/aries-agent-test-harness && \
@@ -124,7 +123,11 @@ aath-check-test-aip20:
 aath-test-check-aip20: gen-findy info record-logs aath-start-test-aip20 store-logs aath-check-test-aip20
 
 image:
-	cd .. && docker build --build-arg FAB_LOG_INCOMING_REQUESTS=true -t findy-agent-backchannel .
+# build harness (needs one agent as param but override findy in next step)
+	cd .docker/aries-agent-test-harness && \
+		./manage build -a findy
+	cd .. && \
+		docker build --build-arg FAB_LOG_INCOMING_REQUESTS=true -t findy-agent-backchannel .
 
 gen-cert:
 	$(eval DOCKERHOST_IP=$(shell docker run --rm --net=host eclipse/che-ip))
@@ -139,7 +142,12 @@ gen-cert:
 
 von-up:
 	-cd .docker/aries-agent-test-harness && ./manage service start von-network
-	cd .docker/aries-agent-test-harness/services/von-network/.build/von-network && ./manage build
+# TODO: take in use when ARM-compatible:
+# using custom image for now (arm-support branch pulls custom image)
+#	cd .docker/aries-agent-test-harness/services/von-network/.build/von-network && ./manage build
+	cd .docker/aries-agent-test-harness/services/von-network/.build/von-network && \
+		git fetch origin --depth=1 $(VON_NETWORK_VERSION):version && \
+		git checkout version
 	cd .docker/aries-agent-test-harness && ./manage service start von-network
 
 tails-up:

@@ -3,8 +3,8 @@ module github.com/findy-network/findy-agent-backchannel
 go 1.18
 
 require (
-	github.com/findy-network/findy-agent-auth v0.1.37
-	github.com/findy-network/findy-common-go v0.2.0
+	github.com/findy-network/findy-agent-auth v0.1.42
+	github.com/findy-network/findy-common-go v0.2.4
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/lainio/err2 v0.8.13

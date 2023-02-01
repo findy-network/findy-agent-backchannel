@@ -65,7 +65,7 @@ aath-test-aip10: gen-findy info
 			2>&1 | tee output_aip10.log
 
 aath-test-aip10-check: record-container-logs aath-test-aip10 store-logs
-	cat output_aip10.log | grep $(EXPECTED_RESULT_AIP10)
+	cat .docker/aries-agent-test-harness/output_aip10.log | grep $(EXPECTED_RESULT_AIP10)
 
 aath-test-check: aath-test-aip10-check
 
@@ -78,7 +78,7 @@ aath-test-aip20: gen-findy info
 			2>&1 | tee output_aip20.log
 
 aath-test-aip20-check: record-container-logs aath-test-aip20 store-logs
-	cat output_aip20.log | grep $(EXPECTED_RESULT_AIP20)
+	cat .docker/aries-agent-test-harness/output_aip20.log | grep $(EXPECTED_RESULT_AIP20)
 
 aath-test-check-aip20: aath-test-aip20-check
 

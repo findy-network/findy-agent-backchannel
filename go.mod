@@ -1,6 +1,6 @@
 module github.com/findy-network/findy-agent-backchannel
 
-go 1.18
+go 1.20
 
 require (
 	github.com/findy-network/findy-agent-auth v0.1.48

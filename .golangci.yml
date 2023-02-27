@@ -73,7 +73,7 @@ linters:
     - noctx
     - nolintlint
     - revive
-    - rowserrcheck
+#   - rowserrcheck # until generics support
     - staticcheck
     - stylecheck
     - typecheck

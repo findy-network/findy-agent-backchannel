@@ -35,7 +35,7 @@ jobs:
   #       env:
   #         NO_TTY: "1"
   push-images:
-    needs: full-iop
+#    needs: full-iop
     runs-on: ubuntu-latest
     permissions:
       packages: write

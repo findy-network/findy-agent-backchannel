@@ -84,11 +84,9 @@ runs:
         # tag the image
         docker tag ${{env.IMAGE_TAG}}:test ${{inputs.AGENT_NAME}}-agent-backchannel:latest
 
-        # build von-network for testing
-        #cd ./env/.docker/aries-agent-test-harness
-        #./manage service start von-network
-        #cd services/von-network/.build/von-network
-        #./manage build
+        cd ./env
+        make clone von-up
+        ./wait-for-ledger.sh | grep "Ledger OK"
 
         # start agents
         cd ../../../..

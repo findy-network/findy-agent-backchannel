@@ -92,8 +92,7 @@ runs:
         cd .docker/aries-agent-test-harness
         output=$(./manage start -d ${{inputs.AGENT_NAME}})
         echo $output | grep "failed" && exit 1
-        echo $output
-        # || echo "Agents started successfully."
+        echo $output | grep "Agents to be used" && echo "Agents started successfully."
       shell: bash
       env:
         NO_TTY: "1"

@@ -89,8 +89,11 @@ runs:
         ./wait-for-ledger.sh | grep "Ledger OK"
 
         # start agents
-        cd ../../../..
-        ./manage start -d ${{inputs.AGENT_NAME}} | grep "failed" && exit 1 || echo "Agents started successfully."
+        cd .docker/aries-agent-test-harness
+        output=$(./manage start -d ${{inputs.AGENT_NAME}})
+        echo $output | grep "failed" && exit 1
+        echo $output
+        # || echo "Agents started successfully."
       shell: bash
       env:
         NO_TTY: "1"

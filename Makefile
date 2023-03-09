@@ -1,3 +1,5 @@
+SCAN_SCRIPT_URL="https://raw.githubusercontent.com/findy-network/setup-go-action/master/scanner/cp_scan.sh"
+
 build:
 	go build ./...
 
@@ -39,7 +41,10 @@ drun:
 	docker run -it --rm findy-agent-backchannel
 
 scan:
-	@./scripts/scan.sh $(ARGS)
+	@curl -s $(SCAN_SCRIPT_URL) | bash
+
+scan_and_report:
+	@curl -s $(SCAN_SCRIPT_URL) | bash -s v > licenses.txt
 
 bundle_test:
 	docker build -t findy-aath-bundle -f ./aath/Dockerfile .

@@ -25,6 +25,7 @@
 .docker
 .data
 .logs
+.temp
 
 # generated files
 env/conf/genesis.txt

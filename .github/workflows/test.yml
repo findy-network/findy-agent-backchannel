@@ -4,7 +4,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: setup go
+      - name: setup go, lint and scan
         uses: findy-network/setup-go-action@master
         with:
           linter-config-path: .golangci.yml
@@ -52,7 +52,7 @@ jobs:
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
       - name: Collect docker logs
         if: ${{ failure() }}
-        uses: jwalton/gh-docker-logs@v2.0.2
+        uses: jwalton/gh-docker-logs@v2
         with:
           dest: "./tests_output/docker-logs"
       - name: archive logs

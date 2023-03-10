@@ -37,12 +37,12 @@ jobs:
 
       - name: Collect docker logs
         if: ${{ failure() }}
-        uses: jwalton/gh-docker-logs@v2.0.2
+        uses: jwalton/gh-docker-logs@v2
         with:
           dest: "./tests_output/docker-logs"
       - name: archive logs
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: iop-logs
           path: tests_output

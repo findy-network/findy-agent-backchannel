@@ -35,98 +35,62 @@ jobs:
         env:
           NO_TTY: "1"
 
-  push-bc:
+  push-images:
     needs: full-iop
     runs-on: ubuntu-latest
     permissions:
       packages: write
       contents: read
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/bc-image-push
-        with:
-          IMAGE_NAME: "findy-bc"
-          AGENT_NAME: "findy"
-          FILE: "./Dockerfile"
-          CONTEXT: "./"
-          PLATFORMS: "linux/amd64,linux/arm64"
-          TOKEN:
-            ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      matrix:
+        include:
+          - image: "findy-bc"
+            agent: "findy"
+            file: "./Dockerfile"
+            context: "./"
             # internal findy agency test image contains
             # no agency so cannot be used for testing as "bundle"
-          SKIP_TEST: "true"
-
-  push-acapy-bc:
-    needs: full-iop
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
+            skip_test: "true"
+            skip_cache: "false"
+          - image: "acapy-bc"
+            agent: "acapy"
+            file: "./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy"
+            context: "./env/.docker/aries-agent-test-harness/aries-backchannels"
+            skip_test: "false"
+            skip_cache: "false"
+          - image: "acapy-main-bc"
+            agent: "acapy-main"
+            file: "./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy-main"
+            context: "./env/.docker/aries-agent-test-harness/aries-backchannels"
+            skip_test: "false"
+            skip_cache: "false"
+          - image: "javascript-bc"
+            agent: "javascript"
+            file: "./env/.docker/aries-agent-test-harness/aries-backchannels/javascript/Dockerfile.javascript"
+            context: "./env/.docker/aries-agent-test-harness/aries-backchannels"
+            skip_test: "false"
+            skip_cache: "true" # ensure latest codes are fetched
+          - image: "aath"
+            agent: "aath"
+            file: "./env/.docker/aries-agent-test-harness/aries-test-harness/Dockerfile.harness"
+            context: "./env/.docker/aries-agent-test-harness/aries-test-harness"
+            skip_test: "true" # harness, not agent
+            skip_cache: "false"
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/bc-image-push
         with:
-          IMAGE_NAME: "acapy-bc"
-          AGENT_NAME: "acapy"
-          FILE: "./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy"
-          CONTEXT: "./env/.docker/aries-agent-test-harness/aries-backchannels"
+          IMAGE_NAME: ${{ matrix.image }}
+          AGENT_NAME: ${{ matrix.agent }}
+          FILE: ${{ matrix.file }}
+          CONTEXT: ${{ matrix.context }}
           PLATFORMS: "linux/amd64,linux/arm64"
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  push-acapy-main-bc:
-    needs: full-iop
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/bc-image-push
-        with:
-          IMAGE_NAME: "acapy-main-bc"
-          AGENT_NAME: "acapy-main"
-          FILE: "./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy-main"
-          CONTEXT: "./env/.docker/aries-agent-test-harness/aries-backchannels"
-          PLATFORMS: "linux/amd64,linux/arm64"
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  push-javascript-bc:
-    needs: full-iop
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/bc-image-push
-        with:
-          IMAGE_NAME: "javascript-bc"
-          AGENT_NAME: "javascript"
-          FILE: "./env/.docker/aries-agent-test-harness/aries-backchannels/javascript/Dockerfile.javascript"
-          CONTEXT: "./env/.docker/aries-agent-test-harness/aries-backchannels"
-          PLATFORMS: "linux/amd64,linux/arm64"
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SKIP_CACHE: "true" # ensure latest codes are fetched
-
-  push-aath:
-    needs: full-iop
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/bc-image-push
-        with:
-          IMAGE_NAME: "aath"
-          FILE: "./env/.docker/aries-agent-test-harness/aries-test-harness/Dockerfile.harness"
-          CONTEXT: "./env/.docker/aries-agent-test-harness/aries-test-harness"
-          PLATFORMS: "linux/amd64,linux/arm64"
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SKIP_TEST: "true"
+          SKIP_TEST: ${{ matrix.skip_test }}
+          SKIP_CACHE: ${{ matrix.skip_cache }}
 
   merge:
-    needs: [push-bc, push-acapy-bc, push-acapy-main-bc, push-javascript-bc, push-aath]
+    needs: push-images
     runs-on: ubuntu-latest
     steps:
       - name: checkout

@@ -52,7 +52,7 @@ jobs:
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
       - name: Collect docker logs
         if: ${{ failure() }}
-        uses: jwalton/gh-docker-logs@v2.0.2
+        uses: jwalton/gh-docker-logs@v2
         with:
           dest: "./tests_output/docker-logs"
       - name: archive logs

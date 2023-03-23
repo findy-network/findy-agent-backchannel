@@ -10,8 +10,14 @@ jobs:
           linter-config-path: .golangci.yml
       - name: test
         run: go test ./...
-  iop:
+  test-aip10:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - their_agent: "acapy"
+          - their_agent: "javascript"
+          - their_agent: "findy"
     env:
       NO_TTY: "1"
     steps:
@@ -21,7 +27,7 @@ jobs:
         run: |
           cd ./env
           make aath-up-check \
-            AGENT_DEFAULT=acapy \
+            AGENT_DEFAULT=${{ matrix.their_agent }} \
             AGENT_BOB=findy \
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
       - name: test findy as Acme
@@ -29,7 +35,7 @@ jobs:
           cd ./env
           make aath-test-check \
             AGENT_DEFAULT=findy \
-            AGENT_BOB=acapy \
+            AGENT_BOB=${{ matrix.their_agent }} \
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
       - name: test AIP2.0 findy as Acme 
         run: |
@@ -59,5 +65,36 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v3
         with:
-          name: iop-logs
+          name: iop-aip10-logs
+          path: tests_output
+
+  test-aip20:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - their_agent: "acapy-main"
+          # - their_agent: "javascript"
+          # - their_agent: "findy"
+    env:
+      NO_TTY: "1"
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: test AIP2.0 findy as Acme 
+        run: |
+          cd ./env
+          make aath-test-check-aip20 \
+            AGENT_DEFAULT=findy \
+            AGENT_BOB=acapy-main
+      - name: Collect docker logs
+        if: ${{ failure() }}
+        uses: jwalton/gh-docker-logs@v2
+        with:
+          dest: "./tests_output/docker-logs"
+      - name: archive logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: iop-aip20-logs
           path: tests_output

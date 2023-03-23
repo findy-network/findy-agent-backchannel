@@ -7,6 +7,12 @@ on:
 jobs:
   full-iop:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - their_agent: "acapy"
+          - their_agent: "javascript"
+          - their_agent: "findy"
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -14,7 +20,7 @@ jobs:
         run: |
           cd ./env
           make aath-up-check \
-            AGENT_DEFAULT=acapy \
+            AGENT_DEFAULT=${{ matrix.their_agent }} \
             AGENT_BOB=findy
         env:
           NO_TTY: "1"
@@ -23,15 +29,7 @@ jobs:
           cd ./env
           make aath-test-check \
             AGENT_DEFAULT=findy \
-            AGENT_BOB=acapy
-        env:
-          NO_TTY: "1"
-      - name: test findy as default
-        run: |
-          cd ./env
-          make aath-test-check \
-            AGENT_DEFAULT=findy \
-            AGENT_BOB=findy
+            AGENT_BOB=${{ matrix.their_agent }}
         env:
           NO_TTY: "1"
 

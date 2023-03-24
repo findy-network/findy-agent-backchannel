@@ -3,7 +3,7 @@ module github.com/findy-network/findy-agent-backchannel
 go 1.20
 
 require (
-	github.com/findy-network/findy-agent-auth v0.1.51
+	github.com/findy-network/findy-agent-auth v0.2.0
 	github.com/findy-network/findy-common-go v0.2.14
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
@@ -22,7 +22,7 @@ require (
 	github.com/go-webauthn/revoke v0.1.9 // indirect
 	github.com/go-webauthn/webauthn v0.8.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
-	github.com/golang/glog v1.1.0 // indirect
+	github.com/golang/glog v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-tpm v0.3.3 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect

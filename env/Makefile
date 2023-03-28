@@ -1,4 +1,4 @@
-AATH_VERSION:=7f2e69cc9c9b4b88b3b0e389941232add6d18771
+#AATH_VERSION:=7f2e69cc9c9b4b88b3b0e389941232add6d18771
 VON_NETWORK_VERSION:=3826aca3b69b31365b73222ad056fa748c2e0532
 EXPECTED_RESULT_AIP10:="3 features passed"
 EXPECTED_RESULT_AIP20:="1 feature passed"
@@ -97,10 +97,7 @@ record-container-logs:
 	nohup ./record_logs.sh faber_agent &
 	nohup ./record_logs.sh mallory_agent &
 
-image:
-# build harness (first build old findy but override in next step)
-	cd .docker/aries-agent-test-harness && \
-		./manage build -a $(AGENT_DEFAULT) -a $(AGENT_BOB)
+image: pull-images
 	cd .. && \
 		docker build --build-arg FAB_LOG_INCOMING_REQUESTS=true -t findy-agent-backchannel .
 

@@ -1,4 +1,4 @@
-AATH_VERSION:=7f2e69cc9c9b4b88b3b0e389941232add6d18771
+#AATH_VERSION:=7f2e69cc9c9b4b88b3b0e389941232add6d18771
 VON_NETWORK_VERSION:=3826aca3b69b31365b73222ad056fa748c2e0532
 EXPECTED_RESULT_AIP10:="3 features passed"
 EXPECTED_RESULT_AIP20:="1 feature passed"
@@ -8,9 +8,9 @@ AGENT_DEFAULT?=acapy-main
 AGENT_BOB?=findy
 DATE:=$(shell date +%s)
 
-aath-up: generate clone rm up aath
-aath-up-check: generate clone rm up aath-check
-aath-up-check-aip20: generate clone rm up aath-check-aip20
+aath-up: generate clone rm up build-aath
+aath-up-check: generate clone rm up build-aath-check
+aath-up-check-aip20: generate clone rm up build-aath-check-aip20
 
 generate:
 	$(eval DOCKERHOST=$(shell ./dockerhost.sh))
@@ -26,17 +26,21 @@ clone:
 #	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
 #	cd .docker/aries-agent-test-harness && git reset --hard $(AATH_VERSION)
 
-aath: clone image pull-images aath-test-aip10
-aath-check: image pull-images aath-test-aip10-check
-aath-check-aip20: image pull-images aath-test-aip20-check
+aath: clone pull-images aath-test-aip10
+aath-check: pull-images aath-test-aip10-check
+aath-check-aip20: pull-images aath-test-aip20-check
+
+build-aath: clone image aath-test-aip10
+build-aath-check: image aath-test-aip10-check
+build-aath-check-aip20: image aath-test-aip20-check
 
 pull-images:
-	docker pull ghcr.io/findy-network/findy-agent-backchannel/acapy-bc:latest
-	docker tag ghcr.io/findy-network/findy-agent-backchannel/acapy-bc:latest acapy-agent-backchannel:latest
-	docker pull ghcr.io/findy-network/findy-agent-backchannel/acapy-main-bc:latest
-	docker tag ghcr.io/findy-network/findy-agent-backchannel/acapy-main-bc:latest acapy-main-agent-backchannel:latest
-	docker pull ghcr.io/findy-network/findy-agent-backchannel/javascript-bc:latest
-	docker tag ghcr.io/findy-network/findy-agent-backchannel/javascript-bc:latest javascript-agent-backchannel:latest
+	docker pull ghcr.io/findy-network/findy-agent-backchannel/$(AGENT_DEFAULT)-bc:latest
+	docker tag ghcr.io/findy-network/findy-agent-backchannel/$(AGENT_DEFAULT)-bc:latest $(AGENT_DEFAULT)-agent-backchannel:latest
+	docker pull ghcr.io/findy-network/findy-agent-backchannel/$(AGENT_BOB)-bc:latest
+	docker tag ghcr.io/findy-network/findy-agent-backchannel/$(AGENT_BOB)-bc:latest $(AGENT_BOB)-agent-backchannel:latest
+	docker pull ghcr.io/findy-network/findy-agent-backchannel/aath:latest
+	docker tag ghcr.io/findy-network/findy-agent-backchannel/aath:latest aries-test-harness:latest
 
 gen-findy:
 	cd .docker/aries-agent-test-harness && \
@@ -93,10 +97,7 @@ record-container-logs:
 	nohup ./record_logs.sh faber_agent &
 	nohup ./record_logs.sh mallory_agent &
 
-image:
-# build harness (needs one agent as param but override findy in next step)
-	cd .docker/aries-agent-test-harness && \
-		./manage build -a findy
+image: pull-images
 	cd .. && \
 		docker build --build-arg FAB_LOG_INCOMING_REQUESTS=true -t findy-agent-backchannel .
 

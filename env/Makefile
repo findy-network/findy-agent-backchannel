@@ -10,7 +10,7 @@ DATE:=$(shell date +%s)
 
 aath-up: generate clone rm up build-aath
 aath-up-check: generate clone rm up build-aath-check
-aath-up-check-aip20: generate clone rm up buil-aath-check-aip20
+aath-up-check-aip20: generate clone rm up build-aath-check-aip20
 
 generate:
 	$(eval DOCKERHOST=$(shell ./dockerhost.sh))

@@ -7,7 +7,7 @@ require (
 	github.com/findy-network/findy-common-go v0.2.21
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/lainio/err2 v0.9.0
+	github.com/lainio/err2 v0.9.1
 	google.golang.org/grpc v1.54.0
 )
 

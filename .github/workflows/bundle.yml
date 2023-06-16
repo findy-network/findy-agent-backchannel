@@ -14,9 +14,10 @@ jobs:
       - name: build findy
         run: docker build -t findy-agent-backchannel -f ./aath/Dockerfile .
       - uses: actions/checkout@v3
+        # TODO: using temporarily own branch
         with:
-          repository: "hyperledger/aries-agent-test-harness"
-          ref: "main"
+          repository: "lauravuo/aries-agent-test-harness"
+          ref: "arm-support"
 
       - name: build acapy
         run: ./manage build -a acapy

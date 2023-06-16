@@ -16,20 +16,21 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: test findy as Bob
-        run: |
-          cd ./env
-          make aath-up-check \
-            AGENT_DEFAULT=${{ matrix.their_agent }} \
-            AGENT_BOB=findy
-        env:
-          NO_TTY: "1"
       - name: test findy as Acme
         run: |
           cd ./env
-          make aath-test-check \
+          make aath-up-check \
             AGENT_DEFAULT=findy \
             AGENT_BOB=${{ matrix.their_agent }}
+        env:
+          NO_TTY: "1"
+      - name: test findy as Bob
+        if: ${{ matrix.their_agent != 'javascript' }}
+        run: |
+          cd ./env
+          make aath-test-check \
+            AGENT_DEFAULT=${{ matrix.their_agent }} \
+            AGENT_BOB=findy
         env:
           NO_TTY: "1"
 

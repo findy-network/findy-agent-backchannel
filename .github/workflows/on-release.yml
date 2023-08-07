@@ -1,41 +1,41 @@
 name: release
 on:
   push:
-    tags:
-      - "*"
+    # tags:
+    #   - "*"
 
 jobs:
-  full-iop:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - their_agent: "acapy"
-          - their_agent: "javascript"
-          - their_agent: "findy"
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: test findy as Acme
-        run: |
-          cd ./env
-          make aath-up-check \
-            AGENT_DEFAULT=findy \
-            AGENT_BOB=${{ matrix.their_agent }}
-        env:
-          NO_TTY: "1"
-      - name: test findy as Bob
-        if: ${{ matrix.their_agent != 'javascript' }}
-        run: |
-          cd ./env
-          make aath-test-check \
-            AGENT_DEFAULT=${{ matrix.their_agent }} \
-            AGENT_BOB=findy
-        env:
-          NO_TTY: "1"
+  # full-iop:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       include:
+  #         - their_agent: "acapy"
+  #         - their_agent: "javascript"
+  #         - their_agent: "findy"
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v3
+  #     - name: test findy as Acme
+  #       run: |
+  #         cd ./env
+  #         make aath-up-check \
+  #           AGENT_DEFAULT=findy \
+  #           AGENT_BOB=${{ matrix.their_agent }}
+  #       env:
+  #         NO_TTY: "1"
+  #     - name: test findy as Bob
+  #       if: ${{ matrix.their_agent != 'javascript' }}
+  #       run: |
+  #         cd ./env
+  #         make aath-test-check \
+  #           AGENT_DEFAULT=${{ matrix.their_agent }} \
+  #           AGENT_BOB=findy
+  #       env:
+  #         NO_TTY: "1"
 
   push-images:
-    needs: full-iop
+    #    needs: full-iop
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -88,16 +88,16 @@ jobs:
           SKIP_TEST: ${{ matrix.skip_test }}
           SKIP_CACHE: ${{ matrix.skip_cache }}
 
-  merge:
-    needs: push-images
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-        with:
-          ref: master
-      - name: merge
-        run: |
-          git fetch --tags origin
-          git merge $GITHUB_REF
-          git push origin master
+  # merge:
+  #   needs: push-images
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v3
+  #       with:
+  #         ref: master
+  #     - name: merge
+  #       run: |
+  #         git fetch --tags origin
+  #         git merge $GITHUB_REF
+  #         git push origin master

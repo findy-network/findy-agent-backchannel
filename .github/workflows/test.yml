@@ -31,6 +31,7 @@ jobs:
             AGENT_BOB=${{ matrix.their_agent }} \
             INCLUDE_TAGS='@T001-RFC0160,@T001-RFC0036,@T001-RFC0037'
       - name: test findy as Bob with ${{ matrix.their_agent }}
+        # TODO: figure out why javascript agent fails
         if: ${{ matrix.their_agent != 'javascript' }}
         run: |
           cd ./env

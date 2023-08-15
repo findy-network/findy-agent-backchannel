@@ -1,18 +1,18 @@
 FROM ghcr.io/findy-network/findy-agent:latest AS findy-agent
 
-FROM golang:1.20-buster AS builder
+FROM golang:1.21-bookworm AS builder
 
 RUN git clone https://github.com/findy-network/findy-agent-auth.git && \
-    cd findy-agent-auth && \
-    go build -o /go/bin/findy-agent-auth
+  cd findy-agent-auth && \
+  go build -o /go/bin/findy-agent-auth
 
 ADD . findy-agent-backchannel
 
 RUN cd findy-agent-backchannel && \
-    go install -ldflags "-X 'github.com/findy-network/findy-agent-backchannel/openapi.Version=$(cat ./AGENT_VERSION)'" \
-    ./...
+  go install -ldflags "-X 'github.com/findy-network/findy-agent-backchannel/openapi.Version=$(cat ./AGENT_VERSION)'" \
+  ./...
 
-FROM ghcr.io/findy-network/findy-base:indy-1.16.ubuntu-18.04
+FROM ghcr.io/findy-network/findy-base:indy-1.16.ubuntu-22.04
 
 RUN apt-get update && apt-get install curl jq -y
 
@@ -25,7 +25,7 @@ ADD aath/ngrok-wait.sh /
 ADD aath/cert /grpc-cert
 
 RUN mkdir -p /data && \
-    echo "{}" > /root/findy.json
+  echo "{}" > /root/findy.json
 
 # auth
 ENV FAA_PORT "8888"

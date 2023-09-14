@@ -22,7 +22,7 @@ jobs:
       NO_TTY: "1"
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: test findy as Acme with ${{ matrix.their_agent }}
         run: |
           cd ./env
@@ -63,7 +63,7 @@ jobs:
       NO_TTY: "1"
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: test AIP2.0 findy as Acme with ${{ matrix.their_agent }}
         run: |
           cd ./env

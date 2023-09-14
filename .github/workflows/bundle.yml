@@ -10,10 +10,10 @@ jobs:
   test-bundle:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: build findy
         run: docker build -t findy-agent-backchannel -f ./aath/Dockerfile .
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         # TODO: using temporarily own branch
         with:
           repository: "lauravuo/aries-agent-test-harness"
@@ -55,7 +55,7 @@ jobs:
       packages: write
       contents: read
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: set version
         run: |

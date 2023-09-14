@@ -15,7 +15,7 @@ jobs:
           - their_agent: "findy"
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: test findy as Acme
         run: |
           cd ./env
@@ -76,7 +76,7 @@ jobs:
             skip_test: "true" # harness, not agent
             skip_cache: "false"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/bc-image-push
         with:
           IMAGE_NAME: ${{ matrix.image }}
@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: master
       - name: merge

@@ -63,7 +63,7 @@ jobs:
           echo $NEW_AGENT_VERSION > ./AGENT_VERSION
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: all
 

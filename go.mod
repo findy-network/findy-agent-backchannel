@@ -6,7 +6,7 @@ toolchain go1.21.0
 
 require (
 	github.com/findy-network/findy-agent-auth v0.2.40
-	github.com/findy-network/findy-common-go v0.2.40
+	github.com/findy-network/findy-common-go v0.2.41
 	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.0
 	github.com/lainio/err2 v0.9.41

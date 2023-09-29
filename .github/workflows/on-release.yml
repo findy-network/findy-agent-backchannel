@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - their_agent: "acapy"
+          - their_agent: "acapy-main"
           - their_agent: "javascript"
           - their_agent: "findy"
     steps:
@@ -50,12 +50,6 @@ jobs:
             # internal findy agency test image contains
             # no agency so cannot be used for testing as "bundle"
             skip_test: "true"
-            skip_cache: "false"
-          - image: "acapy-bc"
-            agent: "acapy"
-            file: "./env/.docker/aries-agent-test-harness/aries-backchannels/acapy/Dockerfile.acapy"
-            context: "./env/.docker/aries-agent-test-harness/aries-backchannels"
-            skip_test: "false"
             skip_cache: "false"
           - image: "acapy-main-bc"
             agent: "acapy-main"

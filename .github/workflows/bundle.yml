@@ -20,7 +20,7 @@ jobs:
           ref: "arm-support"
 
       - name: build acapy
-        run: ./manage build -a acapy
+        run: ./manage build -a acapy-main
 
       - name: start ledger
         run: |
@@ -30,7 +30,7 @@ jobs:
 
       - name: run test
         run: |
-          ./manage run -d acapy -b findy -t @AcceptanceTest -t @AIP10 -t ~@wip -t ~@revocation -t ~@RFC0025 > output.log
+          ./manage run -d acapy-main -b findy -t @AcceptanceTest -t @AIP10 -t ~@wip -t ~@revocation -t ~@RFC0025 > output.log
           cat output.log
           cat output.log | grep "3 features passed"
         env:

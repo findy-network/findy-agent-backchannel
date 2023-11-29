@@ -21,7 +21,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.5+incompatible // indirect
 	github.com/fxamacker/cbor/v2 v2.5.0 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.1-0.20221117193127-916db76e8214 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
 	github.com/go-webauthn/webauthn v0.8.6 // indirect
 	github.com/go-webauthn/x v0.1.4 // indirect
 	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect

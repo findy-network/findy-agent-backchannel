@@ -6,7 +6,7 @@ toolchain go1.21.0
 
 require (
 	github.com/findy-network/findy-agent-auth v0.2.66
-	github.com/findy-network/findy-common-go v0.2.52
+	github.com/findy-network/findy-common-go v0.2.53
 	github.com/google/uuid v1.5.0
 	github.com/gorilla/mux v1.8.1
 	github.com/lainio/err2 v0.9.51
@@ -57,6 +57,6 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231002182017-d307bd883b97 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

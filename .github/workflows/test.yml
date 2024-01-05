@@ -46,7 +46,7 @@ jobs:
           dest: "./tests_output/docker-logs"
       - name: archive logs
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: iop-aip10-logs
           path: tests_output
@@ -77,7 +77,7 @@ jobs:
           dest: "./tests_output/docker-logs"
       - name: archive logs
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: iop-aip20-logs
           path: tests_output

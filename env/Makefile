@@ -1,5 +1,5 @@
-#AATH_VERSION:=7f2e69cc9c9b4b88b3b0e389941232add6d18771
-VON_NETWORK_VERSION:=3826aca3b69b31365b73222ad056fa748c2e0532
+AATH_VERSION:=f17f392748ad932d7f4c5c3c3267f3598ef0104e
+VON_NETWORK_VERSION:=b041b9a
 EXPECTED_RESULT_AIP10:="3 features passed"
 EXPECTED_RESULT_AIP20:="1 feature passed"
 INCLUDE_TAGS?=@AcceptanceTest
@@ -20,11 +20,11 @@ generate:
 
 clone:
 	mkdir -p .docker
-	-git clone https://github.com/lauravuo/aries-agent-test-harness .docker/aries-agent-test-harness
-	cd .docker/aries-agent-test-harness && git checkout arm-support
-# TODO: take main fork in use once arm compatible
-#	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
-#	cd .docker/aries-agent-test-harness && git reset --hard $(AATH_VERSION)
+# enable to run on arm
+# -git clone https://github.com/lauravuo/aries-agent-test-harness .docker/aries-agent-test-harness
+# cd .docker/aries-agent-test-harness && git checkout arm-support
+	-git clone https://github.com/hyperledger/aries-agent-test-harness .docker/aries-agent-test-harness
+	cd .docker/aries-agent-test-harness && git reset --hard $(AATH_VERSION)
 
 aath: clone pull-images aath-test-aip10
 aath-check: pull-images aath-test-aip10-check
@@ -114,10 +114,9 @@ gen-cert:
 
 von-up:
 	-cd .docker/aries-agent-test-harness && ./manage service start von-network
-# TODO: take in use when ARM-compatible:
-# using custom image for now (arm-support branch pulls custom image)
-#	cd .docker/aries-agent-test-harness/services/von-network/.build/von-network && ./manage build
+# remove if on ARM
 	cd .docker/aries-agent-test-harness/services/von-network/.build/von-network && \
+		./manage build && \ 
 		git fetch origin --depth=1 $(VON_NETWORK_VERSION):version && \
 		git checkout version
 	cd .docker/aries-agent-test-harness && ./manage service start von-network

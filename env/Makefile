@@ -114,7 +114,7 @@ gen-cert:
 
 von-up:
 	-cd .docker/aries-agent-test-harness && ./manage service start von-network
-# remove if on ARM
+# remove build step if on ARM branch
 	cd .docker/aries-agent-test-harness/services/von-network/.build/von-network && \
 		git fetch origin --depth=1 $(VON_NETWORK_VERSION):version && \
 		git checkout version && \

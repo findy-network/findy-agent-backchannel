@@ -1,5 +1,5 @@
 AATH_VERSION:=f17f392748ad932d7f4c5c3c3267f3598ef0104e
-VON_NETWORK_VERSION:=b041b9a
+VON_NETWORK_VERSION:=b041b9a9af79861db0f11664fa7c386d772b845b
 EXPECTED_RESULT_AIP10:="3 features passed"
 EXPECTED_RESULT_AIP20:="1 feature passed"
 INCLUDE_TAGS?=@AcceptanceTest
@@ -116,9 +116,9 @@ von-up:
 	-cd .docker/aries-agent-test-harness && ./manage service start von-network
 # remove if on ARM
 	cd .docker/aries-agent-test-harness/services/von-network/.build/von-network && \
-		./manage build && \ 
 		git fetch origin --depth=1 $(VON_NETWORK_VERSION):version && \
-		git checkout version
+		git checkout version && \
+		./manage build
 	cd .docker/aries-agent-test-harness && ./manage service start von-network
 
 tails-up:

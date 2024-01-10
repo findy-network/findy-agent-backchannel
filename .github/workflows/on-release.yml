@@ -1,8 +1,8 @@
 name: release
 on:
   push:
-    # tags:
-    #   - "*"
+    tags:
+      - "*"
 
 jobs:
   full-iop:
@@ -77,6 +77,7 @@ jobs:
           AGENT_NAME: ${{ matrix.agent }}
           FILE: ${{ matrix.file }}
           CONTEXT: ${{ matrix.context }}
+          # TODO: acapy missing arm support
           #PLATFORMS: "linux/amd64,linux/arm64"
           PLATFORMS: "linux/amd64"
           TOKEN: ${{ secrets.GITHUB_TOKEN }}

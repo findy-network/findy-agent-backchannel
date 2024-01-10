@@ -77,7 +77,9 @@ jobs:
           AGENT_NAME: ${{ matrix.agent }}
           FILE: ${{ matrix.file }}
           CONTEXT: ${{ matrix.context }}
-          PLATFORMS: "linux/amd64,linux/arm64"
+          # TODO: acapy missing arm support
+          #PLATFORMS: "linux/amd64,linux/arm64"
+          PLATFORMS: "linux/amd64"
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKIP_TEST: ${{ matrix.skip_test }}
           SKIP_CACHE: ${{ matrix.skip_cache }}

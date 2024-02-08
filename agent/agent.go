@@ -44,7 +44,7 @@ type QuestionHeader struct {
 var authnCmd = authn.Cmd{
 	SubCmd:   "",
 	UserName: "",
-	Url:      "http://localhost:8888",
+	URL:      "http://localhost:8888",
 	AAGUID:   "12c85a48-4baf-47bd-b51f-f192871a1511",
 	Key:      "15308490f1e4026284594dd08d31291bc8ef2aeac730d0daf6ff87bb92d4336c",
 	Counter:  0,
@@ -60,10 +60,10 @@ func Init() *Agent {
 	publicDIDSeed := ""
 	publicDIDSeed = registerDID()
 
-	authnCmd.Url = fmt.Sprintf("http://%s:8888", url)
+	authnCmd.URL = fmt.Sprintf("http://%s:8888", url)
 	authnCmd.UserName = fmt.Sprintf("findy-agent-backchannel-%d", time.Now().UnixNano())
 	authnCmd.PublicDIDSeed = publicDIDSeed
-	log.Printf("Auth url %s, origin %s, user %s", authnCmd.Url, authnCmd.Origin, authnCmd.UserName)
+	log.Printf("Auth url %s, origin %s, user %s", authnCmd.URL, authnCmd.Origin, authnCmd.UserName)
 
 	myCmd := authnCmd
 	myCmd.SubCmd = "register"

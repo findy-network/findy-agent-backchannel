@@ -84,6 +84,9 @@ func (a *Agent) Login() {
 	try.To(myCmd.Validate())
 	r := try.To1(myCmd.Exec(os.Stdout))
 
+	log.Println("token", r.Token)
+	log.Println(r.String())
+
 	a.JWT = r.Token
 
 	conf := client.BuildClientConnBase(

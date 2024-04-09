@@ -133,14 +133,14 @@ up: services-up gen-cert
 	./wait-for-ledger.sh
 	mkdir -p conf
 	curl http://localhost:9000/genesis > conf/genesis.txt
-	docker-compose up -d
+	docker compose up -d
 
 down:
-	docker-compose down
+	docker compose down
 	cd .docker/aries-agent-test-harness && ./manage stop && ./manage rm
 
 rm: down
-	docker-compose rm
+	docker compose rm
 	cd .docker/aries-agent-test-harness && ./manage service stop von-network && ./manage service clean von-network
 	cd .docker/aries-agent-test-harness && ./manage service stop uniresolver && ./manage service clean uniresolver
 	cd .docker/aries-agent-test-harness && ./manage service stop indy-tails && ./manage service clean indy-tails

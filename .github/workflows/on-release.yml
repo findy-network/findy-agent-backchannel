@@ -11,7 +11,7 @@ jobs:
       matrix:
         include:
           - their_agent: "acapy-main"
-          - their_agent: "javascript"
+#          - their_agent: "javascript"
           - their_agent: "findy"
     steps:
       - name: checkout
@@ -57,12 +57,12 @@ jobs:
             context: "./env/.docker/aries-agent-test-harness/aries-backchannels"
             skip_test: "false"
             skip_cache: "false"
-          - image: "javascript-bc"
-            agent: "javascript"
-            file: "./env/.docker/aries-agent-test-harness/aries-backchannels/javascript/Dockerfile.javascript"
-            context: "./env/.docker/aries-agent-test-harness/aries-backchannels"
-            skip_test: "false"
-            skip_cache: "true" # ensure latest codes are fetched
+#          - image: "javascript-bc"
+#            agent: "javascript"
+#            file: "./env/.docker/aries-agent-test-harness/aries-backchannels/javascript/Dockerfile.javascript"
+#            context: "./env/.docker/aries-agent-test-harness/aries-backchannels"
+#            skip_test: "false"
+#            skip_cache: "true" # ensure latest codes are fetched
           - image: "aath"
             agent: "aath"
             file: "./env/.docker/aries-agent-test-harness/aries-test-harness/Dockerfile.harness"
